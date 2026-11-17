@@ -1,0 +1,214 @@
+<view class="app theme-{{theme}}">
+  <view class="topbar">
+    <button class="back-icon" bindtap="handleBack">‹</button>
+    <view class="topbar-title" wx:if="{{view === 'report'}}">训练分析报告</view>
+    <view class="topbar-title" wx:else>小鱼计时器</view>
+    <view class="topbar-spacer"></view>
+  </view>
+
+  <block wx:if="{{view === 'config'}}">
+    <scroll-view class="config-scroll" scroll-y="{{!dragging}}" enhanced show-scrollbar="{{false}}" bindscroll="onConfigScroll" bindscrolltolower="onConfigBottom">
+      <view class="page-content">
+        <view class="target-row">
+          <view class="hero-card">
+            <view class="hero-main">
+              <view class="eyebrow">目标时间</view>
+              <view class="total-target"><text class="num">{{totalMinutes}}</text><text class="unit">分钟</text></view>
+              <view class="hero-sub"><text class="num">{{modules.length}}</text> 个模块 · 顺序计时</view>
+            </view>
+            <view class="clock-badge">◷</view>
+          </view>
+          <button class="history-button" bindtap="openHistory">本地记录</button>
+        </view>
+
+        <view class="control-bar">
+          <view class="mode-capsule">
+            <view class="mode-seg {{mode === item.key ? 'on' : ''}}" wx:for="{{modes}}" wx:key="key" data-key="{{item.key}}" bindtap="chooseMode">{{item.name}}</view>
+          </view>
+          <button class="primary-button" bindtap="startTraining" disabled="{{!modules.length}}">开始计时 <text>▶</text></button>
+        </view>
+
+        <view class="section-title-row">
+          <view class="section-title">训练模块</view>
+          <view class="muted">按住 ☰ 拖动排序</view>
+        </view>
+
+        <view class="template-list quick-templates">
+          <view class="template-list-label">模板 · 点击切换，长按删除</view>
+          <view class="template-list-pills">
+            <view class="template-pick {{item.name === templateName ? 'active' : ''}}" wx:for="{{templates}}" wx:key="name" data-index="{{index}}" data-name="{{item.name}}" bindtap="loadTemplate" bindlongpress="removeTemplate">{{item.name}}</view>
+            <view class="template-pick template-add" bindtap="openTemplateModal">＋ 新建模板</view>
+          </view>
+        </view>
+
+        <view class="module-card {{dragIndex === index ? 'dragging' : ''}} {{dragging && dragIndex !== index ? 'drag-mode' : ''}} {{templateSwitching ? 'module-switching' : ''}}" style="{{dragIndex === index ? dragStyle : settleIndex === index ? settleStyle : dragStyles[index]}}" wx:for="{{modules}}" wx:key="id" data-index="{{index}}" bindtouchstart="touchStart" bindlongpress="activateDrag" bindtouchmove="touchMove" bindtouchend="touchEnd" bindtouchcancel="touchEnd">
+          <view class="module-head">
+            <input class="module-name" value="{{item.name}}" data-index="{{index}}" bindinput="changeModuleName" bindblur="normalizeModuleName" maxlength="20" />
+            <button class="delete-button" data-index="{{index}}" catchtap="removeModule">×</button>
+          </view>
+          <view class="duration-row">
+            <view class="stepper">
+              <button class="round-small" data-index="{{index}}" data-step="-1" bindtap="adjustMinutes">−</button>
+              <input class="minute-input num" type="number" value="{{item.targetMinutes}}" data-index="{{index}}" bindinput="changeMinutes" />
+              <button class="round-small" data-index="{{index}}" data-step="1" bindtap="adjustMinutes">＋</button>
+            </view>
+            <view class="slider-wrap">
+              <slider class="duration-slider" min="0" max="60" step="1" value="{{item.targetMinutes}}" data-index="{{index}}" bindchanging="changeSlider" bindchange="changeSlider" activeColor="{{sliderActive}}" backgroundColor="{{sliderTrack}}" blockColor="{{sliderBlock}}" />
+              <view class="slider-labels"><text><text class="num">0</text>M</text><text><text class="num">30</text>M</text><text><text class="num">60</text>M</text></view>
+            </view>
+          </view>
+          <view class="module-foot" data-index="{{index}}" catchtouchstart="handleTouchStart" catchtouchmove="touchMove" catchtouchend="touchEnd" catchtouchcancel="touchEnd"><text class="drag-handle">☰</text></view>
+        </view>
+
+        <view class="add-bottom" wx:if="{{addVisible && modules.length < 8}}" bindtap="openPresetSheet">＋ 添加模块</view>
+      </view>
+    </scroll-view>
+    <view class="dock">
+      <view class="dock-item" data-tab="overview" bindtap="openStats">
+        <view class="dock-ico di-bars"><view class="db b1"></view><view class="db b2"></view><view class="db b3"></view></view>
+      </view>
+      <view class="dock-item" data-tab="todo" bindtap="openStats">
+        <view class="dock-ico di-todo"><view class="tick t1"></view><view class="tick t2"></view></view>
+      </view>
+      <view class="dock-item" bindtap="openSettings">
+        <view class="dock-ico di-slide">
+          <view class="sl l1"></view><view class="kn k1"></view>
+          <view class="sl l2"></view><view class="kn k2"></view>
+          <view class="sl l3"></view><view class="kn k3"></view>
+        </view>
+      </view>
+    </view>
+  </block>
+
+
+  <block wx:if="{{view === 'report'}}">
+    <view class="page-content report-page">
+      <view class="report-hero">
+        <view class="report-hero-head">
+          <view class="report-hero-title">
+            <view class="report-kicker">模考训练分析</view>
+            <view class="report-meta"><text class="meta-chip">训练时间</text><text class="num">{{report.startedAtText}}</text></view>
+          </view>
+          <text class="status-tag">已完成</text>
+        </view>
+
+        <view class="report-hero-body">
+          <view class="score-ring">
+            <view class="score-value"><text class="num">{{report.passRate}}</text><text class="score-unit">%</text></view>
+            <text class="score-caption">模块达标率</text>
+          </view>
+          <view class="hero-stat-grid">
+            <view class="hero-stat">
+              <text class="hero-stat-label">实际用时</text>
+              <text class="hero-stat-value num">{{report.totalActualText}}</text>
+            </view>
+            <view class="hero-stat">
+              <text class="hero-stat-label">计划用时</text>
+              <text class="hero-stat-value num">{{report.totalTarget}}<text class="hero-stat-unit">分</text></text>
+            </view>
+            <view class="hero-stat">
+              <text class="hero-stat-label">超时模块</text>
+              <text class="hero-stat-value num warn">{{report.overtimeCount}}<text class="hero-stat-unit">/{{report.rows.length}}</text></text>
+            </view>
+            <view class="hero-stat">
+              <text class="hero-stat-label">未完成</text>
+              <text class="hero-stat-value num">{{report.incompleteCount}}<text class="hero-stat-unit">个</text></text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view class="completion-card">
+        <view class="completion-head">
+          <text class="card-title">整体目标完成度</text>
+          <text class="completion-value num">{{report.totalActualPercent}}%</text>
+        </view>
+        <view class="track"><view class="track-fill" style="width:{{report.totalActualPercent}}%"></view></view>
+        <text class="rule-text">{{report.statusRuleText}}</text>
+      </view>
+
+      <view class="insight-card" wx:if="{{report.slowestName}}">
+        <view class="card-title">关键结论</view>
+        <view class="insight-row">
+          <text class="insight-tag">最耗时</text>
+          <text class="insight-name">{{report.slowestName}}</text>
+          <text class="insight-value num">{{report.slowestText}}</text>
+        </view>
+        <view class="insight-row" wx:if="{{report.worstName}}">
+          <text class="insight-tag warn">超时最多</text>
+          <text class="insight-name">{{report.worstName}}</text>
+          <text class="insight-value num warn">{{report.worstDeltaText}}</text>
+        </view>
+        <view class="insight-row">
+          <text class="insight-tag ok">按时完成</text>
+          <text class="insight-name">未超出目标的模块</text>
+          <text class="insight-value num">{{report.onTrackCount}}<text class="insight-sub">/{{report.rows.length}}</text></text>
+        </view>
+      </view>
+
+      <view class="compare-card">
+        <view class="compare-head-row">
+          <text class="card-title">模块用时对比</text>
+          <view class="legend"><text class="dot target"></text>目标<text class="dot actual"></text>实际</view>
+        </view>
+        <block wx:for="{{reportView}}" wx:key="id">
+          <view class="compare-row">
+            <view class="compare-row-head">
+              <view class="compare-name"><text class="compare-index num">{{index < 9 ? '0' + (index + 1) : index + 1}}</text><text class="compare-title">{{item.name}}</text></view>
+              <text class="status-badge status-{{item.statusCode}}">{{item.statusLabel}}</text>
+            </view>
+            <view class="bar-line">
+              <text class="bar-label">目标</text>
+              <view class="bar-track"><view class="bar-target" style="width:{{item.targetPercent}}%"></view></view>
+              <text class="bar-value num">{{item.targetMinutes}}:00</text>
+            </view>
+            <view class="bar-line">
+              <text class="bar-label">实际</text>
+              <view class="bar-track"><view class="bar-actual bar-{{item.statusCode}}" style="width:{{item.actualPercent}}%"></view></view>
+              <text class="bar-value num">{{item.actualText}}</text>
+            </view>
+            <view class="compare-foot {{item.statusCode === 'overtime' ? 'negative' : item.statusCode === 'on-track' || item.statusCode === 'near' ? 'positive' : 'muted-foot'}}"><text class="num">{{item.deltaText}}</text></view>
+          </view>
+        </block>
+        <view class="report-expand" wx:if="{{report.rows.length > 5}}" bindtap="toggleReportRows"><text wx:if="{{reportExpanded}}">收起模块</text><text wx:else>查看全部 <text class="num">{{report.rows.length}}</text> 个模块</text></view>
+      </view>
+
+      <view class="quote-card"><text class="quote-mark">★</text><text class="quote-text">{{report.quote}}</text></view>
+
+      <view class="report-actions">
+        <button class="secondary-button" bindtap="previewReport">预览</button>
+        <button class="secondary-button" bindtap="exportReport">保存</button>
+        <button class="secondary-button" bindtap="shareReport">分享</button>
+        <button class="danger-button" bindtap="restartTraining">重跑</button>
+      </view>
+      <view class="report-saved">已自动保存在本机</view>
+      <canvas canvas-id="reportCanvas" class="report-canvas" />
+    </view>
+  </block>
+
+  <view class="modal-mask" wx:if="{{presetSheetOpen}}" catchtouchmove="blockTouch" bindtap="closePresetSheet">
+    <view class="modal-card" catchtap="blockTouch">
+      <view class="modal-title">添加训练模块</view>
+      <view class="modal-desc">选一个常用模块，会自动带上常用时长</view>
+      <view class="preset-grid">
+        <view class="preset-chip" wx:for="{{presets}}" wx:key="name" data-index="{{index}}" bindtap="pickPreset">{{item.name}}<text class="preset-min num">{{item.minutes}}M</text></view>
+      </view>
+      <view class="modal-actions">
+        <button class="modal-cancel" bindtap="closePresetSheet">取消</button>
+        <button class="modal-confirm" bindtap="pickCustom">＋ 自定义模块</button>
+      </view>
+    </view>
+  </view>
+
+  <view class="modal-mask" wx:if="{{templateModalOpen}}" catchtouchmove="blockTouch" bindtap="closeTemplateModal">
+    <view class="modal-card" catchtap="blockTouch">
+      <view class="modal-title">新建模板</view>
+      <view class="modal-desc">把当前的模块顺序与目标时长存成一个模板</view>
+      <input class="modal-input" value="{{newTemplateName}}" placeholder="例如：周末训练" maxlength="12" focus="{{templateModalOpen}}" confirm-type="done" bindinput="onTemplateNameInput" bindconfirm="confirmTemplate" />
+      <view class="modal-actions">
+        <button class="modal-cancel" bindtap="closeTemplateModal">取消</button>
+        <button class="modal-confirm" bindtap="confirmTemplate">保存模板</button>
+      </view>
+    </view>
+  </view>
+</view>

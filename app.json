@@ -1,0 +1,19 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/settings/settings",
+    "pages/timer/timer",
+    "pages/stats/stats",
+    "pages/history/history",
+    "pages/todo/todo"
+  ],
+  "window": {
+    "navigationBarTitleText": "小鱼计时器",
+    "navigationBarBackgroundColor": "#FFD874",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#FBF3DF"
+  },
+  "lazyCodeLoading": "requiredComponents",
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

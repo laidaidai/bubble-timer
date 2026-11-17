@@ -1,0 +1,75 @@
+.topbar { position: sticky; top: 0; z-index: 10; }
+.settings-page { min-height: 100vh; background: var(--bg); color: var(--ink); padding-bottom: 60rpx; }
+
+
+.settings-body { padding: 22rpx 24rpx 0; }
+
+.settings-hero { padding: 26rpx 28rpx; background: var(--accent-bg); border: 2rpx solid var(--edge); border-radius: 28rpx; box-shadow: 6rpx 7rpx 0 var(--shadow); }
+.hero-eyebrow { color: var(--text-mid); font-size: 21rpx; font-weight: 800; letter-spacing: 1rpx; }
+.hero-name { margin-top: 6rpx; font-size: 42rpx; font-weight: 900; letter-spacing: 1rpx; }
+.hero-sub { margin-top: 8rpx; color: var(--text-mid); font-size: 20rpx; }
+
+.section-title-row { margin: 30rpx 2rpx 16rpx; display: flex; align-items: baseline; justify-content: space-between; }
+.section-title { font-size: 27rpx; font-weight: 900; }
+.muted { color: var(--text-2); font-size: 20rpx; }
+
+.theme-grid { display: flex; flex-direction: column; gap: 18rpx; }
+
+.theme-card { color: var(--ink); display: flex; align-items: center; gap: 20rpx; padding: 20rpx 22rpx; background: var(--card); border: 2rpx solid var(--edge); border-radius: 26rpx; box-shadow: 5rpx 6rpx 0 var(--shadow); }
+.theme-card.active { border-width: 3rpx; box-shadow: 6rpx 8rpx 0 var(--shadow); }
+
+.theme-swatch { flex: 0 0 auto; display: flex; gap: -10rpx; }
+.swatch-dot { width: 34rpx; height: 34rpx; margin-right: -8rpx; border: 2rpx solid var(--edge); border-radius: 50%; }
+.swatch-dot:last-child { margin-right: 0; }
+
+.theme-info { flex: 1; min-width: 0; }
+.theme-name { font-size: 26rpx; font-weight: 900; }
+.theme-desc { margin-top: 4rpx; color: var(--text-2); font-size: 19rpx; }
+
+.theme-check { flex: 0 0 auto; padding: 8rpx 14rpx; color: var(--on-panel); background: var(--panel); border-radius: 999rpx; font-size: 18rpx; font-weight: 900; }
+
+.settings-tip { margin-top: 26rpx; padding: 18rpx 20rpx; color: var(--text-2); background: var(--cream-2); border: 2rpx dashed var(--line-strong); border-radius: 20rpx; font-size: 19rpx; line-height: 1.5; }
+
+.option-grid { display: flex; flex-wrap: wrap; gap: 14rpx; }
+.option-card { flex: 1 1 calc(50% - 14rpx); min-width: 0; padding: 18rpx 20rpx; color: var(--ink); background: var(--card); border: 2rpx solid var(--line-strong); border-radius: 22rpx; }
+.option-card.active { border-color: var(--edge); border-width: 3rpx; background: var(--accent-bg); box-shadow: 4rpx 5rpx 0 var(--shadow); }
+.option-name { font-size: 24rpx; font-weight: 900; }
+.option-desc { margin-top: 6rpx; color: var(--text-2); font-size: 18rpx; }
+
+.ring-list { display: flex; flex-direction: column; gap: 12rpx; }
+.ring-row { display: flex; align-items: center; gap: 16rpx; padding: 16rpx 20rpx; color: var(--ink); background: var(--card); border: 2rpx solid var(--line-strong); border-radius: 22rpx; }
+.ring-row.active { border-color: var(--edge); border-width: 3rpx; box-shadow: 4rpx 5rpx 0 var(--shadow); background: var(--accent-bg); }
+.ring-icon { flex: 0 0 56rpx; width: 56rpx; height: 56rpx; display: flex; align-items: center; justify-content: center; color: var(--on-primary); background: var(--primary); border: 2rpx solid var(--edge); border-radius: 50%; font-size: 26rpx; }
+.ring-info { flex: 1; min-width: 0; }
+.ring-name { font-size: 24rpx; font-weight: 900; }
+.ring-src { margin-top: 4rpx; color: var(--text-2); font-size: 18rpx; }
+.ring-state { flex: 0 0 auto; padding: 8rpx 14rpx; color: var(--on-panel); background: var(--panel); border-radius: 999rpx; font-size: 18rpx; font-weight: 900; }
+
+.switch-list { display: flex; flex-direction: column; gap: 12rpx; }
+.switch-row { display: flex; align-items: center; gap: 16rpx; padding: 18rpx 20rpx; background: var(--card); border: 2rpx solid var(--line-strong); border-radius: 22rpx; }
+.switch-info { flex: 1; min-width: 0; }
+.switch-name { color: var(--ink); font-size: 24rpx; font-weight: 900; }
+.switch-desc { margin-top: 4rpx; color: var(--text-2); font-size: 18rpx; }
+.switch { flex: 0 0 auto; width: 76rpx; height: 42rpx; padding: 4rpx; display: flex; align-items: center; background: var(--track); border: 2rpx solid var(--line-strong); border-radius: 999rpx; }
+.switch.on { background: var(--primary); border-color: var(--edge); justify-content: flex-end; }
+.knob { width: 30rpx; height: 30rpx; background: var(--card); border: 2rpx solid var(--edge); border-radius: 50%; }
+.acc { margin-top: 18rpx; }
+.acc-head { display: flex; align-items: center; gap: 14rpx; padding: 22rpx 24rpx; background: var(--card); border: 2rpx solid var(--edge); border-radius: 24rpx; box-shadow: 4rpx 5rpx 0 var(--shadow); }
+.acc.open .acc-head { background: var(--cream-2); }
+.acc-title { flex: 0 0 auto; color: var(--ink); font-size: 24rpx; font-weight: 900; }
+.acc-hint { flex: 1; min-width: 0; overflow: hidden; color: var(--text-3); text-align: right; white-space: nowrap; font-size: 19rpx; font-weight: 700; }
+.acc-arrow { flex: 0 0 auto; color: var(--text-2); font-size: 20rpx; font-weight: 900; }
+.acc-body { margin-top: 12rpx; }
+.habit-pre-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14rpx; }
+.habit-pre-title { color: var(--text-2); font-size: 20rpx; font-weight: 800; }
+.habit-pre-count { color: var(--text-3); font-size: 19rpx; font-weight: 800; }
+.habit-presets { display: flex; flex-wrap: wrap; justify-content: space-between; margin-top: 4rpx; }
+.habit-preset { width: 48.5%; margin-bottom: 12rpx; padding: 20rpx 18rpx; display: flex; align-items: center; gap: 10rpx; background: var(--card); border: 2rpx solid var(--line-strong); border-radius: 20rpx; }
+.habit-preset.checked { background: var(--cream-2); border: 2rpx solid var(--edge); box-shadow: 4rpx 4rpx 0 var(--shadow-soft); }
+.habit-preset-main { flex: 1; min-width: 0; }
+.habit-preset-name { color: var(--ink); font-size: 22rpx; font-weight: 900; }
+.habit-preset-desc { margin-top: 4rpx; color: var(--text-3); font-size: 18rpx; font-weight: 700; }
+.habit-check { flex: 0 0 30rpx; width: 30rpx; height: 30rpx; display: flex; align-items: center; justify-content: center; border: 2rpx solid var(--line-strong); border-radius: 50%; color: var(--on-primary); font-size: 18rpx; font-weight: 900; }
+.habit-preset.checked .habit-check { background: var(--primary); border-color: var(--edge); }
+.habit-expand { margin: 4rpx 0 16rpx; padding: 12rpx 0; color: var(--text-2); text-align: center; border: 2rpx dashed var(--line-strong); border-radius: 18rpx; font-size: 19rpx; font-weight: 800; }
+.sub-head { margin: 22rpx 0 14rpx; color: var(--text-2); font-size: 20rpx; font-weight: 800; }

@@ -1,0 +1,67 @@
+<view class="timer-page theme-{{theme}} clock-{{clockStyle}}">
+  <view class="timer-main">
+    <view class="mode-chip {{phaseLabel ? (phaseLabel === '专注' ? 'focus' : 'rest') : ''}}">
+      <text>{{modeName}}</text>
+      <text class="mode-phase" wx:if="{{phaseLabel}}">{{phaseLabel}}</text>
+    </view>
+    <view class="clock-stage" bindtap="cycleClockStyle">
+      <text class="ms-line">{{mainLabel}} <text class="ms-val">+{{msText}}</text> ms</text>
+
+      <view class="style-hint" wx:if="{{showStyleHint}}">
+        <text class="hint-dot"></text>
+        <text class="hint-text">{{clockStyleName}} · 轻点背景可切换</text>
+      </view>
+
+      <!-- 翻页时钟 -->
+      <view class="flip-row" wx:if="{{clockStyle === 'flip'}}">
+        <block wx:for="{{flipPairs}}" wx:key="key">
+          <view class="flip-colon" wx:if="{{index > 0}}">:</view>
+          <view class="flip-card {{item.changed ? (flipPhase ? 'flip-a' : 'flip-b') : ''}}">
+            <view class="flip-split"></view>
+            <text class="flip-num">{{item.text}}</text>
+          </view>
+        </block>
+      </view>
+
+      <!-- 积木方块 -->
+      <view class="block-row" wx:elif="{{clockStyle === 'blocks'}}">
+        <block wx:for="{{flipDigits}}" wx:key="key">
+          <view class="block-colon" wx:if="{{item.sep}}">:</view>
+          <view class="block-tile" wx:else><text class="block-num">{{item.text}}</text></view>
+        </block>
+      </view>
+
+      <!-- 数字时钟 / 极简 -->
+      <view class="plain-clock" wx:else>
+        <text class="plain-num {{clockStyle === 'digital' ? 'glow' : 'thin'}}">{{mainTimeText}}</text>
+      </view>
+
+      <view class="stage-meta">
+        <text class="meta-module">{{currentModule.name || '训练完成'}}</text>
+        <text class="meta-total"><text class="num">{{moduleTimeText}}</text></text>
+      </view>
+
+      <view class="stage-progress">
+        <view class="stage-progress-fill {{isOvertime ? 'overtime-fill' : ''}}" style="width: {{progressPercent}}%;"></view>
+      </view>
+      <view class="stage-target">
+        <text>TARGET: <text class="num">{{currentModule.targetMinutes}}</text>M</text>
+        <text class="{{isOvertime ? 'overtime' : 'on-track'}}">{{isOvertime ? 'OVERTIME' : 'ON TRACK'}}</text>
+      </view>
+    </view>
+
+    <view class="controls">
+      <button class="prev-button {{isFirstModule ? 'disabled' : ''}}" bindtap="prevModule">◀</button>
+      <button class="pause-button" bindtap="togglePause">{{isPaused ? '▶' : 'Ⅱ'}}</button>
+      <button class="next-button" bindtap="nextModule"><text class="next-label">下一模块</text><text class="next-arrow">▶</text></button>
+      <button class="complete-button {{isHolding ? 'holding' : ''}}" catchtouchstart="startCompleteHold" catchtouchend="endCompleteHold" catchtouchcancel="endCompleteHold">✓<text class="num">1s</text></button>
+    </view>
+  </view>
+
+  <scroll-view class="module-side" scroll-y="true" enhanced="true" show-scrollbar="false">
+    <view class="module-list {{item.status === 'current' ? 'selected' : ''}}" wx:for="{{runtimeModules}}" wx:key="id" data-index="{{index}}" bindtap="selectModule">
+      <view class="module-index num">{{item.status === 'done' ? '✓' : index + 1}}</view>
+      <view class="module-info"><text>{{item.name}}</text><text class="num">{{item.targetMinutes}}M</text></view>
+    </view>
+  </scroll-view>
+</view>

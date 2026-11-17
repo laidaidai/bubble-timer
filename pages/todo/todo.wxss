@@ -1,0 +1,54 @@
+page { background: var(--bg); }
+
+.todo-page { min-height: 100vh; background: var(--bg); color: var(--ink); }
+
+.todo-count { padding: 8rpx 18rpx; color: var(--on-panel); background: var(--panel); border-radius: 999rpx; font-size: 19rpx; font-weight: 900; }
+
+.todo-body { height: calc(100vh - 176rpx); padding: 6rpx 28rpx 60rpx; box-sizing: border-box; }
+
+.todo-hero { padding: 24rpx 26rpx; background: var(--card); border: 3rpx solid var(--edge); border-radius: 28rpx; box-shadow: 7rpx 8rpx 0 var(--shadow); }
+.todo-hero-top { display: flex; align-items: flex-end; justify-content: space-between; }
+.todo-eyebrow { padding-bottom: 10rpx; color: var(--text-2); font-size: 21rpx; font-weight: 800; }
+.todo-percent { display: flex; align-items: flex-end; }
+.todo-percent .num { font-size: 76rpx; font-weight: 900; line-height: 1; }
+.todo-unit { margin-left: 6rpx; padding-bottom: 8rpx; color: var(--text-warm); font-size: 26rpx; font-weight: 900; }
+.todo-bar { margin-top: 16rpx; height: 16rpx; background: var(--track); border-radius: 999rpx; overflow: hidden; }
+.todo-fill { height: 100%; background: var(--primary); border-radius: 999rpx; }
+.todo-hint { margin-top: 12rpx; color: var(--text-2); font-size: 19rpx; }
+
+.add-row { margin-top: 20rpx; display: flex; gap: 12rpx; }
+.add-input { flex: 1; min-width: 0; height: 84rpx; padding: 0 24rpx; color: var(--ink); background: var(--card); border: 2rpx solid var(--line-strong); border-radius: 20rpx; font-size: 24rpx; }
+.add-placeholder { color: var(--text-3); font-size: 23rpx; }
+.add-button { flex: 0 0 132rpx; width: 132rpx; height: 84rpx; margin: 0; padding: 0; display: flex; align-items: center; justify-content: center; color: var(--on-primary); background: var(--primary); border: 2rpx solid var(--edge); border-radius: 20rpx; box-shadow: 4rpx 5rpx 0 var(--shadow); font-size: 24rpx; font-weight: 900; line-height: 1; }
+
+.todo-list { margin-top: 20rpx; display: flex; flex-direction: column; gap: 12rpx; }
+.todo-item { display: flex; align-items: center; gap: 16rpx; padding: 20rpx 20rpx; background: var(--card); border: 2rpx solid var(--line-strong); border-radius: 20rpx; }
+.todo-item.done { background: var(--cream-2); }
+.todo-check { flex: 0 0 42rpx; width: 42rpx; height: 42rpx; display: flex; align-items: center; justify-content: center; background: var(--cream-1); border: 2rpx solid var(--edge); border-radius: 12rpx; }
+.todo-check.checked { background: var(--primary); }
+.check-mark { color: var(--on-primary); font-size: 24rpx; font-weight: 900; line-height: 1; }
+.todo-main { flex: 1; min-width: 0; }
+.todo-text { color: var(--ink); font-size: 24rpx; font-weight: 700; line-height: 1.45; }
+.todo-item.done .todo-text { color: var(--text-3); text-decoration: line-through; }
+.todo-tip { flex: 0 0 auto; color: var(--text-4); font-size: 18rpx; }
+
+.empty-card { margin-top: 20rpx; padding: 44rpx 28rpx; text-align: center; background: var(--cream-1); border: 2rpx dashed var(--line-strong); border-radius: 24rpx; }
+.empty-icon { width: 62rpx; height: 62rpx; margin: 0 auto 14rpx; display: flex; align-items: center; justify-content: center; color: var(--on-primary); background: var(--primary); border: 2rpx solid var(--edge); border-radius: 50%; font-size: 32rpx; font-weight: 900; }
+.empty-title { font-size: 24rpx; font-weight: 900; }
+.empty-desc { margin-top: 8rpx; color: var(--text-2); font-size: 19rpx; }
+
+.todo-actions { margin-top: 22rpx; display: flex; gap: 14rpx; }
+.todo-action { flex: 1; margin: 0; padding: 20rpx 0; color: var(--ink); background: var(--cream-1); border: 2rpx solid var(--edge); border-radius: 999rpx; font-size: 22rpx; font-weight: 900; line-height: 1.2; }
+.todo-action.primary { color: var(--on-primary); background: var(--primary); box-shadow: 4rpx 5rpx 0 var(--shadow); }
+.todo-foot { margin: 22rpx 4rpx 0; color: var(--text-3); font-size: 18rpx; line-height: 1.6; }
+.time-row { margin-top: 14rpx; display: flex; gap: 12rpx; }
+.time-row picker { flex: 1; }
+.time-chip { display: flex; align-items: center; gap: 8rpx; padding: 14rpx 18rpx; background: var(--cream-1); border: 2rpx solid var(--line-strong); border-radius: 16rpx; color: var(--ink); font-size: 21rpx; font-weight: 800; }
+.chip-label { color: var(--text-3); font-size: 18rpx; font-weight: 700; }
+.remind-row { margin-top: 12rpx; display: flex; flex-wrap: wrap; gap: 10rpx; }
+.remind-chip { padding: 10rpx 16rpx; color: var(--text-2); background: var(--cream-1); border: 2rpx solid var(--line-strong); border-radius: 999rpx; font-size: 19rpx; font-weight: 800; }
+.remind-chip.active { color: var(--on-primary); background: var(--primary); border-color: var(--edge); }
+.todo-meta { margin-top: 6rpx; display: flex; align-items: center; gap: 10rpx; }
+.todo-due { color: var(--text-3); font-size: 18rpx; font-weight: 800; }
+.todo-due.overdue { color: var(--danger); }
+.todo-remind { padding: 2rpx 10rpx; color: var(--text-2); background: var(--cream-2); border-radius: 999rpx; font-size: 18rpx; font-weight: 800; }

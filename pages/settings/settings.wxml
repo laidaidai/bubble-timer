@@ -1,0 +1,124 @@
+<view class="settings-page theme-{{theme}}">
+  <view class="topbar">
+    <button class="back-icon" bindtap="handleBack">‹</button>
+    <view class="topbar-title">设置</view>
+    <view class="topbar-spacer"></view>
+  </view>
+
+  <view class="settings-body">
+    <view class="settings-hero">
+      <view class="hero-eyebrow">当前主题</view>
+      <view class="hero-name">{{themeName}}</view>
+      <view class="hero-sub">配色会同步到计时页、配置页和统计报告</view>
+    </view>
+
+    <view class="acc {{openSection === 'theme' ? 'open' : ''}}">
+      <view class="acc-head" data-key="theme" bindtap="toggleSection">
+        <view class="acc-title">主题配色</view>
+        <view class="acc-hint">{{themeName}}</view>
+        <view class="acc-arrow">{{openSection === 'theme' ? '▾' : '▸'}}</view>
+      </view>
+      <view class="acc-body" wx:if="{{openSection === 'theme'}}">
+    <view class="theme-grid">
+      <view class="theme-card theme-{{item.key}} {{item.active ? 'active' : ''}}" wx:for="{{themes}}" wx:key="key" data-key="{{item.key}}" bindtap="selectTheme">
+        <view class="theme-swatch">
+          <view class="swatch-dot" style="background: {{item.swatch[0]}};"></view>
+          <view class="swatch-dot" style="background: {{item.swatch[1]}};"></view>
+          <view class="swatch-dot" style="background: {{item.swatch[2]}};"></view>
+        </view>
+        <view class="theme-info">
+          <view class="theme-name">{{item.name}}</view>
+          <view class="theme-desc">{{item.desc}}</view>
+        </view>
+        <view class="theme-check" wx:if="{{item.active}}">使用中</view>
+      </view>
+    </view>
+      </view>
+    </view>
+
+    <view class="acc {{openSection === 'remind' ? 'open' : ''}}">
+      <view class="acc-head" data-key="remind" bindtap="toggleSection">
+        <view class="acc-title">提醒方式</view>
+        <view class="acc-hint">{{remindHint}}</view>
+        <view class="acc-arrow">{{openSection === 'remind' ? '▾' : '▸'}}</view>
+      </view>
+      <view class="acc-body" wx:if="{{openSection === 'remind'}}">
+    <view class="option-grid">
+      <view class="option-card {{soundMode === item.key ? 'active' : ''}}" wx:for="{{soundModes}}" wx:key="key" data-key="{{item.key}}" bindtap="setSoundMode">
+        <view class="option-name">{{item.name}}</view>
+        <view class="option-desc">{{item.desc}}</view>
+      </view>
+    </view>
+    <view class="sub-head" wx:if="{{soundMode === 'both' || soundMode === 'ring'}}">提示铃声 · 点一下试听</view>
+    <view class="ring-list" wx:if="{{soundMode === 'both' || soundMode === 'ring'}}">
+      <view class="ring-row {{ringKey === item.key ? 'active' : ''}}" wx:for="{{rings}}" wx:key="key" data-key="{{item.key}}" bindtap="selectRing">
+        <view class="ring-icon">♪</view>
+        <view class="ring-info">
+          <view class="ring-name">{{item.name}}</view>
+          <view class="ring-src">本地铃声 · {{item.key}}</view>
+        </view>
+        <view class="ring-state">{{ringKey === item.key ? '使用中' : '试听/选用'}}</view>
+      </view>
+    </view>
+      </view>
+    </view>
+
+    <view class="acc {{openSection === 'guard' ? 'open' : ''}}">
+      <view class="acc-head" data-key="guard" bindtap="toggleSection">
+        <view class="acc-title">专注保护</view>
+        <view class="acc-hint">训练中生效</view>
+        <view class="acc-arrow">{{openSection === 'guard' ? '▾' : '▸'}}</view>
+      </view>
+      <view class="acc-body" wx:if="{{openSection === 'guard'}}">
+    <view class="switch-list">
+      <view class="switch-row" data-key="keepScreenOn" bindtap="toggleSwitch">
+        <view class="switch-info">
+          <view class="switch-name">计时中保持屏幕常亮</view>
+          <view class="switch-desc">避免熄屏导致计时中断</view>
+        </view>
+        <view class="switch {{keepScreenOn ? 'on' : ''}}"><view class="knob"></view></view>
+      </view>
+      <view class="switch-row" data-key="exitGuard" bindtap="toggleSwitch">
+        <view class="switch-info">
+          <view class="switch-name">退出前二次确认</view>
+          <view class="switch-desc">训练未结束返回时弹提示</view>
+        </view>
+        <view class="switch {{exitGuard ? 'on' : ''}}"><view class="knob"></view></view>
+      </view>
+      <view class="switch-row" data-key="overtimeAlert" bindtap="toggleSwitch">
+        <view class="switch-info">
+          <view class="switch-name">超时强提醒</view>
+          <view class="switch-desc">总时间到持续震动并响铃</view>
+        </view>
+        <view class="switch {{overtimeAlert ? 'on' : ''}}"><view class="knob"></view></view>
+      </view>
+    </view>
+      </view>
+    </view>
+
+    <view class="acc {{openSection === 'habit' ? 'open' : ''}}">
+      <view class="acc-head" data-key="habit" bindtap="toggleSection">
+        <view class="acc-title">习惯模板</view>
+        <view class="acc-hint">已启用 {{selectedCount}}/{{presetLimit}}</view>
+        <view class="acc-arrow">{{openSection === 'habit' ? '▾' : '▸'}}</view>
+      </view>
+      <view class="acc-body" wx:if="{{openSection === 'habit'}}">
+    <view class="habit-presets">
+      <view class="habit-preset {{item.checked ? 'checked' : ''}}" wx:for="{{presetView}}" wx:key="key" data-key="{{item.key}}" bindtap="togglePreset">
+        <view class="habit-preset-main">
+          <view class="habit-preset-name">{{item.name}}</view>
+          <view class="habit-preset-desc">{{item.short}}</view>
+        </view>
+        <view class="habit-check">{{item.checked ? '✓' : ''}}</view>
+      </view>
+    </view>
+    <view class="habit-expand" wx:if="{{habitPresets.length > 4}}" bindtap="toggleExpand">
+      {{presetExpanded ? '收起' : '展开全部 ' + habitPresets.length + ' 个'}}
+    </view>
+
+      </view>
+    </view>
+
+    <view class="settings-tip">提醒设置会立即生效；铃声为内置本地音频，不消耗流量。</view>
+  </view>
+</view>
