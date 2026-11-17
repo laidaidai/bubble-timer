@@ -1,6 +1,7 @@
 {
   "pages": [
     "pages/index/index",
+    "pages/tools/tools",
     "pages/settings/settings",
     "pages/timer/timer",
     "pages/stats/stats",
@@ -15,5 +16,32 @@
   },
   "lazyCodeLoading": "requiredComponents",
   "style": "v2",
-  "sitemapLocation": "sitemap.json"
+  "sitemapLocation": "sitemap.json",
+  "tabBar": {
+    "color": "#8A7078",
+    "selectedColor": "#E36F8B",
+    "backgroundColor": "#FFFCF2",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页",
+        "iconPath": "assets/tabbar/timer-normal.png",
+        "selectedIconPath": "assets/tabbar/timer-active.png"
+      },
+      {
+        "pagePath": "pages/tools/tools",
+        "text": "工具",
+        "iconPath": "assets/tabbar/tools-normal.png",
+        "selectedIconPath": "assets/tabbar/tools-active.png"
+      },
+      {
+        "pagePath": "pages/history/history",
+        "text": "记录",
+        "iconPath": "assets/tabbar/records-normal.png",
+        "selectedIconPath": "assets/tabbar/records-active.png"
+      }
+    ],
+    "custom": true
+  }
 }

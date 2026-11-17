@@ -1,6 +1,8 @@
 <view class="app theme-{{theme}}" style="{{themeStyle}}">
   <view class="topbar">
-    <button class="back-icon" bindtap="handleBack">‹</button>
+    <button class="back-icon" wx:if="{{homeTimerOverride && view !== 'report'}}" bindtap="exitTimerOverride">‹</button>
+    <button class="back-icon" wx:elif="{{view === 'report'}}" bindtap="handleBack">‹</button>
+    <view class="topbar-spacer" wx:else></view>
     <view class="topbar-title" wx:if="{{view === 'report'}}">训练分析报告</view>
     <view class="topbar-title" wx:else>小鱼时钟</view>
     <view class="topbar-spacer"></view>
@@ -9,75 +11,100 @@
   <block wx:if="{{view === 'config'}}">
     <scroll-view class="config-scroll" scroll-y="{{!dragging}}" enhanced show-scrollbar="{{false}}" bindscroll="onConfigScroll" bindscrolltolower="onConfigBottom">
       <view class="page-content">
-        <view class="target-row">
-          <view class="hero-card">
-            <view class="hero-main">
-              <view class="eyebrow">目标时间</view>
-              <view class="total-target"><text class="num">{{totalMinutes}}</text><text class="unit">分钟</text></view>
-              <view class="hero-sub"><text class="num">{{modules.length}}</text> 个模块 · 顺序计时</view>
-            </view>
-            <view class="clock-badge">◷</view>
-          </view>
-          <button class="history-button" bindtap="openHistory">本地记录</button>
-        </view>
-
-        <view class="control-bar">
-          <view class="mode-capsule">
-            <view class="mode-seg {{mode === item.key ? 'on' : ''}}" wx:for="{{modes}}" wx:key="key" data-key="{{item.key}}" bindtap="chooseMode">{{item.name}}</view>
-          </view>
-          <button class="primary-button" bindtap="startTraining" disabled="{{!modules.length}}">开始计时 <text>▶</text></button>
-        </view>
-
-        <view class="section-title-row">
-          <view class="section-title">训练模块</view>
-          <view class="muted">按住 ☰ 拖动排序</view>
-        </view>
-
-        <view class="template-list quick-templates">
-          <view class="template-list-label">模板 · 点击切换，长按删除</view>
-          <view class="template-list-pills">
-            <view class="template-pick {{item.name === templateName ? 'active' : ''}}" wx:for="{{templates}}" wx:key="name" data-index="{{index}}" data-name="{{item.name}}" bindtap="loadTemplate" bindlongpress="removeTemplate">{{item.name}}</view>
-            <view class="template-pick template-add" bindtap="openTemplateModal">＋ 新建模板</view>
-          </view>
-        </view>
-
-        <view class="module-card {{dragIndex === index ? 'dragging' : ''}} {{dragging && dragIndex !== index ? 'drag-mode' : ''}} {{templateSwitching ? 'module-switching' : ''}}" style="{{dragIndex === index ? dragStyle : settleIndex === index ? settleStyle : dragStyles[index]}}" wx:for="{{modules}}" wx:key="id" data-index="{{index}}" bindtouchstart="touchStart" bindlongpress="activateDrag" bindtouchmove="touchMove" bindtouchend="touchEnd" bindtouchcancel="touchEnd">
-          <view class="module-head">
-            <input class="module-name" value="{{item.name}}" data-index="{{index}}" bindinput="changeModuleName" bindblur="normalizeModuleName" maxlength="20" />
-            <button class="delete-button" data-index="{{index}}" catchtap="removeModule">×</button>
-          </view>
-          <view class="duration-row">
-            <view class="stepper">
-              <button class="round-small" data-index="{{index}}" data-step="-1" bindtap="adjustMinutes">−</button>
-              <input class="minute-input num" type="number" value="{{item.targetMinutes}}" data-index="{{index}}" bindinput="changeMinutes" />
-              <button class="round-small" data-index="{{index}}" data-step="1" bindtap="adjustMinutes">＋</button>
-            </view>
-            <view class="slider-wrap">
-              <slider class="duration-slider" min="0" max="60" step="1" value="{{item.targetMinutes}}" data-index="{{index}}" bindchanging="changeSlider" bindchange="changeSlider" activeColor="{{sliderActive}}" backgroundColor="{{sliderTrack}}" blockColor="{{sliderBlock}}" />
-              <view class="slider-labels"><text><text class="num">0</text>M</text><text><text class="num">30</text>M</text><text><text class="num">60</text>M</text></view>
+        <block wx:if="{{homePrimary === 'timer' || homeTimerOverride}}">
+          <view class="target-row">
+            <view class="hero-card">
+              <view class="hero-main">
+                <view class="eyebrow">目标时间</view>
+                <view class="total-target"><text class="num">{{totalMinutes}}</text><text class="unit">分钟</text></view>
+              </view>
+              <view class="tomato-board {{tomatoPop ? 'pop' : ''}}" wx:if="{{tomatoCount}}">
+                <view class="tomato-grid">
+                  <view class="tomato" wx:for="{{tomatoIcons}}" wx:key="*this"></view>
+                </view>
+              </view>
             </view>
           </view>
-          <view class="module-foot" data-index="{{index}}" catchtouchstart="handleTouchStart" catchtouchmove="touchMove" catchtouchend="touchEnd" catchtouchcancel="touchEnd"><text class="drag-handle">☰</text></view>
-        </view>
 
-        <view class="add-bottom" wx:if="{{addVisible && modules.length < 8}}" bindtap="openPresetSheet">＋ 添加模块</view>
+          <view class="control-bar">
+            <view class="mode-capsule">
+              <view class="mode-seg {{mode === item.key ? 'on' : ''}}" wx:for="{{modes}}" wx:key="key" data-key="{{item.key}}" bindtap="chooseMode">{{item.name}}</view>
+            </view>
+            <button class="primary-button" bindtap="startTraining" disabled="{{!modules.length}}">开始计时 <text>▶</text></button>
+          </view>
+
+          <view class="home-feature home-feature-in-timer" wx:if="{{homeImportantPreview.length}}">
+            <view class="home-feature-important-grid count-{{homeImportantPreview.length}}">
+              <view class="home-feature-important-card {{item.soon ? 'soon' : ''}} {{item.isPast ? 'past' : ''}}" wx:for="{{homeImportantPreview}}" wx:key="id" bindtap="goTools">
+                <view class="home-feature-important-name-row"><text class="home-feature-important-name">{{item.name}}</text></view>
+                <view class="home-feature-important-count"><text class="home-feature-important-num num">{{item.countdownNumber}}</text><text class="home-feature-important-unit" wx:if="{{item.countdownUnit}}">{{item.countdownUnit}}</text></view>
+              </view>
+            </view>
+          </view>
+
+
+          <view class="section-title-row">
+            <view class="section-title-main">
+              <view class="section-title">训练模块</view>
+              <view class="template-plus" bindtap="openTemplateModal">＋</view>
+            </view>
+            <text class="template-save" bindtap="saveCurrentTemplate">保存</text>
+          </view>
+
+          <view class="template-list quick-templates" wx:if="{{templates.length}}">
+            <view class="template-list-pills">
+              <view class="template-pick {{item.name === templateName ? 'active' : ''}}" wx:for="{{templates}}" wx:key="name" data-index="{{index}}" data-name="{{item.name}}" bindtap="loadTemplate" bindlongpress="removeTemplate">{{item.name}}</view>
+            </view>
+          </view>
+
+          <view class="module-card {{dragIndex === index ? 'dragging' : ''}} {{dragging && dragIndex !== index ? 'drag-mode' : ''}} {{templateSwitching ? 'module-switching' : ''}}" style="{{dragIndex === index ? dragStyle : settleIndex === index ? settleStyle : dragStyles[index]}}" wx:for="{{modules}}" wx:key="id" data-index="{{index}}" bindtouchstart="touchStart" bindlongpress="activateDrag" bindtouchmove="touchMove" bindtouchend="touchEnd" bindtouchcancel="touchEnd">
+            <view class="module-head">
+              <input class="module-name" value="{{item.name}}" data-index="{{index}}" bindinput="changeModuleName" bindblur="normalizeModuleName" maxlength="20" />
+              <button class="delete-button" data-index="{{index}}" catchtap="removeModule">×</button>
+            </view>
+            <view class="duration-row">
+              <view class="stepper">
+                <button class="round-small" data-index="{{index}}" data-step="-1" bindtap="adjustMinutes">−</button>
+                <input class="minute-input num" type="number" value="{{item.targetMinutes}}" data-index="{{index}}" bindinput="changeMinutes" />
+                <button class="round-small" data-index="{{index}}" data-step="1" bindtap="adjustMinutes">＋</button>
+              </view>
+              <view class="slider-wrap">
+                <slider class="duration-slider" min="0" max="60" step="1" value="{{item.targetMinutes}}" data-index="{{index}}" bindchanging="changeSlider" bindchange="changeSlider" activeColor="{{sliderActive}}" backgroundColor="{{sliderTrack}}" blockColor="{{sliderBlock}}" block-size="20" />
+              </view>
+            </view>
+            <view class="module-foot" data-index="{{index}}" catchtouchstart="handleTouchStart" catchtouchmove="touchMove" catchtouchend="touchEnd" catchtouchcancel="touchEnd"><text class="drag-handle">☰</text></view>
+          </view>
+
+          <view class="add-module-row" wx:if="{{addVisible && modules.length < 8}}"><view class="add-module-plus" bindtap="openPresetSheet">＋</view></view>
+        </block>
+
+        <block wx:elif="{{homePrimary === 'important'}}">
+          <view class="home-feature">
+            <view class="home-feature-important-grid {{homeImportantPreview.length === 1 ? 'single' : ''}}" wx:if="{{homeImportantPreview.length}}">
+              <view class="home-feature-important-card {{item.soon ? 'soon' : ''}} {{item.isPast ? 'past' : ''}}" wx:for="{{homeImportantPreview}}" wx:key="id" bindtap="goTools">
+                <view class="home-feature-important-name-row"><text class="home-feature-important-name">{{item.name}}</text></view>
+                <view class="home-feature-important-count"><text class="home-feature-important-num num">{{item.countdownNumber}}</text><text class="home-feature-important-unit" wx:if="{{item.countdownUnit}}">{{item.countdownUnit}}</text></view>
+              </view>
+            </view>
+            <view class="home-feature-add" wx:else bindtap="goTools">＋</view>
+          </view>
+        </block>
+
+        <block wx:elif="{{homePrimary === 'stats'}}">
+          <view class="home-feature" bindtap="openStatsPage">
+            <view class="home-feature-head">
+              <text class="home-feature-title">打卡</text>
+
+            </view>
+            <view class="home-feature-stats">
+              <text class="home-feature-percent num">{{homeStats.percent || 0}}%</text>
+              <view class="home-feature-bar"><view class="home-feature-bar-fill" style="width: {{homeStats.percent || 0}}%;"></view></view>
+              <text class="home-feature-streak">{{homeStats.streak || 0}} 天</text>
+            </view>
+          </view>
+        </block>
       </view>
     </scroll-view>
-    <view class="dock">
-      <view class="dock-item" data-tab="overview" bindtap="openStats">
-        <view class="dock-ico di-bars"><view class="db b1"></view><view class="db b2"></view><view class="db b3"></view></view>
-      </view>
-      <view class="dock-item" data-tab="todo" bindtap="openStats">
-        <view class="dock-ico di-todo"><view class="tick t1"></view><view class="tick t2"></view></view>
-      </view>
-      <view class="dock-item" bindtap="openSettings">
-        <view class="dock-ico di-slide">
-          <view class="sl l1"></view><view class="kn k1"></view>
-          <view class="sl l2"></view><view class="kn k2"></view>
-          <view class="sl l3"></view><view class="kn k3"></view>
-        </view>
-      </view>
-    </view>
   </block>
 
 
@@ -106,12 +133,12 @@
         </view>
       </view>
 
-      <view class="rp-tips {{report.shortestName ? '' : 'single'}}" wx:if="{{report.slowestName}}">
+      <view class="rp-tips {{(!report.shortestName || report.shortestName === report.slowestName) ? 'single' : ''}}" wx:if="{{report.slowestName}}">
         <view class="rp-tip">
           <view class="rp-tip-k">最耗时</view>
           <view class="rp-tip-v">{{report.slowestName}} <text class="num">{{report.slowestText}}</text></view>
         </view>
-        <view class="rp-tip" wx:if="{{report.shortestName}}">
+        <view class="rp-tip" wx:if="{{report.shortestName && report.shortestName !== report.slowestName}}">
           <view class="rp-tip-k">最短时</view>
           <view class="rp-tip-v">{{report.shortestName}} <text class="num">{{report.shortestText}}</text></view>
         </view>
@@ -120,7 +147,6 @@
       <view class="rp-list">
         <view class="rp-list-head">
           <text class="rp-list-title">模块用时</text>
-          <text class="rp-list-sub">实际 / 目标</text>
         </view>
         <view class="rp-item" wx:for="{{reportView}}" wx:key="id">
           <view class="rp-item-head">
@@ -128,12 +154,8 @@
             <view class="rp-item-time"><text class="num">{{item.actualText}}</text><text class="rp-item-target">/ {{item.targetMinutes}}:00</text></view>
           </view>
           <view class="rp-item-track"><view class="rp-item-fill fill-{{item.statusCode}}" style="width:{{item.actualPercent}}%"></view></view>
-          <view class="rp-item-foot"><text class="rp-item-status s-{{item.statusCode}}">{{item.statusLabel}}</text><text class="rp-item-delta num">{{item.actualPercent}}%</text></view>
         </view>
-        <view class="rp-more" wx:if="{{report.rows.length > 5}}" bindtap="toggleReportRows">{{reportExpanded ? '收起' : '展开全部 ' + report.rows.length + ' 个'}}</view>
       </view>
-
-      <view class="rp-quote">{{report.quote}}</view>
 
       <view class="rp-actions">
         <view class="rp-action-row">
@@ -150,13 +172,12 @@
   <view class="modal-mask" wx:if="{{presetSheetOpen}}" catchtouchmove="blockTouch" bindtap="closePresetSheet">
     <view class="modal-card" catchtap="blockTouch">
       <view class="modal-title">添加训练模块</view>
-      <view class="modal-desc">选一个常用模块，会自动带上常用时长</view>
       <view class="preset-grid">
         <view class="preset-chip" wx:for="{{presets}}" wx:key="name" data-index="{{index}}" bindtap="pickPreset">{{item.name}}<text class="preset-min num">{{item.minutes}}M</text></view>
       </view>
       <view class="modal-actions">
         <button class="modal-cancel" bindtap="closePresetSheet">取消</button>
-        <button class="modal-confirm" bindtap="pickCustom">＋ 自定义模块</button>
+        <button class="modal-confirm" bindtap="pickCustom">自定义</button>
       </view>
     </view>
   </view>
@@ -164,11 +185,41 @@
   <view class="modal-mask" wx:if="{{templateModalOpen}}" catchtouchmove="blockTouch" bindtap="closeTemplateModal">
     <view class="modal-card" catchtap="blockTouch">
       <view class="modal-title">新建模板</view>
-      <view class="modal-desc">把当前的模块顺序与目标时长存成一个模板</view>
       <input class="modal-input" value="{{newTemplateName}}" placeholder="例如：周末训练" maxlength="12" focus="{{templateModalOpen}}" confirm-type="done" bindinput="onTemplateNameInput" bindconfirm="confirmTemplate" />
       <view class="modal-actions">
         <button class="modal-cancel" bindtap="closeTemplateModal">取消</button>
         <button class="modal-confirm" bindtap="confirmTemplate">保存模板</button>
+      </view>
+    </view>
+  </view>
+
+  <view class="modal-mask" wx:if="{{importantModalOpen}}" catchtouchmove="blockTouch" bindtap="closeImportantModal">
+    <view class="modal-card important-modal" catchtap="blockTouch">
+      <view class="modal-title">{{importantEditingId ? '编辑重要日子' : '添加重要日子'}}</view>
+      <input class="modal-input" value="{{importantName}}" placeholder="例如：考研初试、妈妈的生日" maxlength="16" focus="{{importantModalOpen}}" confirm-type="done" bindinput="onImportantNameInput" bindconfirm="saveImportantDate" />
+      <view class="important-form-row">
+        <view class="important-date-btn {{importantCalendarOpen ? 'on' : ''}}" bindtap="toggleImportantCalendar">
+          <text class="important-date-label">日期</text>
+          <text class="important-date-value">{{importantDateText}}</text>
+        </view>
+        <view class="important-yearly {{importantYearly ? 'on' : ''}}" bindtap="toggleImportantYearly">每年重复</view>
+      </view>
+      <view class="important-calendar" wx:if="{{importantCalendarOpen}}">
+        <view class="important-cal-head">
+          <view class="important-cal-nav" data-step="-1" catchtap="shiftImportantMonth">‹</view>
+          <text class="important-cal-title">{{importantCalTitle}}</text>
+          <view class="important-cal-nav" data-step="1" catchtap="shiftImportantMonth">›</view>
+        </view>
+        <view class="important-cal-weekdays">
+          <text class="important-cal-weekday" wx:for="{{importantCalWeekLabels}}" wx:key="*this">{{item}}</text>
+        </view>
+        <view class="important-cal-row" wx:for="{{importantCalRows}}" wx:key="key" wx:for-item="row">
+          <view class="important-cal-cell {{cell.empty ? 'empty' : ''}} {{cell.selected ? 'selected' : ''}} {{cell.today ? 'today' : ''}}" wx:for="{{row.cells}}" wx:for-item="cell" wx:key="key" data-key="{{cell.key}}" bindtap="selectImportantDay">{{cell.day}}</view>
+        </view>
+      </view>
+      <view class="modal-actions">
+        <button class="modal-cancel" bindtap="closeImportantModal">取消</button>
+        <button class="modal-confirm" bindtap="saveImportantDate">{{importantEditingId ? '保存修改' : '添加'}}</button>
       </view>
     </view>
   </view>

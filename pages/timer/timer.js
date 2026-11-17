@@ -5,8 +5,23 @@ const CLOCK_STYLES = [
   { key: 'flip', name: '翻页时钟' },
   { key: 'digital', name: '数字时钟' },
   { key: 'blocks', name: '积木方块' },
-  { key: 'minimal', name: '极简线条' }
+  { key: 'minimal', name: '极简线条' },
+  { key: 'led', name: 'LED 灯' }
 ]
+
+// 七段数码管：a, b, c, d, e, f, g
+const LED_PATTERNS = {
+  '0': [1, 1, 1, 1, 1, 1, 0],
+  '1': [0, 1, 1, 0, 0, 0, 0],
+  '2': [1, 1, 0, 1, 1, 0, 1],
+  '3': [1, 1, 1, 1, 0, 0, 1],
+  '4': [0, 1, 1, 0, 0, 1, 1],
+  '5': [1, 0, 1, 1, 0, 1, 1],
+  '6': [1, 0, 1, 1, 1, 1, 1],
+  '7': [1, 1, 1, 0, 0, 0, 0],
+  '8': [1, 1, 1, 1, 1, 1, 1],
+  '9': [1, 1, 1, 1, 0, 1, 1]
+}
 
 const FOCUS_SECONDS = 25 * 60
 const REST_SECONDS = 5 * 60
@@ -19,17 +34,18 @@ Page({
     globalSeconds: 0, moduleSeconds: 0,
     globalTimeText: '00:00:00', moduleTimeText: '00:00:00', mainTimeText: '00:00:00',
     progressPercent: 0, isPaused: false, isOvertime: false, isHolding: false,
-    clockStyle: 'flip', clockStyleName: '翻页时钟', flipPairs: [], flipDigits: [], flipPhase: false,
-    msText: '000', showStyleHint: false, theme: 'cream', themeStyle: '',
+    clockStyle: 'flip', clockStyleName: '翻页时钟', flipCells: [], flipDigits: [], ledDigits: [], flipPhase: false,
+    msText: '000', theme: 'rose', themeStyle: '',
     isLastModule: false, isFirstModule: true,
     mode: 'countup', modeName: '正计时', mainLabel: '总用时',
-    phaseLabel: '', phaseText: ''
+    phaseLabel: '', phaseText: '', tickMuted: true, compact: true, immersive: false
   },
 
   onLoad() {
-    const theme = app.getTheme ? app.getTheme() : { key: 'cream' }
+    const theme = app.getTheme ? app.getTheme() : { key: 'rose' }
     const settings = app.getSettings ? app.getSettings() : {}
-    this.setData({ theme: theme.key, themeStyle: theme.style || '' })
+    this.tickAudioFlip = false
+    this.setData({ theme: theme.key, themeStyle: theme.style || '', tickMuted: settings.tickSound !== true, compact: true })
     if (app.applyNavBar) app.applyNavBar()
 
     const session = wx.getStorageSync(app.globalData.storageKey)
@@ -64,7 +80,6 @@ Page({
       modeName: modeInfo ? modeInfo.name : '正计时'
     }, () => {
       this.updateDisplay()
-      this.showStyleHint()
       if (!this.data.isPaused) {
         this.startTicker()
         this.startMsTicker()
@@ -80,12 +95,6 @@ Page({
     if (settings.exitGuard && wx.enableAlertBeforeUnload) {
       wx.enableAlertBeforeUnload({ message: '训练还在进行，确定要退出吗？' })
     }
-  },
-
-  showStyleHint() {
-    clearTimeout(this.styleHintTimer)
-    this.setData({ showStyleHint: true })
-    this.styleHintTimer = setTimeout(() => this.setData({ showStyleHint: false }), 2400)
   },
 
   startMsTicker() {
@@ -112,7 +121,6 @@ Page({
     this.setData({ clockStyle: next.key, clockStyleName: next.name })
     wx.setStorageSync(app.globalData.clockStyleKey, next.key)
     if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
-    this.showStyleHint()
   },
 
   onHide() {
@@ -128,16 +136,21 @@ Page({
     this.stopTicker()
     this.stopMsTicker()
     this.stopTotalBuzz()
-    clearTimeout(this.styleHintTimer)
     if (wx.setKeepScreenOn) wx.setKeepScreenOn({ keepScreenOn: false, fail: () => {} })
     if (wx.disableAlertBeforeUnload) wx.disableAlertBeforeUnload()
     if (app.audioContext) app.audioContext.stop()
+    if (this.tickAudios) {
+      Object.keys(this.tickAudios).forEach(key => {
+        try { this.tickAudios[key].destroy() } catch (error) {}
+      })
+      this.tickAudios = null
+    }
   },
 
   startTicker() {
     this.stopTicker()
     this.lastTickAt = Date.now()
-    this.timer = setInterval(() => this.tick(), 1000)
+    this.timer = setInterval(() => this.tick(true), 1000)
   },
 
   stopTicker() {
@@ -145,12 +158,42 @@ Page({
     this.timer = null
   },
 
-  tick() {
+  tick(withSound) {
     if (this.data.isPaused || this.finished) return
     const elapsed = Math.floor((Date.now() - this.lastTickAt) / 1000)
     if (!elapsed) return
     this.lastTickAt += elapsed * 1000
+    if (withSound) this.playTick()
     this.accumulate(elapsed)
+  },
+
+  playTick() {
+    if (this.data.tickMuted) return
+    this.tickAudioFlip = !this.tickAudioFlip
+    const key = this.tickAudioFlip ? 'a' : 'b'
+    try {
+      this.tickAudios = this.tickAudios || {}
+      let audio = this.tickAudios[key]
+      if (!audio) {
+        audio = wx.createInnerAudioContext()
+        audio.src = `/assets/audio/tick-${key}.m4a`
+        audio.volume = 0.3
+        audio.obeyMuteSwitch = true
+        this.tickAudios[key] = audio
+      }
+      audio.stop()
+      audio.play()
+    } catch (error) { /* 播放失败不影响计时 */ }
+  },
+
+  toggleTick() {
+    const muted = !this.data.tickMuted
+    this.setData({ tickMuted: muted }, () => {
+      if (app.saveSettings) app.saveSettings({ tickSound: !muted })
+      this.persistSession()
+      if (!muted) this.playTick()
+    })
+    if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
   },
 
   accumulate(elapsed) {
@@ -334,11 +377,22 @@ Page({
       phaseText = this.pomodoroPhase === 'focus' ? 'FOCUS' : 'BREAK'
     }
 
-    const lastPairs = this.lastPairText || ['', '', '']
-    const flipPairs = mainTimeText.split(':').map((text, index) => ({ key: `pair-${index}`, text, changed: text !== lastPairs[index] }))
+    const previousTimeText = this.lastTimeText || mainTimeText
+    const flipCells = mainTimeText.split('').map((text, index) => ({
+      key: `flip-${index}`,
+      text,
+      oldText: previousTimeText[index] || text,
+      changed: text !== (previousTimeText[index] || text),
+      sep: text === ':'
+    }))
     const flipDigits = mainTimeText.split('').map((text, index) => ({ key: `digit-${index}`, text, sep: text === ':' }))
-    this.lastPairText = flipPairs.map(item => item.text)
-    if (flipPairs.some(item => item.changed)) this.flipPhase = !this.flipPhase
+    const ledDigits = mainTimeText.split('').map((text, index) => ({
+      key: `led-${index}`,
+      sep: text === ':',
+      segs: LED_PATTERNS[text] || [0, 0, 0, 0, 0, 0, 0]
+    }))
+    this.lastTimeText = mainTimeText
+    if (flipCells.some(item => item.changed)) this.flipPhase = !this.flipPhase
 
     this.setData({
       currentModule,
@@ -352,10 +406,17 @@ Page({
       isOvertime: this.data.moduleSeconds > targetSeconds,
       isLastModule: this.data.currentIndex >= this.data.runtimeModules.length - 1,
       isFirstModule: this.data.currentIndex <= 0,
-      flipPairs,
+      flipCells,
       flipDigits,
+      ledDigits,
       flipPhase: !!this.flipPhase
     })
+  },
+
+  toggleImmersive() {
+    const immersive = !this.data.immersive
+    this.setData({ immersive })
+    if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
   },
 
   togglePause() {
@@ -454,7 +515,8 @@ Page({
       totalTargetSeconds: this.totalTargetSeconds,
       pomodoroPhase: this.pomodoroPhase,
       phaseRemaining: this.phaseRemaining,
-      pomodoroCycle: this.pomodoroCycle
+      pomodoroCycle: this.pomodoroCycle,
+      tickSound: !this.data.tickMuted
     })
   },
 
@@ -464,6 +526,7 @@ Page({
   },
 
   finish(modules) {
+    if (this.finished) return
     this.stopTicker()
     this.stopMsTicker()
     this.stopTotalBuzz()
@@ -497,6 +560,7 @@ Page({
         modules: rows.length
       })
     }
+    if (app.addTomato) app.addTomato(1)
     wx.removeStorageSync(app.globalData.storageKey)
     wx.navigateBack()
   }

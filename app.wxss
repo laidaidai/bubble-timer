@@ -77,6 +77,55 @@ page, .theme-cream {
   --warn-text: #7A5A1C;
 }
 
+.theme-tomato {
+  --bg: #FFF4E4;
+  --card: #FFFDF6;
+  --panel: #5A1F1A;
+  --panel-deep: #421410;
+  --ink: #3D1F18;
+  --edge: #3D1F18;
+  --edge-deep: #2E1310;
+  --shadow: #4A1E18;
+  --shadow-soft: #EAC4B4;
+  --text-2: #A67C5F;
+  --text-3: #BE9B7F;
+  --text-4: #D2B59A;
+  --text-warm: #9A5A3A;
+  --text-mid: #85503A;
+  --text-dim: #6B3A2C;
+  --on-panel: #FFF9E8;
+  --on-panel-warm: #FFD84D;
+  --accent-text: #FFEAA8;
+  --accent-bg: #FFD84D;
+  --cream-1: #FFF9ED;
+  --cream-2: #FFEFC9;
+  --cream-3: #FFE7AE;
+  --cream-4: #FFE3A2;
+  --line: #F0D7B8;
+  --line-2: #F5E2C8;
+  --line-strong: #E1BFA0;
+  --track: #F6D6C8;
+  --bar-target: #D9A174;
+  --bar-incomplete: #C99B8A;
+  --chip-neutral: #F8E4D2;
+  --primary: #F2603C;
+  --primary-2: #D9482B;
+  --primary-3: #C93B26;
+  --on-primary: #FFF8E1;
+  --nav: #F27A52;
+  --nav-front: #FFFFFF;
+  --success: #4F9B74;
+  --success-text: #2F7A55;
+  --success-bg: #DDF3E8;
+  --success-line: #A9D8C0;
+  --danger: #D62828;
+  --danger-text: #A51D18;
+  --danger-bg: #FFE3DE;
+  --danger-line: #F0C2B8;
+  --warn-bg: #FFF0B8;
+  --warn-text: #7A5312;
+}
+
 .theme-rose {
   --bg: #FFF1F3;
   --card: #FFFBFC;

@@ -8,6 +8,14 @@
 .seg.on { color: var(--on-primary); background: var(--primary); box-shadow: 5rpx 5rpx 0 var(--shadow); }
 
 .pane { margin-top: 26rpx; }
+.home-primary-list { display: flex; flex-direction: column; gap: 14rpx; }
+.home-primary-item { display: flex; align-items: center; gap: 16rpx; padding: 24rpx; background: var(--card); border: 2rpx solid var(--edge); border-radius: 22rpx; box-shadow: 4rpx 5rpx 0 var(--shadow-soft); }
+.home-primary-item.on { background: var(--cream-2); border-width: 3rpx; }
+.home-primary-radio { flex: 0 0 36rpx; width: 36rpx; height: 36rpx; display: flex; align-items: center; justify-content: center; background: var(--cream-1); border: 2rpx solid var(--line-strong); border-radius: 50%; }
+.home-primary-dot { width: 20rpx; height: 20rpx; background: var(--primary); border-radius: 50%; transform: scale(0); transition: transform .15s ease; }
+.home-primary-item.on .home-primary-radio { border-color: var(--edge); }
+.home-primary-item.on .home-primary-dot { transform: scale(1); }
+.home-primary-name { color: var(--ink); font-size: 27rpx; font-weight: 900; }
 .pane-tip, .pane-sub { margin-bottom: 16rpx; color: var(--text-warm); font-size: 22rpx; font-weight: 700; }
 .pane-more { margin-top: 20rpx; padding: 18rpx; color: var(--text-mid); text-align: center; background: var(--cream-1); border: 2rpx solid var(--edge); border-radius: 999rpx; font-size: 22rpx; font-weight: 800; }
 
@@ -65,3 +73,9 @@
 /* 自定义铃声 */
 .ring-actions { margin-top: 16rpx; display: flex; gap: 12rpx; }
 .ring-action { padding: 16rpx 26rpx; color: var(--ink); background: var(--cream-1); border: 2rpx solid var(--edge); border-radius: 999rpx; box-shadow: 4rpx 4rpx 0 var(--shadow-soft); font-size: 22rpx; font-weight: 800; }
+
+/* 本地数据 */
+.data-zone { margin-top: 42rpx; padding: 26rpx; background: var(--card); border: 2rpx solid var(--edge); border-radius: 24rpx; box-shadow: 5rpx 5rpx 0 var(--shadow-soft); }
+.data-title { color: var(--ink); font-size: 25rpx; font-weight: 900; }
+.data-desc { margin-top: 8rpx; color: var(--text-2); font-size: 20rpx; line-height: 1.7; }
+.data-clear-btn { display: flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box; margin: 20rpx 0 0; padding: 18rpx 10rpx; color: #FFFFFF; background: var(--danger); border: 2rpx solid var(--edge); border-radius: 999rpx; box-shadow: 4rpx 5rpx 0 var(--shadow); font-size: 23rpx; font-weight: 900; line-height: 1.3; }

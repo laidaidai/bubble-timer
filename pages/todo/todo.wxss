@@ -19,14 +19,14 @@
 .todo-list { display: flex; flex-direction: column; gap: 14rpx; }
 .todo-item { display: flex; align-items: center; gap: 18rpx; padding: 22rpx 22rpx; background: var(--card); border: 2rpx solid var(--edge); border-radius: 22rpx; box-shadow: 4rpx 5rpx 0 var(--shadow-soft); }
 .todo-item.done { background: var(--cream-1); box-shadow: 3rpx 3rpx 0 var(--shadow-soft); }
-.todo-check { flex: 0 0 46rpx; width: 46rpx; height: 46rpx; display: flex; align-items: center; justify-content: center; background: var(--cream-2); border: 2rpx solid var(--edge); border-radius: 50%; }
+.todo-check { flex: 0 0 48rpx; width: 48rpx; height: 48rpx; display: flex; align-items: center; justify-content: center; background: var(--cream-2); border: 2rpx solid var(--edge); border-radius: 50%; }
 .todo-check.checked { background: var(--success); }
 .check-mark { color: var(--card); font-size: 24rpx; font-weight: 900; line-height: 1; }
 .todo-main { flex: 1; min-width: 0; }
-.todo-text { font-size: 26rpx; font-weight: 800; line-height: 1.4; word-break: break-all; }
+.todo-text { font-size: 28rpx; font-weight: 800; line-height: 1.4; word-break: break-all; }
 .todo-item.done .todo-text { color: var(--text-3); text-decoration: line-through; }
 .todo-meta { margin-top: 6rpx; display: flex; align-items: center; gap: 12rpx; }
-.todo-due { color: var(--text-2); font-size: 20rpx; font-weight: 700; }
+.todo-due { color: var(--text-2); font-size: 21rpx; font-weight: 700; }
 .todo-due.overdue { color: var(--danger-text); }
 .todo-remind { padding: 2rpx 10rpx; color: var(--text-mid); background: var(--cream-2); border-radius: 999rpx; font-size: 18rpx; }
 .todo-edit { flex: 0 0 auto; color: var(--text-4); font-size: 26rpx; font-weight: 900; }

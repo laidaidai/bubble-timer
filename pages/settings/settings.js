@@ -23,8 +23,8 @@ const buildGroups = (conf) => {
 
 Page({
   data: {
-    theme: 'cream',
-    themeName: '蜂蜜奶霜',
+    theme: 'rose',
+    themeName: '蜜桃雪酪',
     themeStyle: '',
     themes: [],
     rings: [],
@@ -34,6 +34,13 @@ Page({
     keepScreenOn: true,
     exitGuard: true,
     overtimeAlert: true,
+    tickSound: false,
+    homePrimary: 'timer',
+    homePrimaryOptions: [
+      { key: 'timer', name: '计时' },
+      { key: 'important', name: '重要日子' },
+      { key: 'stats', name: '打卡' }
+    ],
     habitPresets: [],
     presetView: [],
     presetExpanded: false,
@@ -42,6 +49,7 @@ Page({
     selectedCount: 0,
     section: 'theme',
     sections: [
+      { key: 'home', name: '首页' },
       { key: 'theme', name: '主题' },
       { key: 'remind', name: '提醒' },
       { key: 'guard', name: '专注' },
@@ -110,6 +118,8 @@ Page({
       keepScreenOn: !!settings.keepScreenOn,
       exitGuard: !!settings.exitGuard,
       overtimeAlert: !!settings.overtimeAlert,
+      tickSound: settings.tickSound === true,
+      homePrimary: settings.homePrimary === 'todo' ? 'timer' : (settings.homePrimary || 'timer'),
       hasCustomRing: (app.getRings ? app.getRings() : []).some(item => String(item.key).indexOf('cr-') === 0 || item.key === 'custom')
     }
 
@@ -239,7 +249,7 @@ Page({
         if (!confirm) return
         const list = (settings.customThemes || []).filter(item => item.key !== key)
         const patch = { customThemes: list, customTheme: null }
-        if (settings.theme === key) patch.theme = 'cream'
+        if (settings.theme === key) patch.theme = 'rose'
         app.saveSettings(patch)
         this.setData({ showEditor: false, editorKey: '', customName: '' })
         this.refresh()
@@ -386,6 +396,15 @@ Page({
     wx.showToast({ title: next ? '已开启' : '已关闭', icon: 'none', duration: 1000 })
   },
 
+  selectHomePrimary(event) {
+    const key = event.currentTarget.dataset.key
+    if (!key) return
+    app.saveSettings({ homePrimary: key })
+    this.refresh()
+    if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
+    wx.showToast({ title: '已设为首页', icon: 'none', duration: 1000 })
+  },
+
   selectSection(event) {
     const key = event.currentTarget.dataset.key
     if (!key) return
@@ -482,6 +501,38 @@ Page({
       presetView: fold(allPresets, this.data.presetExpanded, 4),
       selectedKeys: valid,
       selectedCount: valid.length
+    })
+  },
+
+  clearLocalData() {
+    wx.showModal({
+      title: '清除全部本地数据？',
+      content: '训练记录、待办、模板、主题、铃声和设置都会被删除，且无法恢复。',
+      confirmText: '清除',
+      confirmColor: '#E8442F',
+      success: ({ confirm }) => {
+        if (!confirm) return
+        if (this.audio) this.audio.stop()
+        const settings = app.getSettings ? app.getSettings() : {}
+        const rings = Array.isArray(settings.customRings) ? settings.customRings : []
+        const fs = wx.getFileSystemManager ? wx.getFileSystemManager() : null
+        if (fs) {
+          rings.forEach(item => {
+            if (item && item.path) fs.unlink({ filePath: item.path, fail: () => {} })
+          })
+          if (settings.customRing && settings.customRing.path) {
+            fs.unlink({ filePath: settings.customRing.path, fail: () => {} })
+          }
+        }
+        try {
+          wx.clearStorageSync()
+        } catch (error) {
+          wx.showModal({ title: '清除失败', content: '请稍后重试', showCancel: false })
+          return
+        }
+        wx.showToast({ title: '本地数据已清除', icon: 'success' })
+        setTimeout(() => wx.reLaunch({ url: '/pages/index/index' }), 500)
+      }
     })
   },
 

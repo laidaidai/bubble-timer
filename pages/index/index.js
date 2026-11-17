@@ -9,9 +9,17 @@ const DEFAULT_MODULES = [
 ]
 
 const QUOTES = ['稳定节奏，持续精进。', '今天的坚持，是明天的底气。', '把时间用在真正重要的事情上。']
+const WEEK_LABELS = ['一', '二', '三', '四', '五', '六', '日']
+const TOMATO_SHOW_LIMIT = 8
 const app = getApp()
 
-const { pad, clock: formatTime, dateTimeText: formatDateTime, clone, fold } = require('../../utils/format')
+function importantDateText(key) {
+  const parts = String(key || '').split('-').map(Number)
+  if (!parts[0] || !parts[1] || !parts[2]) return ''
+  return `${parts[0]} 年 ${parts[1]} 月 ${parts[2]} 日`
+}
+
+const { pad, clock: formatTime, dateTimeText: formatDateTime, clone, fold, dateKey } = require('../../utils/format')
 
 Page({
   data: {
@@ -48,19 +56,47 @@ Page({
     settleStyle: '',
     templateModalOpen: false,
     newTemplateName: '',
-    theme: 'cream', themeStyle: '',
-    themeName: '蜂蜜奶霜',
-    sliderActive: '#E8A33D',
-    sliderTrack: '#F0E2C2',
-    sliderBlock: '#FFFDF6',
+    theme: 'rose', themeStyle: '',
+    themeName: '蜜桃雪酪',
+    sliderActive: '#EE7E99',
+    sliderTrack: '#F7E2E8',
+    sliderBlock: '#FF9FB6',
     mode: 'countup',
     modeName: '正计时',
-    modes: []
+    modes: [],
+    // 重要日子
+    importantDates: [],
+    importantModalOpen: false,
+    importantEditingId: '',
+    importantName: '',
+    importantDate: '',
+    importantDateText: '',
+    importantYearly: false,
+    importantCalendarOpen: false,
+    importantCalTitle: '',
+    importantCalRows: [],
+    importantCalWeekLabels: WEEK_LABELS,
+    // 番茄激励
+    tomatoCount: 0,
+    tomatoIcons: [],
+    tomatoCaption: '完成计时收番茄',
+    tomatoPop: false,
+    homePrimary: 'timer',
+    homeTimerOverride: false,
+    homeTodo: null,
+    homeTodoPreview: [],
+    homeImportantPreview: [],
+    homeStats: null,
+    // 首页只看最近 3 个倒计时
+    homeCountdowns: [],
+    homeCountdownCount: 0,
+    importantMore: 0,
+    importantLinkText: '管理 ›'
   },
 
   onLoad() {
     this.setOrientation('portrait')
-    const theme = app.getTheme ? app.getTheme() : { key: 'cream' }
+    const theme = app.getTheme ? app.getTheme() : { key: 'rose' }
     const modes = (app.modes || []).map(item => ({ ...item }))
     const savedMode = wx.getStorageSync(app.globalData.modeKey) || 'countup'
     const modeInfo = modes.find(item => item.key === savedMode) || modes[0]
@@ -95,6 +131,11 @@ Page({
         success: ({ confirm }) => confirm ? wx.navigateTo({ url: '/pages/timer/timer' }) : wx.removeStorageSync(app.globalData.storageKey)
       })
     }
+    this.loadImportantDates()
+    this.loadTomatoes()
+    this.loadHomeConfig()
+    this.loadHomeTodo()
+    this.loadHomeStats()
   },
 
   onHide() {
@@ -102,6 +143,10 @@ Page({
   },
 
   onShow() {
+    if (this.getTabBar && this.getTabBar()) this.getTabBar().sync()
+    const homeTimerRequest = wx.getStorageSync('exam-timer-home-timer')
+    if (homeTimerRequest) wx.removeStorageSync('exam-timer-home-timer')
+    this.setData({ homeTimerOverride: !!homeTimerRequest })
     const habitApply = wx.getStorageSync(app.globalData.habitApplyKey)
     if (habitApply) {
       wx.removeStorageSync(app.globalData.habitApplyKey)
@@ -152,6 +197,11 @@ Page({
       }
       if (app.applyNavBar) app.applyNavBar()
     }
+    this.loadImportantDates()
+    this.loadTomatoes()
+    this.loadHomeConfig()
+    this.loadHomeTodo()
+    this.loadHomeStats()
     setTimeout(() => this.measureConfigScroll(), 150)
     const report = wx.getStorageSync('exam-timer-pending-report')
     if (report) {
@@ -195,6 +245,290 @@ Page({
     clearTimeout(this.settleTimer)
     clearTimeout(this.settleTimer2)
     clearTimeout(this.templateSwitchTimer)
+    clearTimeout(this.tomatoPopTimer)
+  },
+
+  // ---- 重要日子倒计时 ----
+  loadHomeConfig() {
+    const settings = app.getSettings ? app.getSettings() : {}
+    let primary = settings.homePrimary || 'timer'
+    if (primary === 'todo') {
+      primary = 'timer'
+      if (app.saveSettings) app.saveSettings({ homePrimary: 'timer' })
+    }
+    this.setData({ homePrimary: primary })
+  },
+
+  loadHomeTodo() {
+    const todos = wx.getStorageSync(app.globalData.todoKey) || []
+    const pending = todos.filter(item => !item.done).sort((a, b) => {
+      const at = a.dueAt || Number.MAX_SAFE_INTEGER
+      const bt = b.dueAt || Number.MAX_SAFE_INTEGER
+      return at - bt
+    })
+    const preview = pending.slice(0, 3).map(item => {
+      const date = item.dueAt ? new Date(item.dueAt) : null
+      const todayKey = dateKey(new Date())
+      const timeText = date
+        ? (dateKey(date) === todayKey ? `${pad(date.getHours())}:${pad(date.getMinutes())}` : `${date.getMonth() + 1}/${date.getDate()} ${pad(date.getHours())}:${pad(date.getMinutes())}`)
+        : ''
+      return { id: item.id, text: item.text, timeText, overdue: !!(item.dueAt && item.dueAt < Date.now()) }
+    })
+    if (!pending.length) {
+      if (this.data.homeTodo || this.data.homeTodoPreview.length) this.setData({ homeTodo: null, homeTodoPreview: [] })
+      return
+    }
+    const todo = pending[0]
+    const date = todo.dueAt ? new Date(todo.dueAt) : null
+    const today = dateKey(new Date())
+    const timeText = date
+      ? (dateKey(date) === today ? `${pad(date.getHours())}:${pad(date.getMinutes())}` : `${date.getMonth() + 1}/${date.getDate()} ${pad(date.getHours())}:${pad(date.getMinutes())}`)
+      : ''
+    this.setData({
+      homeTodo: {
+        id: todo.id,
+        text: todo.text,
+        timeText,
+        overdue: !!(todo.dueAt && todo.dueAt < Date.now())
+      },
+      homeTodoPreview: preview
+    })
+  },
+
+  openTodoPage() {
+    wx.navigateTo({ url: '/pages/todo/todo' })
+  },
+
+  loadHomeStats() {
+    const summary = app.dailyStats ? app.dailyStats() : {}
+    this.setData({
+      homeStats: {
+        percent: summary.todayPercent || 0,
+        streak: summary.streak || 0,
+        weekDays: summary.weekDays || 0
+      }
+    })
+  },
+
+  openStatsPage() {
+    wx.navigateTo({ url: '/pages/stats/stats' })
+  },
+
+  exitTimerOverride() {
+    this.setData({ homeTimerOverride: false })
+  },
+
+  loadImportantDates() {
+    const raw = wx.getStorageSync(app.globalData.importantKey)
+    const list = (Array.isArray(raw) ? raw : []).map(item => ({
+      ...item,
+      id: item.id || `important-${item.date}-${item.name}`
+    }))
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const decorated = list.map(item => this.decorateImportant(item, today)).filter(Boolean)
+    decorated.sort((a, b) => {
+      const ap = a.diff < 0 ? 1 : 0
+      const bp = b.diff < 0 ? 1 : 0
+      if (ap !== bp) return ap - bp
+      return Math.abs(a.diff) - Math.abs(b.diff)
+    })
+    const homeCountdowns = decorated.slice(0, 3)
+    this.setData({
+      importantDates: decorated,
+      homeImportantPreview: decorated.slice(0, 3),
+      homeCountdowns,
+      homeCountdownCount: homeCountdowns.length,
+      importantMore: Math.max(0, decorated.length - homeCountdowns.length),
+      importantLinkText: decorated.length > 3 ? `全部 ${decorated.length} 个 ›` : '管理 ›'
+    })
+  },
+
+  decorateImportant(item, today) {
+    if (!item || !item.name || !item.date) return null
+    const parts = String(item.date).split('-').map(Number)
+    if (!parts[0] || !parts[1] || !parts[2]) return null
+    let diff = 0
+    if (item.yearly) {
+      let target = new Date(today.getFullYear(), parts[1] - 1, parts[2])
+      if (target < today) target = new Date(today.getFullYear() + 1, parts[1] - 1, parts[2])
+      diff = Math.round((target - today) / 86400000)
+    } else {
+      const target = new Date(parts[0], parts[1] - 1, parts[2])
+      diff = Math.round((target - today) / 86400000)
+    }
+    const isToday = diff === 0
+    return {
+      id: item.id || `important-${item.date}-${item.name}`,
+      name: item.name,
+      date: item.date,
+      yearly: !!item.yearly,
+      diff,
+      isToday,
+      daysAbs: Math.abs(diff),
+      countdownNumber: isToday ? '今天' : Math.abs(diff),
+      countdownUnit: isToday ? '' : (diff > 0 ? '天后' : '天前'),
+      dateText: item.yearly ? `${parts[1]} 月 ${parts[2]} 日` : `${parts[0]}.${pad(parts[1])}.${pad(parts[2])}`,
+      soon: diff >= 0 && diff <= 7,
+      isPast: diff < 0
+    }
+  },
+
+  openImportantModal() {
+    const today = dateKey(new Date())
+    this.setData({
+      importantModalOpen: true,
+      importantEditingId: '',
+      importantName: '',
+      importantDate: today,
+      importantDateText: importantDateText(today),
+      importantYearly: false,
+      importantCalendarOpen: false
+    })
+    this.refreshImportantCalendar(today)
+  },
+
+  editImportant(event) {
+    const id = event.currentTarget.dataset.id
+    const item = this.data.importantDates.find(entry => entry.id === id)
+    if (!item) return
+    this.setData({
+      importantModalOpen: true,
+      importantEditingId: item.id,
+      importantName: item.name,
+      importantDate: item.date,
+      importantDateText: importantDateText(item.date),
+      importantYearly: item.yearly,
+      importantCalendarOpen: false
+    })
+    this.refreshImportantCalendar(item.date)
+  },
+
+  closeImportantModal() {
+    this.setData({ importantModalOpen: false, importantCalendarOpen: false })
+  },
+
+  onImportantNameInput(event) {
+    this.setData({ importantName: event.detail.value })
+  },
+
+  toggleImportantYearly() {
+    this.setData({ importantYearly: !this.data.importantYearly })
+  },
+
+  toggleImportantCalendar() {
+    const open = !this.data.importantCalendarOpen
+    if (open) this.refreshImportantCalendar(this.data.importantDate || dateKey(new Date()))
+    this.setData({ importantCalendarOpen: open })
+  },
+
+  buildImportantCalendar(year, month, selectedKey) {
+    const first = new Date(year, month, 1)
+    const lead = (first.getDay() + 6) % 7
+    const days = new Date(year, month + 1, 0).getDate()
+    const todayKey = dateKey(new Date())
+    const cells = []
+    for (let i = 0; i < lead; i += 1) cells.push({ key: `pad-${i}`, empty: true })
+    for (let d = 1; d <= days; d += 1) {
+      const key = dateKey(new Date(year, month, d))
+      cells.push({ key, day: d, empty: false, selected: key === selectedKey, today: key === todayKey })
+    }
+    while (cells.length % 7 !== 0) cells.push({ key: `tail-${cells.length}`, empty: true })
+    const rows = []
+    for (let i = 0; i < cells.length; i += 7) rows.push({ key: `row-${i}`, cells: cells.slice(i, i + 7) })
+    return { rows, title: `${year} 年 ${month + 1} 月` }
+  },
+
+  refreshImportantCalendar(dateText) {
+    const parts = (dateText || dateKey(new Date())).split('-').map(Number)
+    const cal = this.buildImportantCalendar(parts[0], parts[1] - 1, dateText)
+    this.setData({ importantCalRows: cal.rows, importantCalTitle: cal.title })
+  },
+
+  shiftImportantMonth(event) {
+    const step = Number(event.currentTarget.dataset.step) || 0
+    const parts = (this.data.importantDate || dateKey(new Date())).split('-').map(Number)
+    const target = new Date(parts[0], parts[1] - 1 + step, 1)
+    const maxDay = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate()
+    const next = new Date(target.getFullYear(), target.getMonth(), Math.min(parts[2] || 1, maxDay))
+    const nextKey = dateKey(next)
+    this.setData({ importantDate: nextKey, importantDateText: importantDateText(nextKey) })
+    this.refreshImportantCalendar(nextKey)
+  },
+
+  selectImportantDay(event) {
+    const key = event.currentTarget.dataset.key
+    if (!key) return
+    this.setData({ importantDate: key, importantDateText: importantDateText(key) })
+    this.refreshImportantCalendar(key)
+  },
+
+  saveImportantDate() {
+    const name = String(this.data.importantName || '').trim()
+    if (!name) {
+      wx.showToast({ title: '先写一个重要日子', icon: 'none' })
+      return
+    }
+    const date = this.data.importantDate || dateKey(new Date())
+    const raw = wx.getStorageSync(app.globalData.importantKey)
+    const list = (Array.isArray(raw) ? raw : []).map(entry => ({
+      ...entry,
+      id: entry.id || `important-${entry.date}-${entry.name}`
+    }))
+    const item = {
+      id: this.data.importantEditingId || `important-${Date.now()}`,
+      name: name.slice(0, 16),
+      date,
+      yearly: !!this.data.importantYearly
+    }
+    const index = list.findIndex(entry => entry.id === item.id)
+    if (index >= 0) list[index] = item
+    else list.push(item)
+    wx.setStorageSync(app.globalData.importantKey, list)
+    this.setData({ importantModalOpen: false, importantCalendarOpen: false })
+    this.loadImportantDates()
+    wx.showToast({ title: this.data.importantEditingId ? '已更新' : '已添加', icon: 'none' })
+  },
+
+  removeImportant(event) {
+    const id = event.currentTarget.dataset.id
+    const item = this.data.importantDates.find(entry => entry.id === id)
+    if (!item) return
+    wx.showModal({
+      title: '删除重要日子',
+      content: `确定删除「${item.name}」吗？`,
+      confirmText: '删除',
+      confirmColor: '#D9534F',
+      success: ({ confirm }) => {
+        if (!confirm) return
+        const raw = wx.getStorageSync(app.globalData.importantKey)
+        const list = (Array.isArray(raw) ? raw : [])
+          .map(entry => ({ ...entry, id: entry.id || `important-${entry.date}-${entry.name}` }))
+          .filter(entry => entry.id !== id)
+        wx.setStorageSync(app.globalData.importantKey, list)
+        this.loadImportantDates()
+      }
+    })
+  },
+
+  // ---- 番茄激励 ----
+  loadTomatoes() {
+    const count = app.getTomatoCount ? app.getTomatoCount() : 0
+    const shown = Math.min(count, TOMATO_SHOW_LIMIT)
+    const icons = Array.from({ length: shown }, (_, index) => index)
+    const previous = this.lastTomatoCount
+    const pop = typeof previous === 'number' && count > previous
+    this.lastTomatoCount = count
+    this.setData({
+      tomatoCount: count,
+      tomatoIcons: icons,
+      tomatoCaption: count ? `${count} 颗番茄` : '完成计时收番茄',
+      tomatoPop: pop
+    })
+    if (pop) {
+      clearTimeout(this.tomatoPopTimer)
+      this.tomatoPopTimer = setTimeout(() => this.setData({ tomatoPop: false }), 700)
+    }
   },
 
   withIds(modules) {
@@ -276,13 +610,14 @@ Page({
 
   showReport(record) {
     const report = this.prepareReport(record)
-    this.setData({ view: 'report', report, reportView: fold(this.decorateRows(report.rows), false, 5), reportExpanded: false })
-  },
-
-  toggleReportRows() {
-    const expanded = !this.data.reportExpanded
-    const rows = (this.data.report && this.data.report.rows) || []
-    this.setData({ reportExpanded: expanded, reportView: fold(this.decorateRows(rows), expanded, 5) })
+    const rows = this.decorateRows(report.rows)
+    const activeRows = rows.filter(item => (item.elapsedSeconds || 0) > 0)
+    this.setData({
+      view: 'report',
+      report,
+      reportView: activeRows.length ? activeRows : rows,
+      reportExpanded: false
+    })
   },
 
   changeModuleName(event) {
@@ -509,7 +844,13 @@ Page({
   readTemplates() {
     const stored = wx.getStorageSync(app.globalData.templateKey)
     if (!stored || !Array.isArray(stored.templates)) return []
-    return stored.templates
+    const seen = {}
+    return stored.templates.filter(item => {
+      if (!item || !item.name || !Array.isArray(item.modules)) return false
+      if (seen[item.name]) return false
+      seen[item.name] = true
+      return true
+    })
   },
 
   openTemplateModal() {
@@ -564,17 +905,27 @@ Page({
     if (!this.data.addVisible) this.setData({ addVisible: true })
   },
 
-  persistTemplate(name) {
-    const templates = (this.data.templates || []).slice()
+  saveTemplateSnapshot(name, overwrite) {
+    const seen = {}
+    const templates = (this.data.templates || []).filter(item => {
+      if (!item || !item.name) return false
+      if (seen[item.name]) return false
+      seen[item.name] = true
+      return true
+    })
     const nextTemplate = { name, modules: clone(this.data.modules) }
     const index = templates.findIndex(item => item.name === name)
+    if (index >= 0 && !overwrite) {
+      wx.showToast({ title: '已有同名模板，换个名字', icon: 'none' })
+      return false
+    }
     if (index >= 0) templates[index] = nextTemplate
     else templates.push(nextTemplate)
     try {
       wx.setStorageSync(app.globalData.templateKey, { currentName: name, templates })
     } catch (error) {
       wx.showToast({ title: '保存失败，请稍后重试', icon: 'none' })
-      return
+      return false
     }
     this.setData({
       templates,
@@ -586,7 +937,25 @@ Page({
       clearTimeout(this.templateSwitchTimer)
       this.templateSwitchTimer = setTimeout(() => this.setData({ templateSwitching: false }), 260)
     })
-    wx.showToast({ title: index >= 0 ? '模板已更新' : '模板已保存', icon: 'success' })
+    wx.showToast({ title: overwrite ? '当前模板已更新' : '新模板已保存', icon: 'success' })
+    return true
+  },
+
+  persistTemplate(name) {
+    this.saveTemplateSnapshot(name, false)
+  },
+
+  saveCurrentTemplate() {
+    const name = this.data.templateName
+    if (!name) return
+    wx.showModal({
+      title: '保存当前模板',
+      content: `用当前模块覆盖“${name}”？其他模板不会改变。`,
+      confirmText: '保存',
+      success: ({ confirm }) => {
+        if (confirm) this.saveTemplateSnapshot(name, true)
+      }
+    })
   },
 
   removeTemplate(event) {
@@ -706,7 +1075,8 @@ Page({
       moduleSeconds: 0,
       isPaused: false,
       mode: useMode,
-      totalTargetSeconds
+      totalTargetSeconds,
+      tickSound: app.getSettings().tickSound === true
     })
     wx.navigateTo({ url: '/pages/timer/timer' })
   },
@@ -751,8 +1121,8 @@ Page({
     }
   },
 
-  openHistory() {
-    wx.navigateTo({ url: '/pages/history/history' })
+  goTools() {
+    wx.switchTab({ url: '/pages/tools/tools' })
   },
 
   handleBack() {
@@ -779,10 +1149,6 @@ Page({
     if (wx.setDeviceOrientation) {
       wx.setDeviceOrientation({ value })
     }
-  },
-
-  openHistory() {
-    wx.navigateTo({ url: '/pages/history/history' })
   },
 
   createReportImage(callback) {
@@ -816,7 +1182,9 @@ Page({
     context.setFillStyle(palette.sub)
     context.setFontSize(20)
     context.fillText(`实际用时 ${report.totalActualText}   计划 ${report.totalTarget}:00`, 64, 398)
-    report.rows.forEach((row, index) => {
+    const activeRows = report.rows.filter(row => (row.elapsedSeconds || 0) > 0)
+    const rows = activeRows.length ? activeRows : report.rows
+    rows.forEach((row, index) => {
       const y = 460 + index * 70
       context.setFillStyle(palette.soft)
       context.fillRect(64, y - 28, 622, 48)
@@ -827,17 +1195,6 @@ Page({
       context.setFontSize(18)
       context.fillText(`${row.actualText} · ${row.deltaText}`, 420, y)
     })
-    context.setFillStyle(palette.panel)
-    context.fillRect(32, 952, 686, 160)
-    context.setFillStyle(palette.highlight)
-    context.setFontSize(30)
-    context.fillText('★', 64, 1008)
-    context.setFillStyle(palette.onPanel)
-    context.setFontSize(23)
-    context.fillText(report.quote, 112, 1008)
-    context.setFillStyle(palette.sub)
-    context.setFontSize(18)
-    context.fillText('坚持记录每一次专注，下一次会更好。', 64, 1070)
     context.draw(false, () => {
       wx.canvasToTempFilePath({
         canvasId: 'reportCanvas',

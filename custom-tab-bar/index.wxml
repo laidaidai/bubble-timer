@@ -1,0 +1,25 @@
+<view class="tabbar" style="{{tabStyle}}">
+  <view class="tabbar-inner">
+    <view class="tab-item {{selected === index ? 'active' : ''}}" wx:for="{{list}}" wx:key="path" data-index="{{index}}" bindtap="switchTab">
+      <view class="tab-icon-wrap">
+        <view class="icon-home" wx:if="{{index === 0}}">
+          <view class="home-roof" style="border-color:{{selected === index ? activeColor : inactiveColor}};"></view>
+          <view class="home-body" style="border-color:{{selected === index ? activeColor : inactiveColor}};"></view>
+          <view class="home-door" style="background:{{selected === index ? activeColor : inactiveColor}};"></view>
+        </view>
+        <view class="icon-tools" wx:elif="{{index === 1}}">
+          <view class="tool-sq" style="border-color:{{selected === index ? activeColor : inactiveColor}};"></view>
+          <view class="tool-sq" style="border-color:{{selected === index ? activeColor : inactiveColor}};"></view>
+          <view class="tool-sq" style="border-color:{{selected === index ? activeColor : inactiveColor}};"></view>
+          <view class="tool-sq" style="border-color:{{selected === index ? activeColor : inactiveColor}};"></view>
+        </view>
+        <view class="icon-records" wx:else>
+          <view class="rec-line long" style="background:{{selected === index ? activeColor : inactiveColor}};"></view>
+          <view class="rec-line mid" style="background:{{selected === index ? activeColor : inactiveColor}};"></view>
+          <view class="rec-line short" style="background:{{selected === index ? activeColor : inactiveColor}};"></view>
+        </view>
+      </view>
+      <text class="tab-label" style="color:{{selected === index ? activeColor : inactiveColor}};">{{item.text}}</text>
+    </view>
+  </view>
+</view>

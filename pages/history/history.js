@@ -2,23 +2,35 @@ const app = getApp()
 
 Page({
   data: {
-    theme: 'cream', themeStyle: '',
+    theme: 'rose', themeStyle: '',
     records: []
   },
 
-  onLoad() {
-    const theme = app.getTheme ? app.getTheme() : { key: 'cream' }
-    this.setData({ theme: theme.key, themeStyle: theme.style || '' })
+  syncTheme() {
+    const theme = app.getTheme ? app.getTheme() : { key: 'rose' }
+    if (theme.key !== this.data.theme || (theme.style || '') !== this.data.themeStyle) {
+      this.setData({ theme: theme.key, themeStyle: theme.style || '' })
+    }
     if (app.applyNavBar) app.applyNavBar()
+  },
+
+  onLoad() {
+    this.syncTheme()
     this.loadRecords()
   },
 
   onShow() {
+    this.syncTheme()
+    if (this.getTabBar && this.getTabBar()) this.getTabBar().sync()
     this.loadRecords()
   },
 
   loadRecords() {
-    this.setData({ records: wx.getStorageSync(app.globalData.recordsKey) || [] })
+    const records = (wx.getStorageSync(app.globalData.recordsKey) || []).map(record => {
+      const names = (record.rows || []).map(item => item.name).filter(Boolean)
+      return { ...record, title: names[0] || '训练记录' }
+    })
+    this.setData({ records })
   },
 
   openReport(event) {
@@ -81,9 +93,7 @@ Page({
   },
 
   backToIndex() {
-    const pages = getCurrentPages()
-    if (pages.length > 1) wx.navigateBack()
-    else wx.reLaunch({ url: '/pages/index/index' })
+    wx.switchTab({ url: '/pages/index/index' })
   },
 
   handleBack() {

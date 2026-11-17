@@ -107,7 +107,7 @@ const buildCustomTheme = (conf, meta) => {
     swatch: [bg, primary, ink],
     nav,
     front: '#000000',
-    slider: { active: primaryDeep, track: css.track, block: css['cream-1'] },
+    slider: { active: primaryDeep, track: css.track, block: primary },
     canvas: {
       bg,
       card: css.card,
@@ -133,12 +133,15 @@ const MODES = [
 ]
 
 const DEFAULT_SETTINGS = {
-  theme: 'cream',
+  theme: 'rose',
   soundMode: 'both',
   ring: 'chime',
   keepScreenOn: true,
   exitGuard: true,
-  overtimeAlert: true
+  overtimeAlert: true,
+  tickSound: false,
+  tickDefaultOff: true,
+  homePrimary: 'timer'
 }
 
 App({
@@ -154,11 +157,20 @@ App({
     modeKey: 'exam-timer-mode',
     habitApplyKey: 'exam-timer-habit-apply',
     presetSelectKey: 'exam-timer-preset-select',
+    importantKey: 'exam-timer-important-dates',
+    tomatoKey: 'exam-timer-tomatoes',
     presetLimit: 8,
     presetFold: 4
   },
   onLaunch() {
     this.normalizeTemplates()
+    // 历史版本里 tickSound 默认是开，第一次升级时统一关掉，之后按用户选择走
+    const saved = wx.getStorageSync(this.globalData.settingsKey)
+    if (saved && !saved.tickDefaultOff) {
+      saved.tickSound = false
+      saved.tickDefaultOff = true
+      wx.setStorageSync(this.globalData.settingsKey, saved)
+    }
   },
 
   // 模板存储只保留一种结构：{ currentName, templates: [{ name, modules }] }
@@ -176,6 +188,7 @@ App({
     } else if (raw && Array.isArray(raw.modules)) {
       list = [{ name: raw.name || '常规', modules: raw.modules }]
     }
+    const seenNames = {}
     const templates = list
       .filter(item => item && Array.isArray(item.modules))
       .map(item => ({
@@ -187,6 +200,11 @@ App({
           source: moduleItem.source || ''
         }))
       }))
+      .filter(item => {
+        if (seenNames[item.name]) return false
+        seenNames[item.name] = true
+        return true
+      })
     if (!templates.length) return
     const finalName = templates.some(item => item.name === currentName) ? currentName : templates[0].name
     wx.setStorageSync(this.globalData.templateKey, { currentName: finalName, templates })
@@ -247,7 +265,7 @@ App({
       if (entry) return buildCustomTheme(entry, { name: entry.name, key: entry.key })
     }
     if (key === 'custom') return buildCustomTheme(settings.customTheme)
-    return THEMES.find(item => item.key === key) || THEMES[0]
+    return THEMES.find(item => item.key === key) || THEMES.find(item => item.key === 'rose') || THEMES[0]
   },
 
   // 自定义主题列表（带旧数据兼容）
@@ -325,6 +343,18 @@ App({
     if (settings.soundMode === 'ring' || settings.soundMode === 'silent') return
     if (!wx.vibrateShort) return
     wx.vibrateShort({ type: type || 'medium', fail: () => {} })
+  },
+
+  // 番茄激励：完成一次计时就累计一颗
+  addTomato(count) {
+    const current = Number(wx.getStorageSync(this.globalData.tomatoKey) || 0) || 0
+    const total = Math.max(0, current + (Number(count) || 1))
+    wx.setStorageSync(this.globalData.tomatoKey, total)
+    return total
+  },
+
+  getTomatoCount() {
+    return Math.max(0, Number(wx.getStorageSync(this.globalData.tomatoKey) || 0) || 0)
   },
 
   // 每日汇总，供统计页使用

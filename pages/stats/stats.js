@@ -4,7 +4,7 @@ const poster = require('../../utils/poster')
 
 Page({
   data: {
-    theme: 'cream', themeStyle: '',
+    theme: 'rose', themeStyle: '',
     todayText: '0 分钟',
     todayPercent: 0,
     todayTarget: '3 小时',
@@ -18,11 +18,20 @@ Page({
     weakness: [],
     trendModules: [],
     hasTrend: false,
-    poster
+    poster,
+    posterPath: ''
+  },
+
+  syncTheme() {
+    const theme = app.getTheme ? app.getTheme() : { key: 'rose' }
+    if (theme.key !== this.data.theme || (theme.style || '') !== this.data.themeStyle) {
+      this.setData({ theme: theme.key, themeStyle: theme.style || '' })
+    }
+    if (app.applyNavBar) app.applyNavBar()
   },
 
   onLoad() {
-    const theme = app.getTheme ? app.getTheme() : { key: 'cream' }
+    const theme = app.getTheme ? app.getTheme() : { key: 'rose' }
     const mode = wx.getStorageSync(app.globalData.modeKey) || 'countup'
     const modeInfo = (app.modes || []).find(item => item.key === mode)
     this.setData({ theme: theme.key, themeStyle: theme.style || '', modeName: modeInfo ? modeInfo.name : '正计时' })
@@ -32,7 +41,10 @@ Page({
   },
 
   onShow() {
-    if (this.ready) this.loadStats()
+    if (this.ready) {
+      this.syncTheme()
+      this.loadStats()
+    }
   },
 
   loadStats() {
@@ -52,6 +64,7 @@ Page({
       ...this.buildInsights()
     }, () => {
       setTimeout(() => this.drawTrend(), 120)
+      this.refreshPoster()
     })
   },
 
@@ -242,24 +255,24 @@ Page({
     context.fillRect(60, 626, W - 120, 3)
     context.setFillStyle(palette.ink)
     context.setFontSize(24)
-    context.fillText(`${poster.calendarTitle} ${this.data.calendar.monthDays || 0} ${poster.calendarUnit}`, 60, 690)
+    context.fillText(`${poster.calendarTitle} ${this.data.calendar.monthDays || 0} ${poster.calendarUnit}`, 60, 682)
     context.setFillStyle(palette.sub)
     context.setFontSize(18)
-    context.fillText(poster.calendarUnit === '天' ? `${(this.data.calendar.monthLabel || '').replace('年', '.').replace('月', '').replace(/ /g, '')}` : '', 60, 722)
+    context.fillText(poster.calendarUnit === '天' ? `${(this.data.calendar.monthLabel || '').replace('年', '.').replace('月', '').replace(/ /g, '')}` : '', 60, 710)
 
     const weekday = ['一', '二', '三', '四', '五', '六', '日']
-    const cell = 54
-    const gap = 10
-    const gridW = cell * 7 + gap * 6
+    const cellW = 84
+    const cellH = 42
+    const gap = 6
+    const gridW = cellW * 7 + gap * 6
     const gridX = (W - gridW) / 2
     let y = 750
     context.setFillStyle(palette.sub)
-    context.setFontSize(18)
+    context.setFontSize(19)
     weekday.forEach((label, index) => {
       const w = context.measureText(label).width
-      context.fillText(label, gridX + index * (cell + gap) + (cell - w) / 2, y)
+      context.fillText(label, gridX + index * (cellW + gap) + (cellW - w) / 2, y - 16)
     })
-    y += 16
 
     const levelColors = {
       '0': palette.soft,
@@ -272,37 +285,37 @@ Page({
     ;(cal.rows || []).forEach((row) => {
       const cells = row.cells || []
       cells.forEach((item, index) => {
-        const x = gridX + index * (cell + gap)
+        const x = gridX + index * (cellW + gap)
         if (item.empty) return
         context.setFillStyle(levelColors[item.level] || palette.soft)
-        context.fillRect(x, y, cell, cell)
+        context.fillRect(x, y, cellW, cellH)
         if (item.isToday) {
           context.setStrokeStyle(palette.panel)
           context.setLineWidth(4)
-          context.strokeRect(x, y, cell, cell)
+          context.strokeRect(x, y, cellW, cellH)
         }
         context.setFillStyle(item.level === '4' || item.level === '3' ? palette.onPanel : palette.ink)
-        context.setFontSize(18)
+        context.setFontSize(21)
         const dayText = `${item.day}`
         const dw = context.measureText(dayText).width
-        context.fillText(dayText, x + (cell - dw) / 2, y + cell / 2 + 6)
+        context.fillText(dayText, x + (cellW - dw) / 2, y + cellH / 2 + 7)
       })
-      y += cell + gap
+      y += cellH + gap
     })
 
     // 金句
     context.setFillStyle(palette.panel)
-    context.fillRect(60, 1052, W - 120, 74)
+    context.fillRect(60, 1064, W - 120, 72)
     context.setFillStyle(palette.onPanel)
     context.setFontSize(22)
-    context.fillText(poster.quote, 88, 1098)
+    context.fillText(poster.quote, 88, 1108)
 
     // 页脚
     context.setFillStyle(palette.sub)
     context.setFontSize(18)
-    context.fillText(poster.footLeft, 60, 1166)
+    context.fillText(poster.footLeft, 60, 1180)
     const footRightWidth = context.measureText(poster.footRight).width
-    context.fillText(poster.footRight, W - 60 - footRightWidth, 1166)
+    context.fillText(poster.footRight, W - 60 - footRightWidth, 1180)
 
     context.draw(false, () => {
       wx.canvasToTempFilePath({
@@ -317,6 +330,48 @@ Page({
         fail: () => wx.showToast({ title: '生成失败，请重试', icon: 'none' })
       }, this)
     })
+  },
+
+  refreshPoster() {
+    clearTimeout(this.posterTimer)
+    this.posterTimer = setTimeout(() => {
+      this.drawPoster(path => {
+        if (path && path !== this.data.posterPath) this.setData({ posterPath: path })
+      })
+    }, 160)
+  },
+
+  previewPoster() {
+    if (!this.data.posterPath) return
+    wx.previewImage({ urls: [this.data.posterPath] })
+  },
+
+  handlePosterLongPress() {
+    const path = this.data.posterPath
+    if (!path) return
+    wx.showActionSheet({
+      itemList: ['保存到相册', '发送给朋友'],
+      success: ({ tapIndex }) => {
+        if (tapIndex === 0) {
+          wx.saveImageToPhotosAlbum({
+            filePath: path,
+            success: () => wx.showToast({ title: '已保存到相册', icon: 'success' }),
+            fail: () => wx.showToast({ title: '保存失败，请允许相册权限', icon: 'none' })
+          })
+          return
+        }
+        if (wx.showShareImageMenu) {
+          wx.showShareImageMenu({ path, fail: () => wx.previewImage({ urls: [path] }) })
+          return
+        }
+        wx.previewImage({ urls: [path] })
+      },
+      fail: () => {}
+    })
+  },
+
+  onUnload() {
+    clearTimeout(this.posterTimer)
   },
 
   savePoster() {

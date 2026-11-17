@@ -1,41 +1,15 @@
 <view class="stats-page theme-{{theme}}" style="{{themeStyle}}">
   <view class="topbar">
     <button class="back-icon" bindtap="handleBack">‹</button>
-    <view class="topbar-title">数据与打卡</view>
+    <view class="topbar-title">打卡</view>
     <view class="topbar-spacer"></view>
   </view>
 
   <scroll-view class="stats-body" scroll-y>
 
-    <view class="hero-card">
-      <view class="hero-top">
-        <view class="hero-eyebrow">今日目标完成</view>
-        <view class="hero-mode">{{modeName}}</view>
-      </view>
-      <view class="hero-percent"><text class="hero-num num">{{todayPercent}}</text><text class="hero-unit">%</text></view>
-      <view class="hero-bar"><view class="hero-bar-fill" style="width: {{todayPercent}}%;"></view></view>
-      <view class="hero-meta">今日 {{todayText}} · 目标 {{todayTarget}}</view>
-    </view>
-
-    <view class="metric-row">
-      <view class="metric-card">
-        <view class="metric-label">本周累计</view>
-        <view class="metric-value num">{{weekText}}</view>
-        <view class="metric-sub">出勤 {{weekDays}} 天</view>
-      </view>
-      <view class="metric-card metric-accent">
-        <view class="metric-label">连续打卡</view>
-        <view class="metric-value num">{{streak}} 天</view>
-        <view class="metric-sub">累计 {{totalDays}} 天</view>
-      </view>
-    </view>
-
     <view class="panel poster-panel">
-      <view class="panel-head">
-        <view class="panel-title">打卡海报</view>
-        <view class="panel-sub">竖版 · 可保存或分享</view>
-      </view>
-      <view class="poster-card">
+      <image class="poster-image" wx:if="{{posterPath}}" src="{{posterPath}}" mode="widthFix" bindlongpress="handlePosterLongPress" bindtap="previewPoster"></image>
+      <view class="poster-card" wx:else>
         <view class="pc-head">
           <view class="pc-brand">{{poster.brand}}</view>
           <view class="pc-row">
@@ -94,19 +68,13 @@
           <text>{{poster.footRight}}</text>
         </view>
       </view>
-
-      <view class="poster-actions">
-        <button class="mini-action primary" bindtap="savePoster">保存相册</button>
-        <button class="mini-action" bindtap="sharePoster">分享</button>
-      </view>
     </view>
 
-    <view class="panel">
+    <view class="panel" wx:if="{{weakness.length}}">
       <view class="panel-head">
         <view class="panel-title">弱项追踪</view>
-        <view class="panel-sub">最近 12 次 · 已忽略不足 1 分钟</view>
       </view>
-      <view class="weak-list" wx:if="{{weakness.length}}">
+      <view class="weak-list">
         <view class="weak-row" wx:for="{{weakness}}" wx:key="name">
           <view class="weak-rank num">{{index + 1}}</view>
           <view class="weak-main">
@@ -119,26 +87,21 @@
           </view>
         </view>
       </view>
-      <view class="panel-empty" wx:else>完成几次训练后，这里会排出最需要补的模块</view>
     </view>
 
-    <view class="panel">
+    <view class="panel" wx:if="{{hasTrend}}">
       <view class="panel-head">
         <view class="panel-title">成绩趋势</view>
-        <view class="panel-sub">最近 8 次 · 虚线为 100%</view>
       </view>
-      <view class="trend-legend" wx:if="{{hasTrend}}">
+      <view class="trend-legend">
         <view class="trend-key" wx:for="{{trendModules}}" wx:key="name" wx:for-item="item" wx:for-index="index">
           <view class="trend-dot tk-{{index}}"></view>
           <text class="trend-name">{{item.name}}</text>
           <text class="trend-last num">{{item.last}}%</text>
         </view>
       </view>
-      <canvas canvas-id="trendCanvas" class="trend-canvas" wx:if="{{hasTrend}}"></canvas>
-      <view class="panel-empty" wx:else>同一模块练两次以上，就能看到用时曲线</view>
+      <canvas canvas-id="trendCanvas" class="trend-canvas"></canvas>
     </view>
-
-    <view class="stats-tip">数据统计按本机记录汇总，卸载小程序会一并清空。</view>
   </scroll-view>
 
   <canvas class="poster-canvas" canvas-id="posterCanvas"></canvas>

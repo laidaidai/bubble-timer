@@ -46,7 +46,7 @@ function dueLabel(dueAt) {
 
 Page({
   data: {
-    theme: 'cream', themeStyle: '',
+    theme: 'rose', themeStyle: '',
     todos: [],
     viewTodos: [],
     schedTitle: '',
@@ -78,10 +78,16 @@ Page({
     calRows: []
   },
 
-  onLoad() {
-    const theme = app.getTheme ? app.getTheme() : { key: 'cream' }
-    this.setData({ theme: theme.key, themeStyle: theme.style || '' })
+  syncTheme() {
+    const theme = app.getTheme ? app.getTheme() : { key: 'rose' }
+    if (theme.key !== this.data.theme || (theme.style || '') !== this.data.themeStyle) {
+      this.setData({ theme: theme.key, themeStyle: theme.style || '' })
+    }
     if (app.applyNavBar) app.applyNavBar()
+  },
+
+  onLoad() {
+    this.syncTheme()
     this.loadTodos()
     // 键盘高度 → 底部面板整体抬升，避免输入法盖住输入框
     this.onKeyboard = (res) => {
@@ -97,6 +103,7 @@ Page({
   },
 
   onShow() {
+    this.syncTheme()
     this.checkReminders()
     clearInterval(this.timer)
     this.timer = setInterval(() => this.checkReminders(), 30000)
@@ -174,6 +181,7 @@ Page({
       })
     }
     while (cells.length % 7 !== 0) cells.push({ key: `tail-${cells.length}`, empty: true })
+    while (cells.length < 42) cells.push({ key: `fill-${cells.length}`, empty: true })
     const rows = []
     for (let i = 0; i < cells.length; i += 7) rows.push({ key: `srow-${i}`, cells: cells.slice(i, i + 7) })
     return { rows, title: `${target.getFullYear()} 年 ${target.getMonth() + 1} 月` }
@@ -223,6 +231,7 @@ Page({
       cells.push({ key, day: d, empty: false, selected: key === selectedKey, today: key === todayKey })
     }
     while (cells.length % 7 !== 0) cells.push({ key: `tail-${cells.length}`, empty: true })
+    while (cells.length < 42) cells.push({ key: `fill-${cells.length}`, empty: true })
     const rows = []
     for (let i = 0; i < cells.length; i += 7) rows.push({ key: `row-${i}`, cells: cells.slice(i, i + 7) })
     return { rows, title: `${year} 年 ${month + 1} 月` }

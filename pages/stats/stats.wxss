@@ -32,6 +32,8 @@ page { background: var(--bg); }
 .panel-empty { margin-top: 16rpx; padding: 30rpx 8rpx; color: var(--text-3); font-size: 20rpx; line-height: 1.6; text-align: center; }
 
 /* ===== 打卡海报 ===== */
+.poster-panel .poster-card { margin-top: 0; }
+.poster-image { display: block; width: 100%; border: 3rpx solid var(--edge); border-radius: 26rpx; box-shadow: 6rpx 7rpx 0 var(--shadow); background: var(--card); }
 .poster-card { margin-top: 16rpx; background: var(--card); border: 3rpx solid var(--edge); border-radius: 26rpx; box-shadow: 6rpx 7rpx 0 var(--shadow); overflow: hidden; }
 .pc-head { padding: 20rpx 24rpx 22rpx; background: var(--panel); }
 .pc-brand { color: var(--on-panel-warm); font-size: 18rpx; font-weight: 900; letter-spacing: 2rpx; }
@@ -74,7 +76,7 @@ page { background: var(--bg); }
 .poster-actions { margin-top: 16rpx; display: flex; gap: 12rpx; }
 .mini-action { flex: 1; margin: 0; padding: 16rpx 0; color: var(--ink); background: var(--cream-1); border: 2rpx solid var(--edge); border-radius: 999rpx; font-size: 20rpx; font-weight: 900; line-height: 1.2; }
 .mini-action.primary { color: var(--on-primary); background: var(--primary); }
-.poster-canvas { position: fixed; left: -4000rpx; top: 0; width: 750rpx; height: 2360rpx; }
+.poster-canvas { position: fixed; left: -4000rpx; top: 0; width: 750px; height: 1200px; }
 
 /* ===== 弱项追踪 ===== */
 .weak-list { margin-top: 16rpx; }

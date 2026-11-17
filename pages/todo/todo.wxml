@@ -6,7 +6,7 @@
   </view>
 
   <scroll-view class="todo-body" scroll-y>
-    <view class="todo-hero">
+    <view class="todo-hero" wx:if="{{total}}">
       <view class="hero-line">
         <view class="hero-eyebrow">今日完成</view>
         <view class="hero-percent"><text class="num">{{percent}}</text><text class="hero-unit">%</text></view>
@@ -32,7 +32,6 @@
         <text class="sched-filter-text">{{filterText}} · {{viewTodos.length}} 项</text>
         <text class="sched-clear" bindtap="clearScheduleFilter">显示全部</text>
       </view>
-      <view class="sched-tip" wx:else>带圆点的日期有待办，点一下只看那天</view>
     </view>
 
     <view class="list-head" wx:if="{{viewTodos.length}}">
@@ -56,18 +55,7 @@
       </view>
     </view>
 
-    <view class="empty-card" wx:if="{{total && !viewTodos.length}}">
-      <view class="empty-icon">☾</view>
-      <view class="empty-title">这天没有待办</view>
-      <view class="empty-desc">点日期可切换到别的日子，或新增一条</view>
-    </view>
-    <view class="empty-card" wx:if="{{!total}}">
-      <view class="empty-icon">＋</view>
-      <view class="empty-title">还没有待办</view>
-      <view class="empty-desc">点右下角的按钮，写下要练的模块和时间</view>
-    </view>
 
-    <view class="todo-foot">待办只存在本机 · 提醒会写入手机日历</view>
   </scroll-view>
 
   <view class="fab" bindtap="openCreate"><text class="fab-plus">＋</text></view>

@@ -1,5 +1,14 @@
-<view class="timer-page theme-{{theme}} clock-{{clockStyle}}" style="{{themeStyle}}">
+<view class="timer-page theme-{{theme}} clock-{{clockStyle}} {{compact ? 'compact' : ''}} {{immersive ? 'immersive' : ''}}" style="{{themeStyle}}">
   <view class="timer-main">
+    <view class="immersive-toggle {{immersive ? 'on' : ''}}" catchtap="toggleImmersive">
+      <view class="fs-icon" wx:if="{{!immersive}}">
+        <view class="fs-corner fs-tl"></view>
+        <view class="fs-corner fs-tr"></view>
+        <view class="fs-corner fs-bl"></view>
+        <view class="fs-corner fs-br"></view>
+      </view>
+      <view class="fs-exit" wx:else><text class="fs-exit-char">‹</text></view>
+    </view>
     <view class="mode-chip {{phaseLabel ? (phaseLabel === '专注' ? 'focus' : 'rest') : ''}}">
       <text>{{modeName}}</text>
       <text class="mode-phase" wx:if="{{phaseLabel}}">{{phaseLabel}}</text>
@@ -7,18 +16,21 @@
     <view class="clock-stage" bindtap="cycleClockStyle">
       <text class="ms-line">{{mainLabel}} <text class="ms-val">+{{msText}}</text> ms</text>
 
-      <view class="style-hint" wx:if="{{showStyleHint}}">
-        <text class="hint-dot"></text>
-        <text class="hint-text">{{clockStyleName}} · 轻点背景可切换</text>
-      </view>
-
       <!-- 翻页时钟 -->
       <view class="flip-row" wx:if="{{clockStyle === 'flip'}}">
-        <block wx:for="{{flipPairs}}" wx:key="key">
-          <view class="flip-colon" wx:if="{{index > 0}}">:</view>
-          <view class="flip-card {{item.changed ? (flipPhase ? 'flip-a' : 'flip-b') : ''}}">
+        <block wx:for="{{flipCells}}" wx:key="key">
+          <view class="flip-colon" wx:if="{{item.sep}}">:</view>
+          <view class="flip-card {{item.changed ? (flipPhase ? 'flip-a' : 'flip-b') : ''}}" wx:else>
+            <view class="flip-face flip-face-top"><text class="flip-num">{{item.text}}</text></view>
+            <view class="flip-face flip-face-bottom"><text class="flip-num">{{item.text}}</text></view>
+            <view class="flip-face flip-face-bottom flip-face-old" wx:if="{{item.changed}}"><text class="flip-num">{{item.oldText}}</text></view>
+            <view class="flip-flap flip-flap-top" wx:if="{{item.changed}}">
+              <view class="flip-flap-face"><text class="flip-num">{{item.oldText}}</text></view>
+            </view>
+            <view class="flip-flap flip-flap-bottom" wx:if="{{item.changed}}">
+              <view class="flip-flap-face flip-flap-face-bottom"><text class="flip-num">{{item.text}}</text></view>
+            </view>
             <view class="flip-split"></view>
-            <text class="flip-num">{{item.text}}</text>
           </view>
         </block>
       </view>
@@ -28,6 +40,25 @@
         <block wx:for="{{flipDigits}}" wx:key="key">
           <view class="block-colon" wx:if="{{item.sep}}">:</view>
           <view class="block-tile" wx:else><text class="block-num">{{item.text}}</text></view>
+        </block>
+      </view>
+
+      <!-- LED 数码管 -->
+      <view class="led-clock" wx:elif="{{clockStyle === 'led'}}">
+        <block wx:for="{{ledDigits}}" wx:key="key">
+          <view class="led-colon" wx:if="{{item.sep}}">
+            <view class="led-dot"></view>
+            <view class="led-dot"></view>
+          </view>
+          <view class="led-digit" wx:else>
+            <view class="led-seg seg-a {{item.segs[0] ? 'on' : ''}}"></view>
+            <view class="led-seg seg-b {{item.segs[1] ? 'on' : ''}}"></view>
+            <view class="led-seg seg-c {{item.segs[2] ? 'on' : ''}}"></view>
+            <view class="led-seg seg-d {{item.segs[3] ? 'on' : ''}}"></view>
+            <view class="led-seg seg-e {{item.segs[4] ? 'on' : ''}}"></view>
+            <view class="led-seg seg-f {{item.segs[5] ? 'on' : ''}}"></view>
+            <view class="led-seg seg-g {{item.segs[6] ? 'on' : ''}}"></view>
+          </view>
         </block>
       </view>
 
@@ -47,6 +78,10 @@
       <view class="stage-target">
         <text>TARGET: <text class="num">{{currentModule.targetMinutes}}</text> 分</text>
         <text class="{{isOvertime ? 'overtime' : 'on-track'}}">{{isOvertime ? 'OVERTIME' : 'ON TRACK'}}</text>
+      </view>
+      <view class="tick-pill {{tickMuted ? 'muted' : ''}}" catchtap="toggleTick">
+        <text class="tick-icon">♪</text>
+        <text>{{tickMuted ? '滴答 · 静音' : '滴答 · 开'}}</text>
       </view>
     </view>
 
