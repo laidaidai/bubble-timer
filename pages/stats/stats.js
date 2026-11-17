@@ -1,11 +1,10 @@
 const app = getApp()
 const { pad, minutesText } = require('../../utils/format')
 const poster = require('../../utils/poster')
-const HEAT_LEVELS = ['0', '1', '2', '3', '4']
 
 Page({
   data: {
-    theme: 'cream',
+    theme: 'cream', themeStyle: '',
     todayText: '0 分钟',
     todayPercent: 0,
     todayTarget: '3 小时',
@@ -14,12 +13,11 @@ Page({
     streak: 0,
     totalDays: 0,
     todayLabel: '',
-    heatCols: [],
-    heatLegend: HEAT_LEVELS,
-    trend: [],
-    rankList: [],
-    weekRank: 0,
+    calendar: { monthLabel: '', weekdayLabels: [], rows: [], monthSeconds: 0, monthDays: 0 },
     modeName: '正计时',
+    weakness: [],
+    trendModules: [],
+    hasTrend: false,
     poster
   },
 
@@ -27,33 +25,19 @@ Page({
     const theme = app.getTheme ? app.getTheme() : { key: 'cream' }
     const mode = wx.getStorageSync(app.globalData.modeKey) || 'countup'
     const modeInfo = (app.modes || []).find(item => item.key === mode)
-    this.setData({ theme: theme.key, modeName: modeInfo ? modeInfo.name : '正计时' })
+    this.setData({ theme: theme.key, themeStyle: theme.style || '', modeName: modeInfo ? modeInfo.name : '正计时' })
     if (app.applyNavBar) app.applyNavBar()
     this.loadStats()
+    this.ready = true
+  },
+
+  onShow() {
+    if (this.ready) this.loadStats()
   },
 
   loadStats() {
     const summary = app.dailyStats()
     const todayLabel = `${summary.today.getFullYear()}.${pad(summary.today.getMonth() + 1)}.${pad(summary.today.getDate())}`
-
-    const maxSeconds = summary.trend.reduce((max, item) => Math.max(max, item.seconds || 0), 1)
-    const trendBars = summary.trend.map(item => ({
-      ...item,
-      text: `${Math.floor((item.seconds || 0) / 60)}`,
-      height: Math.max(4, Math.round((item.seconds || 0) / maxSeconds * 100))
-    }))
-
-    const rankList = summary.weekDaily.map(item => ({
-      key: item.key,
-      label: item.label,
-      seconds: item.seconds || 0,
-      text: `${Math.floor((item.seconds || 0) / 60)} 分钟`
-    }))
-    rankList.sort((a, b) => b.seconds - a.seconds)
-    const maxRank = rankList.length ? rankList[0].seconds : 1
-    rankList.forEach(item => {
-      item.width = maxRank ? Math.max(item.seconds ? 6 : 0, Math.round(item.seconds / maxRank * 100)) : 0
-    })
 
     this.setData({
       todayText: minutesText(summary.todaySeconds),
@@ -64,11 +48,124 @@ Page({
       streak: summary.streak,
       totalDays: summary.totalDays,
       todayLabel,
-      heatCols: summary.heatCols,
-      trend: trendBars,
-      rankList,
-      weekRank: summary.weekSeconds
+      calendar: summary.calendar,
+      ...this.buildInsights()
+    }, () => {
+      setTimeout(() => this.drawTrend(), 120)
     })
+  },
+
+  buildInsights() {
+    const records = (wx.getStorageSync(app.globalData.recordsKey) || []).slice(0, 12).reverse()
+    const map = {}
+    const MIN_SECONDS = 60
+    records.forEach(record => {
+      const rows = record.rows || []
+      // 整次训练不足 1 分钟视为测试数据，整体跳过
+      const totalElapsed = rows.reduce((sum, row) => sum + (Number(row.elapsedSeconds) || 0), 0)
+      if (totalElapsed < MIN_SECONDS) return
+      rows.forEach(row => {
+        const target = Number(row.targetMinutes) || 0
+        const elapsed = Number(row.elapsedSeconds) || 0
+        if (!target || elapsed < MIN_SECONDS) return
+        const ratio = Math.round(elapsed / (target * 60) * 100)
+        if (!map[row.name]) map[row.name] = { name: row.name, values: [] }
+        map[row.name].values.push(ratio)
+      })
+    })
+    const all = Object.keys(map).map(name => {
+      const values = map[name].values
+      const avg = Math.round(values.reduce((a, b) => a + b, 0) / values.length)
+      return { name, avg, count: values.length, values }
+    })
+    const weakness = all
+      .slice()
+      .sort((a, b) => b.avg - a.avg)
+      .slice(0, 4)
+      .map(item => ({
+        name: item.name,
+        avg: item.avg,
+        count: item.count,
+        bar: Math.max(8, Math.min(100, Math.round(item.avg / 150 * 100)))
+      }))
+    const trendModules = all
+      .slice()
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 3)
+      .map(item => ({
+        name: item.name,
+        count: item.count,
+        series: item.values.slice(-8),
+        last: item.values[item.values.length - 1]
+      }))
+    return {
+      weakness,
+      trendModules,
+      hasTrend: trendModules.some(item => item.series.length >= 2)
+    }
+  },
+
+  drawTrend() {
+    if (!this.data.hasTrend) return
+    const palette = app.getTheme().canvas
+    const colors = [palette.highlight, palette.accent || palette.highlight, palette.success || palette.sub]
+    const ctx = wx.createCanvasContext('trendCanvas', this)
+    const W = 300
+    const H = 150
+    const left = 30
+    const right = 10
+    const top = 12
+    const bottom = 22
+    const plotW = W - left - right
+    const plotH = H - top - bottom
+    const series = this.data.trendModules
+    const maxLen = Math.max(2, ...series.map(item => item.series.length))
+    const maxVal = Math.max(140, ...series.map(item => Math.max(...item.series)))
+    const yOf = value => top + plotH - Math.min(1, value / maxVal) * plotH
+    const xOf = index => left + (maxLen === 1 ? plotW / 2 : index / (maxLen - 1) * plotW)
+
+    ctx.setFillStyle('rgba(0,0,0,0)')
+    ctx.fillRect(0, 0, W, H)
+    // 网格
+    for (let i = 0; i <= 3; i += 1) {
+      const y = top + (plotH / 3) * i
+      ctx.setStrokeStyle(palette.soft)
+      ctx.setLineWidth(1)
+      ctx.beginPath()
+      ctx.moveTo(left, y)
+      ctx.lineTo(W - right, y)
+      ctx.stroke()
+    }
+    // 100% 基准线
+    ctx.setStrokeStyle(palette.sub)
+    ctx.setLineWidth(1.5)
+    ctx.beginPath()
+    ctx.moveTo(left, yOf(100))
+    ctx.lineTo(W - right, yOf(100))
+    ctx.stroke()
+
+    series.forEach((item, index) => {
+      const color = colors[index % colors.length]
+      ctx.setStrokeStyle(color)
+      ctx.setLineWidth(2.5)
+      ctx.beginPath()
+      item.series.forEach((value, i) => {
+        const x = xOf(i)
+        const y = yOf(value)
+        if (i === 0) ctx.moveTo(x, y)
+        else ctx.lineTo(x, y)
+      })
+      ctx.stroke()
+      ctx.setFillStyle(color)
+      item.series.forEach((value, i) => {
+        const x = xOf(i)
+        const y = yOf(value)
+        ctx.beginPath()
+        ctx.arc(x, y, 2.4, 0, Math.PI * 2)
+        ctx.fill()
+      })
+    })
+    ctx.draw()
   },
 
   drawPoster(onReady) {
@@ -78,133 +175,140 @@ Page({
     const dateText = `${today.getFullYear()}.${pad(today.getMonth() + 1)}.${pad(today.getDate())}`
     const context = wx.createCanvasContext('posterCanvas', this)
     const W = 750
-    const H = 1180
+    const H = 1200
+    const cal = this.data.calendar || { rows: [] }
 
-    // 底
     context.setFillStyle(palette.bg)
     context.fillRect(0, 0, W, H)
 
     // 顶部品牌条
     context.setFillStyle(palette.panel)
-    context.fillRect(0, 0, W, 168)
+    context.fillRect(0, 0, W, 208)
     context.setFillStyle(palette.highlight)
     context.setFontSize(20)
     context.fillText(poster.brand, 60, 66)
     context.setFillStyle(palette.onPanel)
-    context.setFontSize(40)
-    context.fillText(poster.title, 60, 122)
-    context.setFillStyle(palette.onPanel)
+    context.setFontSize(44)
+    context.fillText(poster.title, 60, 130)
     context.setFontSize(22)
-    context.fillText(dateText, W - 60 - context.measureText(dateText).width, 122)
+    const dateWidth = context.measureText(dateText).width
+    context.fillText(dateText, W - 60 - dateWidth, 130)
+    context.setFillStyle(palette.soft)
+    context.fillRect(60, 156, W - 120, 3)
 
-    // 圆环 + 百分比
-    const ringX = 236
-    const ringY = 430
-    const ringR = 132
-    context.setLineWidth(26)
-    context.setStrokeStyle(palette.soft)
-    context.beginPath()
-    context.arc(ringX, ringY, ringR, 0, Math.PI * 2, false)
-    context.stroke()
-    context.setStrokeStyle(palette.highlight)
-    context.beginPath()
-    context.arc(ringX, ringY, ringR, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * percent / 100, false)
-    context.stroke()
-
+    // 大百分比 + 进度条
     const percentText = `${percent}`
     context.setFillStyle(palette.ink)
-    context.setFontSize(112)
+    context.setFontSize(124)
+    context.fillText(percentText, 58, 358)
     const pWidth = context.measureText(percentText).width
-    context.fillText(percentText, ringX - pWidth / 2 - 22, ringY + 34)
     context.setFillStyle(palette.sub)
-    context.setFontSize(34)
-    context.fillText('%', ringX + pWidth / 2 - 18, ringY + 34)
+    context.setFontSize(40)
+    context.fillText('%', 70 + pWidth, 358)
+    context.setFontSize(22)
+    context.fillText(poster.ringLabel, 74 + pWidth, 298)
+
+    context.setFillStyle(palette.soft)
+    context.fillRect(60, 402, W - 120, 18)
+    context.setFillStyle(palette.highlight)
+    context.fillRect(60, 402, Math.max(12, (W - 120) * percent / 100), 18)
     context.setFillStyle(palette.sub)
     context.setFontSize(20)
-    context.fillText(poster.ringLabel, ringX - 66, ringY + 86)
+    context.fillText(`${poster.metricToday} ${this.data.todayText} · 目标 ${this.data.todayTarget}`, 60, 458)
 
-    // 右侧三行指标
-    const rows = [
+    // 三列指标
+    const metrics = [
       { label: poster.metricToday, value: this.data.todayText },
       { label: poster.metricWeek, value: this.data.weekText },
-      { label: poster.metricStreak, value: `${this.data.streak} 天` }
+      { label: poster.metricStreak, value: `${this.data.streak} ${poster.calendarUnit}` }
     ]
-    rows.forEach((row, index) => {
-      const y = 340 + index * 96
-      context.setFillStyle(palette.sub)
-      context.setFontSize(20)
-      context.fillText(row.label, 436, y)
-      context.setFillStyle(palette.ink)
-      context.setFontSize(38)
-      context.fillText(row.value, 436, y + 38)
-      context.setFillStyle(palette.soft)
-      context.fillRect(436, y + 54, 248, 3)
-    })
-
-    // 分割线
-    context.setFillStyle(palette.soft)
-    context.fillRect(60, 596, W - 120, 3)
-
-    // 近 7 天小柱
-    context.setFillStyle(palette.ink)
-    context.setFontSize(24)
-    context.fillText(poster.trendTitle, 60, 654)
-    context.setFillStyle(palette.sub)
-    context.setFontSize(18)
-    context.fillText(poster.trendUnit, W - 140, 654)
-
-    const bars = this.data.trend || []
-    const baseY = 852
-    const colWidth = 76
-    const gap = (W - 120 - bars.length * colWidth) / (bars.length - 1 || 1)
-    bars.forEach((item, index) => {
-      const x = 60 + index * (colWidth + gap)
-      const h = Math.max(8, 150 * (item.height || 0) / 100)
-      context.setFillStyle(palette.soft)
-      context.fillRect(x, baseY - 150, colWidth, 150)
-      context.setFillStyle(palette.highlight)
-      context.fillRect(x, baseY - h, colWidth, h)
-      if (index === bars.length - 1) {
-        context.setFillStyle(palette.panel)
-        context.fillRect(x, baseY - h, colWidth, 6)
+    const colW = (W - 120) / 3
+    metrics.forEach((item, index) => {
+      const x = 60 + index * colW
+      if (index > 0) {
+        context.setFillStyle(palette.soft)
+        context.fillRect(x - 20, 496, 3, 84)
       }
-      context.setFillStyle(palette.ink)
-      context.setFontSize(20)
-      const labelWidth = context.measureText(item.label).width
-      context.fillText(item.label, x + (colWidth - labelWidth) / 2, baseY + 32)
       context.setFillStyle(palette.sub)
       context.setFontSize(18)
-      context.fillText(item.text, x + (colWidth - context.measureText(item.text).width) / 2, baseY - 168)
+      context.fillText(item.label, x + (index > 0 ? 0 : 0), 520)
+      context.setFillStyle(palette.ink)
+      context.setFontSize(34)
+      context.fillText(item.value, x + (index > 0 ? 0 : 0), 570)
     })
-    context.setFillStyle(palette.soft)
-    context.fillRect(60, baseY, W - 120, 3)
 
-    // 底部金句
-    context.setFillStyle(palette.panel)
-    context.fillRect(60, 952, W - 120, 128)
-    context.setFillStyle(palette.highlight)
-    context.setFontSize(26)
-    context.fillText('★', 92, 1016)
-    context.setFillStyle(palette.onPanel)
-    context.setFontSize(24)
-    context.fillText(poster.quote, 136, 1016)
+    // 本月日历
     context.setFillStyle(palette.soft)
+    context.fillRect(60, 626, W - 120, 3)
+    context.setFillStyle(palette.ink)
+    context.setFontSize(24)
+    context.fillText(`${poster.calendarTitle} ${this.data.calendar.monthDays || 0} ${poster.calendarUnit}`, 60, 690)
+    context.setFillStyle(palette.sub)
     context.setFontSize(18)
-    context.fillText(`${poster.totalPrefix} ${this.data.totalDays} 天`, 92, 1052)
+    context.fillText(poster.calendarUnit === '天' ? `${(this.data.calendar.monthLabel || '').replace('年', '.').replace('月', '').replace(/ /g, '')}` : '', 60, 722)
+
+    const weekday = ['一', '二', '三', '四', '五', '六', '日']
+    const cell = 54
+    const gap = 10
+    const gridW = cell * 7 + gap * 6
+    const gridX = (W - gridW) / 2
+    let y = 750
+    context.setFillStyle(palette.sub)
+    context.setFontSize(18)
+    weekday.forEach((label, index) => {
+      const w = context.measureText(label).width
+      context.fillText(label, gridX + index * (cell + gap) + (cell - w) / 2, y)
+    })
+    y += 16
+
+    const levelColors = {
+      '0': palette.soft,
+      '1': palette.accent,
+      '2': palette.highlight,
+      '3': palette.onPanelWarm || palette.highlight,
+      '4': palette.panel,
+      none: palette.bg
+    }
+    ;(cal.rows || []).forEach((row) => {
+      const cells = row.cells || []
+      cells.forEach((item, index) => {
+        const x = gridX + index * (cell + gap)
+        if (item.empty) return
+        context.setFillStyle(levelColors[item.level] || palette.soft)
+        context.fillRect(x, y, cell, cell)
+        if (item.isToday) {
+          context.setStrokeStyle(palette.panel)
+          context.setLineWidth(4)
+          context.strokeRect(x, y, cell, cell)
+        }
+        context.setFillStyle(item.level === '4' || item.level === '3' ? palette.onPanel : palette.ink)
+        context.setFontSize(18)
+        const dayText = `${item.day}`
+        const dw = context.measureText(dayText).width
+        context.fillText(dayText, x + (cell - dw) / 2, y + cell / 2 + 6)
+      })
+      y += cell + gap
+    })
+
+    // 金句
+    context.setFillStyle(palette.panel)
+    context.fillRect(60, 1052, W - 120, 74)
+    context.setFillStyle(palette.onPanel)
+    context.setFontSize(22)
+    context.fillText(poster.quote, 88, 1098)
 
     // 页脚
     context.setFillStyle(palette.sub)
-    context.setFontSize(20)
-    context.fillText(poster.footLeft, 60, 1122)
-    context.setFillStyle(palette.sub)
-    context.setFontSize(16)
-    context.fillText(poster.footRight, W - 60 - 128, 1122)
+    context.setFontSize(18)
+    context.fillText(poster.footLeft, 60, 1166)
+    const footRightWidth = context.measureText(poster.footRight).width
+    context.fillText(poster.footRight, W - 60 - footRightWidth, 1166)
 
     context.draw(false, () => {
       wx.canvasToTempFilePath({
         canvasId: 'posterCanvas',
         destWidth: 1500,
-        destHeight: 2360,
+        destHeight: 2400,
         success: ({ tempFilePath }) => {
           this.posterPath = tempFilePath
           if (onReady) onReady(tempFilePath)
@@ -252,7 +356,7 @@ Page({
 
   onShareAppMessage() {
     return {
-      title: `我在小鱼计时器连续打卡 ${this.data.streak} 天，今日完成 ${this.data.todayPercent}%`,
+      title: `我在泡泡计时器连续打卡 ${this.data.streak} 天，今日完成 ${this.data.todayPercent}%`,
       path: '/pages/index/index'
     }
   },

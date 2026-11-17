@@ -26,16 +26,7 @@
     "wxext14566970e7e9f62": "2.27.3"
   },
   "packOptions": {
-    "ignore": [
-      {
-        "type": "folder",
-        "value": "外观"
-      },
-      {
-        "type": "file",
-        "value": "项目需求.md"
-      }
-    ],
+    "ignore": [],
     "include": []
   },
   "appid": "wx94c4673cd56b09ad",

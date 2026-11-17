@@ -10,6 +10,8 @@ const CLOCK_STYLES = [
 
 const FOCUS_SECONDS = 25 * 60
 const REST_SECONDS = 5 * 60
+const LONG_REST_SECONDS = 15 * 60
+const LONG_REST_EVERY = 4
 
 Page({
   data: {
@@ -18,7 +20,7 @@ Page({
     globalTimeText: '00:00:00', moduleTimeText: '00:00:00', mainTimeText: '00:00:00',
     progressPercent: 0, isPaused: false, isOvertime: false, isHolding: false,
     clockStyle: 'flip', clockStyleName: '翻页时钟', flipPairs: [], flipDigits: [], flipPhase: false,
-    msText: '000', showStyleHint: false, theme: 'cream',
+    msText: '000', showStyleHint: false, theme: 'cream', themeStyle: '',
     isLastModule: false, isFirstModule: true,
     mode: 'countup', modeName: '正计时', mainLabel: '总用时',
     phaseLabel: '', phaseText: ''
@@ -27,7 +29,7 @@ Page({
   onLoad() {
     const theme = app.getTheme ? app.getTheme() : { key: 'cream' }
     const settings = app.getSettings ? app.getSettings() : {}
-    this.setData({ theme: theme.key })
+    this.setData({ theme: theme.key, themeStyle: theme.style || '' })
     if (app.applyNavBar) app.applyNavBar()
 
     const session = wx.getStorageSync(app.globalData.storageKey)
@@ -118,6 +120,11 @@ Page({
   },
 
   onUnload() {
+    // 离开前结算最后一秒，避免会话里少记一段
+    if (!this.finished) {
+      try { this.tick() } catch (error) { /* 已销毁计时器，忽略 */ }
+      this.persistSession()
+    }
     this.stopTicker()
     this.stopMsTicker()
     this.stopTotalBuzz()
@@ -167,19 +174,73 @@ Page({
       moduleSeconds: this.data.moduleSeconds
     }, () => {
       this.updateDisplay()
+      // 番茄进行中：当前模块到目标就即时结算并接到下一个模块，不打断这个专注段
+      if (this.data.mode === 'pomodoro' && this.pomodoroPhase === 'focus' && !this.pomodoroAllDone) {
+        if (this.settlePomodoroModule()) {
+          this.pomodoroAllDone = true
+          setTimeout(() => this.exitTraining(), 900)
+          return
+        }
+      }
       this.checkAlerts()
     })
   },
 
+  // 番茄与模块融合：每个番茄结束时结算当前模块是否达成目标，达成则自动进入下一模块
+  settlePomodoroModule() {
+    if (this.pomodoroAllDone) return true
+    const current = this.data.runtimeModules[this.data.currentIndex]
+    if (!current) return false
+    const targetSeconds = (current.targetMinutes || 0) * 60
+    if (!targetSeconds || this.data.moduleSeconds < targetSeconds) return false
+    const modules = clone(this.data.runtimeModules)
+    modules[this.data.currentIndex].status = 'done'
+    const nextIndex = modules.findIndex(item => item.status !== 'done')
+    if (nextIndex < 0) {
+      wx.showToast({ title: '所有模块已完成', icon: 'none', duration: 1200 })
+      this.moduleSeconds = modules[this.data.currentIndex].elapsedSeconds || this.data.moduleSeconds
+      this.setData({ runtimeModules: modules })
+      return true
+    }
+    modules[nextIndex].status = 'current'
+    this.moduleSeconds = modules[nextIndex].elapsedSeconds || 0
+    this.moduleAlerted = false
+    this.setData({
+      runtimeModules: modules,
+      currentIndex: nextIndex,
+      moduleSeconds: this.moduleSeconds
+    }, () => {
+      this.updateDisplay()
+      this.persistSession()
+    })
+    wx.showToast({ title: `模块完成，下一个 ${modules[nextIndex].name}`, icon: 'none', duration: 1600 })
+    return false
+  },
+
   switchPomodoroPhase() {
-    const nextPhase = this.pomodoroPhase === 'focus' ? 'rest' : 'focus'
-    this.pomodoroPhase = nextPhase
-    this.phaseRemaining = nextPhase === 'focus' ? FOCUS_SECONDS : REST_SECONDS
-    if (nextPhase === 'focus') this.pomodoroCycle += 1
-    const phaseName = nextPhase === 'focus' ? '专注' : '休息'
-    if (app.vibrate) app.vibrate('heavy')
-    if (app.playRing) app.playRing()
-    wx.showToast({ title: `${phaseName}开始`, icon: 'none', duration: 1500 })
+    if (this.pomodoroPhase === 'focus') {
+      const allDone = this.settlePomodoroModule()
+      if (allDone) {
+        if (app.vibrate) app.vibrate('heavy')
+        if (app.playRing) app.playRing()
+        setTimeout(() => this.exitTraining(), 900)
+        return
+      }
+      const completed = this.pomodoroCycle
+      const isLong = completed % LONG_REST_EVERY === 0
+      this.pomodoroPhase = 'rest'
+      this.phaseRemaining = isLong ? LONG_REST_SECONDS : REST_SECONDS
+      if (app.vibrate) app.vibrate('heavy')
+      if (app.playRing) app.playRing()
+      wx.showToast({ title: isLong ? '长休息 15 分钟' : '休息 5 分钟', icon: 'none', duration: 1600 })
+    } else {
+      this.pomodoroPhase = 'focus'
+      this.phaseRemaining = FOCUS_SECONDS
+      this.pomodoroCycle += 1
+      if (app.vibrate) app.vibrate('heavy')
+      if (app.playRing) app.playRing()
+      wx.showToast({ title: '番茄专注开始', icon: 'none', duration: 1600 })
+    }
     this.updateDisplay()
   },
 
@@ -189,7 +250,7 @@ Page({
     const current = this.data.runtimeModules[this.data.currentIndex]
     const targetSeconds = current ? (current.targetMinutes || 0) * 60 : 0
 
-    if (targetSeconds && !this.moduleAlerted && this.data.moduleSeconds >= targetSeconds) {
+    if (this.data.mode !== 'pomodoro' && targetSeconds && !this.moduleAlerted && this.data.moduleSeconds >= targetSeconds) {
       this.moduleAlerted = true
       if (settings.soundMode !== 'silent') {
         if (app.vibrate) app.vibrate('heavy')
@@ -249,7 +310,9 @@ Page({
   updateDisplay() {
     const currentModule = this.data.runtimeModules[this.data.currentIndex] || {}
     const targetSeconds = (currentModule.targetMinutes || 0) * 60
-    const moduleText = clock(this.data.moduleSeconds)
+    // 模块用时最多显示 60 分钟，格式「分 : 秒」，不用三段
+    const cappedModule = Math.min(this.data.moduleSeconds, 3600)
+    const moduleText = `${pad(Math.floor(cappedModule / 60))} : ${pad(cappedModule % 60)}`
     const globalText = clock(this.data.globalSeconds)
     const mode = this.data.mode
 
@@ -263,8 +326,11 @@ Page({
       mainLabel = '剩余'
     } else if (mode === 'pomodoro') {
       mainTimeText = clock(Math.max(0, this.phaseRemaining))
-      mainLabel = this.pomodoroPhase === 'focus' ? `第 ${this.pomodoroCycle} 个番茄` : '休息中'
-      phaseLabel = this.pomodoroPhase === 'focus' ? '专注' : '休息'
+      const moduleTotal = this.data.runtimeModules.length
+      mainLabel = this.pomodoroPhase === 'focus'
+        ? (moduleTotal ? `第 ${this.data.currentIndex + 1}/${moduleTotal} 个模块` : '专注')
+        : (this.phaseRemaining > REST_SECONDS ? '长休息中' : '休息中')
+      phaseLabel = this.pomodoroPhase === 'focus' ? '专注' : (this.phaseRemaining > REST_SECONDS ? '长休息' : '休息')
       phaseText = this.pomodoroPhase === 'focus' ? 'FOCUS' : 'BREAK'
     }
 
@@ -337,7 +403,6 @@ Page({
       this.updateDisplay()
       this.persistSession()
       if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
-      wx.showToast({ title: `切换到 ${target.name}`, icon: 'none', duration: 1200 })
     })
   },
 
@@ -374,7 +439,6 @@ Page({
       this.updateDisplay()
       this.persistSession()
       if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
-      wx.showToast({ title: `切换到 ${modules[targetIndex].name}`, icon: 'none', duration: 1200 })
     })
   },
 
@@ -422,7 +486,7 @@ Page({
       modeName: this.data.modeName,
       quote: '稳定节奏，持续精进。'
     }
-    const records = [report].concat(wx.getStorageSync(app.globalData.recordsKey) || []).slice(0, 3)
+    const records = [report].concat(wx.getStorageSync(app.globalData.recordsKey) || []).slice(0, 10)
     wx.setStorageSync(app.globalData.recordsKey, records)
     wx.setStorageSync('exam-timer-pending-report', report)
     if (app.addDailyStat) {

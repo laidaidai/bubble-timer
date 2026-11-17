@@ -10,5 +10,49 @@ $RECYCLE.BIN/
 .TemporaryItems
 .Trashes
 
-# Node.js
+# Node / 构建产物
 node_modules/
+miniprogram_npm/
+dist/
+build/
+coverage/
+*.log
+
+# 微信开发者工具本机私有配置
+project.private.config.json
+
+# 编辑器 / IDE 本地设置
+.idea/
+.vscode/
+*.iml
+.history/
+
+# Claude Code 本机私有目录，不随项目上传
+.claude/
+
+# 临时与备份文件
+*.tmp
+*.temp
+*.bak
+*.orig
+*.swp
+*~
+*.sublime-workspace
+
+# 环境变量 / 密钥
+.env
+.env.*
+!.env.example
+
+# 打包压缩产物
+*.zip
+*.tar.gz
+
+# SSH / 密钥文件
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+*.pub

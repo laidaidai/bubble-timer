@@ -19,10 +19,117 @@ const RINGS = [
   { key: 'drop', name: '水滴音', src: '/assets/audio/ring-drop.m4a' }
 ]
 
+
+// ---- 自定义主题：由主色 / 底色 / 字色推导整套 CSS 变量 ----
+const hexToRgb = (hex) => {
+  let value = String(hex || '').replace('#', '')
+  if (value.length === 3) value = value.split('').map(ch => ch + ch).join('')
+  const num = parseInt(value, 16)
+  return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 }
+}
+const toHex = (rgb) => '#' + [rgb.r, rgb.g, rgb.b].map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('').toUpperCase()
+const mixColor = (a, b, t) => {
+  const x = hexToRgb(a), y = hexToRgb(b)
+  return toHex({ r: x.r + (y.r - x.r) * t, g: x.g + (y.g - x.g) * t, b: x.b + (y.b - x.b) * t })
+}
+const shade = (hex, t) => t >= 0 ? mixColor(hex, '#FFFFFF', t) : mixColor(hex, '#000000', -t)
+const inkOn = (hex) => {
+  const { r, g, b } = hexToRgb(hex)
+  const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+  return lum > 0.62 ? '#4B3A2A' : '#FFFFFF'
+}
+
+const buildCustomTheme = (conf, meta) => {
+  const metaName = (meta && meta.name) || '自定义'
+  const metaKey = (meta && meta.key) || 'custom'
+  const primary = (conf && conf.primary) || '#FFC94D'
+  const bg = (conf && conf.bg) || '#FBF3DF'
+  const ink = (conf && conf.ink) || '#4B3A2A'
+  const primaryDeep = shade(primary, -0.16)
+  const primarySoft = shade(primary, -0.06)
+  const nav = mixColor(primary, '#FFFFFF', 0.42)
+  const onPrimary = inkOn(primary)
+  const textWarm = mixColor(ink, primary, 0.28)
+  const line = mixColor(ink, bg, 0.82)
+  const css = {
+    'bg': bg,
+    'card': mixColor(bg, '#FFFFFF', 0.85),
+    'panel': ink,
+    'panel-deep': shade(ink, -0.18),
+    'ink': ink,
+    'edge': ink,
+    'edge-deep': shade(ink, -0.12),
+    'shadow': ink,
+    'shadow-soft': mixColor(ink, bg, 0.68),
+    'text-2': mixColor(ink, bg, 0.48),
+    'text-3': mixColor(ink, bg, 0.58),
+    'text-4': mixColor(ink, bg, 0.68),
+    'text-warm': textWarm,
+    'text-mid': mixColor(ink, bg, 0.34),
+    'text-dim': mixColor(ink, bg, 0.24),
+    'on-panel': mixColor(bg, '#FFFFFF', 0.55),
+    'on-panel-warm': shade(primary, 0.2),
+    'accent-text': shade(primary, 0.35),
+    'accent-bg': mixColor(primary, '#FFFFFF', 0.55),
+    'cream-1': mixColor(bg, '#FFFFFF', 0.7),
+    'cream-2': mixColor(bg, primary, 0.1),
+    'cream-3': mixColor(bg, '#FFFFFF', 0.55),
+    'cream-4': mixColor(bg, primary, 0.16),
+    'line': line,
+    'line-2': mixColor(ink, bg, 0.86),
+    'line-strong': mixColor(ink, bg, 0.72),
+    'track': mixColor(primary, bg, 0.72),
+    'bar-target': mixColor(ink, bg, 0.62),
+    'bar-incomplete': mixColor(ink, bg, 0.7),
+    'chip-neutral': mixColor(bg, primary, 0.08),
+    'primary': primary,
+    'primary-2': primaryDeep,
+    'primary-3': primarySoft,
+    'on-primary': onPrimary,
+    'nav': nav,
+    'nav-front': '#000000',
+    'success': '#4F9B74',
+    'success-text': '#3D7F5E',
+    'success-bg': '#DCF1E5',
+    'success-line': '#A9D8C0',
+    'danger': '#E8442F',
+    'danger-text': '#B32B1E',
+    'danger-bg': '#FFE3DE',
+    'danger-line': '#F0C2B8',
+    'warn-bg': '#FFEEC2',
+    'warn-text': '#7A5A1C'
+  }
+  const style = Object.keys(css).map(name => `--${name}:${css[name]};`).join('')
+  return {
+    key: metaKey,
+    name: metaName,
+    desc: `${primary} · 自选配色`,
+    swatch: [bg, primary, ink],
+    nav,
+    front: '#000000',
+    slider: { active: primaryDeep, track: css.track, block: css['cream-1'] },
+    canvas: {
+      bg,
+      card: css.card,
+      panel: ink,
+      onPanel: css['on-panel'],
+      ink,
+      sub: textWarm,
+      accent: css['accent-bg'],
+      soft: css['cream-2'],
+      highlight: primary,
+      success: '#4F9B74',
+      danger: '#E8442F'
+    },
+    css,
+    style
+  }
+}
+
 const MODES = [
   { key: 'countup', name: '正计时', desc: '从 0 往上累计，练多少记多少' },
   { key: 'countdown', name: '倒计时', desc: '按总目标倒数，时间到自动收尾' },
-  { key: 'pomodoro', name: '番茄钟', desc: '25 分钟专注 + 5 分钟休息' }
+  { key: 'pomodoro', name: '番茄钟', desc: '25 分钟专注 / 5 分钟休息，每 4 个后长休息' }
 ]
 
 const DEFAULT_SETTINGS = {
@@ -41,7 +148,6 @@ App({
     templateKey: 'exam-timer-template',
     clockStyleKey: 'exam-timer-clock-style',
     todoKey: 'exam-timer-todos',
-    notifyTmplId: 'CRT3AD6eQmKo5yiX6k4gKtHpiLHboiCXuDuy0yGrdxc',
     themeKey: 'exam-timer-theme',
     dailyKey: 'exam-timer-daily',
     settingsKey: 'exam-timer-settings',
@@ -53,7 +159,6 @@ App({
   },
   onLaunch() {
     this.normalizeTemplates()
-    wx.removeStorageSync('exam-timer-notify-queue')
   },
 
   // 模板存储只保留一种结构：{ currentName, templates: [{ name, modules }] }
@@ -135,8 +240,54 @@ App({
   },
 
   getTheme() {
-    const key = this.getSettings().theme || wx.getStorageSync(this.globalData.themeKey)
+    const settings = this.getSettings()
+    const key = settings.theme || wx.getStorageSync(this.globalData.themeKey)
+    if (key && String(key).indexOf('ct-') === 0) {
+      const entry = (settings.customThemes || []).find(item => item.key === key)
+      if (entry) return buildCustomTheme(entry, { name: entry.name, key: entry.key })
+    }
+    if (key === 'custom') return buildCustomTheme(settings.customTheme)
     return THEMES.find(item => item.key === key) || THEMES[0]
+  },
+
+  // 自定义主题列表（带旧数据兼容）
+  getCustomThemes() {
+    const settings = this.getSettings()
+    const list = Array.isArray(settings.customThemes) ? settings.customThemes.slice() : []
+    if (!Array.isArray(settings.customThemes) && settings.customTheme) {
+      list.push({ key: 'ct-legacy', name: '我的主题', primary: settings.customTheme.primary, bg: settings.customTheme.bg, ink: settings.customTheme.ink })
+    }
+    return list
+  },
+
+  // 运行时主题全部变量（自定义主题走内联 style，内置主题为空）
+  getThemeStyle() {
+    const theme = this.getTheme()
+    return theme.style || ''
+  },
+
+  getRings() {
+    const settings = this.getSettings()
+    const list = RINGS.slice()
+    const customs = Array.isArray(settings.customRings) ? settings.customRings.slice() : []
+    if (!Array.isArray(settings.customRings) && settings.customRing && settings.customRing.path) {
+      customs.push({ key: 'cr-legacy', name: settings.customRing.name || '我的铃声', path: settings.customRing.path })
+    }
+    customs.forEach(item => {
+      if (item && item.path) list.push({ key: item.key, name: item.name || '我的铃声', src: item.path })
+    })
+    return list
+  },
+
+  ringSrc(key) {
+    const settings = this.getSettings()
+    if (key === 'custom' && settings.customRing && settings.customRing.path) return settings.customRing.path
+    const ring = this.getRings().find(item => item.key === key)
+    return ring ? ring.src : RINGS[0].src
+  },
+
+  buildCustomTheme(conf) {
+    return buildCustomTheme(conf)
   },
 
   applyNavBar() {
@@ -160,11 +311,11 @@ App({
   playRing() {
     const settings = this.getSettings()
     if (settings.soundMode === 'vibrate' || settings.soundMode === 'silent') return
-    const ring = RINGS.find(item => item.key === settings.ring) || RINGS[0]
+    const src = this.ringSrc(settings.ring)
     try {
       if (!this.audioContext) this.audioContext = wx.createInnerAudioContext()
       this.audioContext.stop()
-      this.audioContext.src = ring.src
+      this.audioContext.src = src
       this.audioContext.play()
     } catch (error) { /* 播放失败不影响计时 */ }
   },
@@ -220,7 +371,6 @@ App({
     weekStart.setDate(weekStart.getDate() - ((weekStart.getDay() + 6) % 7))
     let weekSeconds = 0
     let weekDays = 0
-    const weekDaily = []
     for (let i = 0; i < 7; i += 1) {
       const day = new Date(weekStart)
       day.setDate(day.getDate() + i)
@@ -229,7 +379,6 @@ App({
         weekSeconds += stat.seconds
         weekDays += 1
       }
-      weekDaily.push({ key: keyOf(day), label: `周${['一', '二', '三', '四', '五', '六', '日'][i]}`, seconds: stat.seconds || 0 })
     }
 
     let streak = 0
@@ -242,32 +391,42 @@ App({
 
     const totalDays = Object.keys(store).filter(key => store[key] && store[key].seconds).length
 
-    const heatCols = []
-    const gridStart = new Date(weekStart)
-    gridStart.setDate(gridStart.getDate() - 49)
-    for (let col = 0; col < 8; col += 1) {
-      const cells = []
-      for (let row = 0; row < 7; row += 1) {
-        const day = new Date(gridStart)
-        day.setDate(day.getDate() + col * 7 + row)
-        const stat = store[keyOf(day)] || {}
-        cells.push({
-          key: keyOf(day),
-          level: day > today ? 'none' : levelOf(stat.seconds),
-          label: `${day.getMonth() + 1}/${day.getDate()}`,
-          minutes: Math.floor((stat.seconds || 0) / 60)
-        })
-      }
-      heatCols.push({ key: `col-${col}`, cells })
+    // 当月日历打卡视图
+    const year = today.getFullYear()
+    const month = today.getMonth()
+    const firstDay = new Date(year, month, 1)
+    const lead = (firstDay.getDay() + 6) % 7
+    const monthDays = new Date(year, month + 1, 0).getDate()
+    const cells = []
+    let monthSeconds = 0
+    let monthDaysCount = 0
+    for (let i = 0; i < lead; i += 1) {
+      cells.push({ key: `pad-${i}`, empty: true, day: '' })
+    }
+    for (let dayNum = 1; dayNum <= monthDays; dayNum += 1) {
+      const day = new Date(year, month, dayNum)
+      const stat = store[keyOf(day)] || {}
+      const seconds = stat.seconds || 0
+      monthSeconds += seconds
+      if (seconds) monthDaysCount += 1
+      cells.push({
+        key: keyOf(day),
+        empty: false,
+        day: dayNum,
+        level: day > today ? 'none' : levelOf(seconds),
+        minutes: Math.floor(seconds / 60),
+        isToday: keyOf(day) === keyOf(today)
+      })
+    }
+    while (cells.length % 7 !== 0) {
+      cells.push({ key: `tail-${cells.length}`, empty: true, day: '' })
+    }
+    const calendarRows = []
+    for (let i = 0; i < cells.length; i += 7) {
+      calendarRows.push({ key: `row-${i}`, cells: cells.slice(i, i + 7) })
     }
 
-    const trend = []
-    for (let i = 6; i >= 0; i -= 1) {
-      const day = startOfDay(new Date())
-      day.setDate(day.getDate() - i)
-      const stat = store[keyOf(day)] || {}
-      trend.push({ key: keyOf(day), label: ['一', '二', '三', '四', '五', '六', '日'][(day.getDay() + 6) % 7], seconds: stat.seconds || 0 })
-    }
+
 
     return {
       today,
@@ -277,11 +436,9 @@ App({
       todayPercent,
       weekSeconds,
       weekDays,
-      weekDaily,
       streak,
       totalDays,
-      heatCols,
-      trend
+      calendar: { monthLabel: `${year} 年 ${month + 1} 月`, weekdayLabels: ['一', '二', '三', '四', '五', '六', '日'], rows: calendarRows, monthSeconds, monthDays: monthDaysCount }
     }
   }
 })

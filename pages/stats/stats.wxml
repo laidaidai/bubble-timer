@@ -1,4 +1,4 @@
-<view class="stats-page theme-{{theme}}">
+<view class="stats-page theme-{{theme}}" style="{{themeStyle}}">
   <view class="topbar">
     <button class="back-icon" bindtap="handleBack">‹</button>
     <view class="topbar-title">数据与打卡</view>
@@ -45,12 +45,16 @@
         </view>
 
         <view class="pc-body">
-          <view class="pc-ring" style="background: conic-gradient(var(--primary) 0% {{todayPercent}}%, var(--cream-2) {{todayPercent}}% 100%);">
-            <view class="pc-ring-inner">
-              <view class="pc-pct num">{{todayPercent}}<text class="pc-unit">%</text></view>
-              <view class="pc-pct-sub">{{poster.ringLabel}}</view>
+          <view class="pc-hero">
+            <view class="pc-pct-row">
+              <text class="pc-pct num">{{todayPercent}}</text>
+              <text class="pc-unit">%</text>
+              <text class="pc-pct-sub">{{poster.ringLabel}}</text>
             </view>
+            <view class="pc-bar"><view class="pc-bar-fill" style="width: {{todayPercent}}%;"></view></view>
+            <view class="pc-hero-sub">{{poster.metricToday}} {{todayText}} · 目标 {{todayTarget}}</view>
           </view>
+
           <view class="pc-stats">
             <view class="pc-stat">
               <view class="pc-label">{{poster.metricToday}}</view>
@@ -65,20 +69,17 @@
               <view class="pc-value num">{{streak}} 天</view>
             </view>
           </view>
-        </view>
 
-        <view class="pc-trend">
-          <view class="pc-trend-head">
-            <text class="pc-trend-title">{{poster.trendTitle}}</text>
-            <text class="pc-trend-unit">{{poster.trendUnit}}</text>
-          </view>
-          <view class="pc-bars">
-            <view class="pc-bar-col" wx:for="{{trend}}" wx:key="key">
-              <text class="pc-bar-val num">{{item.text}}</text>
-              <view class="pc-bar-track">
-                <view class="pc-bar-fill {{index === trend.length - 1 ? 'today' : ''}}" style="height: {{item.height}}%;"></view>
-              </view>
-              <text class="pc-bar-label">{{item.label}}</text>
+          <view class="pc-cal">
+            <view class="pc-cal-head">
+              <text class="pc-cal-title">{{poster.calendarTitle}} {{calendar.monthDays}} 天</text>
+              <text class="pc-cal-sub">{{calendar.monthLabel}}</text>
+            </view>
+            <view class="pc-cal-weekdays">
+              <text class="pc-cal-weekday" wx:for="{{calendar.weekdayLabels}}" wx:key="*this">{{item}}</text>
+            </view>
+            <view class="pc-cal-row" wx:for="{{calendar.rows}}" wx:key="key">
+              <view class="pc-cal-cell {{cell.empty ? 'empty' : 'level-' + cell.level}} {{cell.isToday ? 'today' : ''}}" wx:for="{{item.cells}}" wx:for-item="cell" wx:key="key">{{cell.day}}</view>
             </view>
           </view>
         </view>
@@ -102,56 +103,39 @@
 
     <view class="panel">
       <view class="panel-head">
-        <view class="panel-title">打卡热力图</view>
-        <view class="panel-sub">近 8 周 · 颜色越深练得越多</view>
+        <view class="panel-title">弱项追踪</view>
+        <view class="panel-sub">最近 12 次 · 已忽略不足 1 分钟</view>
       </view>
-      <view class="heat-wrap">
-        <view class="heat-col" wx:for="{{heatCols}}" wx:key="key">
-          <view class="heat-cell level-{{cell.level}}" wx:for="{{item.cells}}" wx:for-item="cell" wx:key="key"></view>
-        </view>
-      </view>
-      <view class="heat-legend">
-        <text class="legend-label">少</text>
-        <view class="heat-cell level-0"></view>
-        <view class="heat-cell level-1"></view>
-        <view class="heat-cell level-2"></view>
-        <view class="heat-cell level-3"></view>
-        <view class="heat-cell level-4"></view>
-        <text class="legend-label">多</text>
-      </view>
-    </view>
-
-    <view class="panel">
-      <view class="panel-head">
-        <view class="panel-title">近 7 天趋势</view>
-        <view class="panel-sub">单位：分钟</view>
-      </view>
-      <view class="trend-row">
-        <view class="trend-item" wx:for="{{trend}}" wx:key="key">
-          <text class="trend-val num">{{item.text}}</text>
-          <view class="trend-track"><view class="trend-bar" style="height: {{item.height}}%;"></view></view>
-          <text class="trend-label">{{item.label}}</text>
-        </view>
-      </view>
-    </view>
-
-    <view class="panel">
-      <view class="panel-head">
-        <view class="panel-title">本周训练榜</view>
-        <view class="panel-sub">先和自己比，再邀请好友一起练</view>
-      </view>
-      <view class="rank-list">
-        <view class="rank-row {{index < 3 ? 'top' : ''}}" wx:for="{{rankList}}" wx:key="key">
-          <view class="rank-no num">{{index + 1}}</view>
-          <view class="rank-info">
-            <view class="rank-name">{{item.label}}</view>
-            <view class="rank-bar"><view class="rank-fill" style="width: {{item.width}}%;"></view></view>
+      <view class="weak-list" wx:if="{{weakness.length}}">
+        <view class="weak-row" wx:for="{{weakness}}" wx:key="name">
+          <view class="weak-rank num">{{index + 1}}</view>
+          <view class="weak-main">
+            <view class="weak-top">
+              <text class="weak-name">{{item.name}}</text>
+              <text class="weak-pct num">{{item.avg}}%</text>
+            </view>
+            <view class="weak-track"><view class="weak-fill" style="width: {{item.bar}}%;"></view></view>
+            <view class="weak-sub">已练 {{item.count}} 次</view>
           </view>
-          <view class="rank-time num">{{item.text}}</view>
         </view>
       </view>
-      <view class="rank-tip">好友榜需要云开发关系链，当前先用「打卡海报 + 小程序转发」和好友对比：把每天的时长截图发出去，谁都不许偷懒。</view>
-      <button class="share-open" open-type="share">转发给好友</button>
+      <view class="panel-empty" wx:else>完成几次训练后，这里会排出最需要补的模块</view>
+    </view>
+
+    <view class="panel">
+      <view class="panel-head">
+        <view class="panel-title">成绩趋势</view>
+        <view class="panel-sub">最近 8 次 · 虚线为 100%</view>
+      </view>
+      <view class="trend-legend" wx:if="{{hasTrend}}">
+        <view class="trend-key" wx:for="{{trendModules}}" wx:key="name" wx:for-item="item" wx:for-index="index">
+          <view class="trend-dot tk-{{index}}"></view>
+          <text class="trend-name">{{item.name}}</text>
+          <text class="trend-last num">{{item.last}}%</text>
+        </view>
+      </view>
+      <canvas canvas-id="trendCanvas" class="trend-canvas" wx:if="{{hasTrend}}"></canvas>
+      <view class="panel-empty" wx:else>同一模块练两次以上，就能看到用时曲线</view>
     </view>
 
     <view class="stats-tip">数据统计按本机记录汇总，卸载小程序会一并清空。</view>

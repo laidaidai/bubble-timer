@@ -1,0 +1,410 @@
+<!doctype html><html><head><meta charset=utf-8><style>*{box-sizing:border-box;margin:0;padding:0}div{display:block}span{display:inline}text{display:inline}button{font-family:inherit;cursor:default}input{border:0;outline:none;-webkit-appearance:none;appearance:none}html,body{width:375px;margin:0;background:#d9d3c7;font-family:-apple-system,"PingFang SC",sans-serif}
+page {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+}
+
+button {
+  border: 0;
+  line-height: 1;
+}
+
+button::after {
+  border: 0;
+}
+
+.mono {
+  font-family: "Courier New", "Menlo", monospace;
+  font-variant-numeric: lining-nums;
+  font-feature-settings: "zero" 0;
+  font-weight: 800;
+}
+
+.num {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===== 主题色板 ===== */
+/* THEME-TOKENS:START 由 theme/palette.js 生成，勿手改 */
+
+page, .theme-cream {
+  --bg: #FBF3DF;
+  --card: #FFFCF2;
+  --panel: #4B3A2A;
+  --panel-deep: #2A2017;
+  --ink: #4B3A2A;
+  --edge: #4B3A2A;
+  --edge-deep: #3A2C1F;
+  --shadow: #4B3A2A;
+  --shadow-soft: #D8C69F;
+  --text-2: #A6906F;
+  --text-3: #B1A084;
+  --text-4: #C6B598;
+  --text-warm: #8A7048;
+  --text-mid: #7A6444;
+  --text-dim: #6E5A42;
+  --on-panel: #FFF9E8;
+  --on-panel-warm: #FFD166;
+  --accent-text: #FFE7A5;
+  --accent-bg: #FFE7A5;
+  --cream-1: #FFF9E8;
+  --cream-2: #FFF3D6;
+  --cream-3: #FFF6DF;
+  --cream-4: #FFF6E0;
+  --line: #E9DCC0;
+  --line-2: #EEE0C4;
+  --line-strong: #D9C7A1;
+  --track: #F2E5C9;
+  --bar-target: #CBB78F;
+  --bar-incomplete: #BFAE90;
+  --chip-neutral: #F0E6D2;
+  --primary: #FFC94D;
+  --primary-2: #E8A33D;
+  --primary-3: #E0B03A;
+  --on-primary: #4B3A2A;
+  --nav: #FFD874;
+  --nav-front: #000000;
+  --success: #4F9B74;
+  --success-text: #3D7F5E;
+  --success-bg: #DCF1E5;
+  --success-line: #A9D8C0;
+  --danger: #E8442F;
+  --danger-text: #B32B1E;
+  --danger-bg: #FFE3DE;
+  --danger-line: #F0C2B8;
+  --warn-bg: #FFEEC2;
+  --warn-text: #7A5A1C;
+}
+
+.theme-rose {
+  --bg: #FFF1F3;
+  --card: #FFFBFC;
+  --panel: #562B36;
+  --panel-deep: #45222B;
+  --ink: #4A2A31;
+  --edge: #4A2A31;
+  --edge-deep: #3A1E25;
+  --shadow: #54232E;
+  --shadow-soft: #EFC9D3;
+  --text-2: #A8798A;
+  --text-3: #BFA0AB;
+  --text-4: #D2BAC2;
+  --text-warm: #8E5262;
+  --text-mid: #7E4A58;
+  --text-dim: #6E4450;
+  --on-panel: #FFF4F7;
+  --on-panel-warm: #FFD9E2;
+  --accent-text: #FFE2EA;
+  --accent-bg: #FFE0E8;
+  --cream-1: #FFF6F8;
+  --cream-2: #FFE8EE;
+  --cream-3: #FFEFF3;
+  --cream-4: #FFE3EA;
+  --line: #F2D6DE;
+  --line-2: #F7E2E8;
+  --line-strong: #E4BFCB;
+  --track: #F9E4EA;
+  --bar-target: #E7C2CD;
+  --bar-incomplete: #CBB1B8;
+  --chip-neutral: #F6E3E8;
+  --primary: #FF9FB6;
+  --primary-2: #EE7E99;
+  --primary-3: #E06C88;
+  --on-primary: #4A2A31;
+  --nav: #FFB9C9;
+  --nav-front: #000000;
+  --success: #4F9B74;
+  --success-text: #2F7A55;
+  --success-bg: #DDF3E8;
+  --success-line: #A9D8C0;
+  --danger: #E8442F;
+  --danger-text: #B32B1E;
+  --danger-bg: #FFE3DE;
+  --danger-line: #F0C2B8;
+  --warn-bg: #FFEFD9;
+  --warn-text: #8A5A1C;
+}
+
+.theme-sky {
+  --bg: #EFF6FE;
+  --card: #FFFFFF;
+  --panel: #1E3A52;
+  --panel-deep: #14293B;
+  --ink: #1E3A52;
+  --edge: #1E3A52;
+  --edge-deep: #132838;
+  --shadow: #16304A;
+  --shadow-soft: #C6DEF3;
+  --text-2: #6E96B5;
+  --text-3: #8FB2CD;
+  --text-4: #AECAE1;
+  --text-warm: #35739B;
+  --text-mid: #2C6489;
+  --text-dim: #255A7C;
+  --on-panel: #F2FAFF;
+  --on-panel-warm: #D6EAFB;
+  --accent-text: #D9EDFC;
+  --accent-bg: #D6EAFB;
+  --cream-1: #F7FBFF;
+  --cream-2: #E3F0FB;
+  --cream-3: #EDF6FD;
+  --cream-4: #DCEDFA;
+  --line: #CFE3F5;
+  --line-2: #E4F0FA;
+  --line-strong: #B7D4EC;
+  --track: #E1EFFA;
+  --bar-target: #BFD8EE;
+  --bar-incomplete: #A9C2D8;
+  --chip-neutral: #E6F1FA;
+  --primary: #5EB0E8;
+  --primary-2: #3C97D6;
+  --primary-3: #2F86C4;
+  --on-primary: #0F2F45;
+  --nav: #7CC0EC;
+  --nav-front: #000000;
+  --success: #3E9B7A;
+  --success-text: #2A7A5D;
+  --success-bg: #DDF3EA;
+  --success-line: #A9DCC7;
+  --danger: #E8442F;
+  --danger-text: #B32B1E;
+  --danger-bg: #FFE3DE;
+  --danger-line: #F0C2B8;
+  --warn-bg: #FFF1D5;
+  --warn-text: #8A5A1C;
+}
+
+.theme-mint {
+  --bg: #EAF6F2;
+  --card: #FBFEFD;
+  --panel: #173F38;
+  --panel-deep: #0F2D28;
+  --ink: #17403A;
+  --edge: #17403A;
+  --edge-deep: #102F2A;
+  --shadow: #12332D;
+  --shadow-soft: #BFDCD2;
+  --text-2: #6E9A90;
+  --text-3: #8FB5AC;
+  --text-4: #AECFC7;
+  --text-warm: #3F8778;
+  --text-mid: #35776A;
+  --text-dim: #2C6B60;
+  --on-panel: #EFFBF7;
+  --on-panel-warm: #CDEFE2;
+  --accent-text: #D8F2E8;
+  --accent-bg: #D8F0E7;
+  --cream-1: #F2FCF9;
+  --cream-2: #DDF3EC;
+  --cream-3: #E8F8F3;
+  --cream-4: #D9F1E9;
+  --line: #CBE7DD;
+  --line-2: #DDF2EC;
+  --line-strong: #B4DACD;
+  --track: #DFF2EC;
+  --bar-target: #BEDDD2;
+  --bar-incomplete: #A9C2BB;
+  --chip-neutral: #E1F2EC;
+  --primary: #6ACFB4;
+  --primary-2: #45B295;
+  --primary-3: #379E82;
+  --on-primary: #12352F;
+  --nav: #7FD6C1;
+  --nav-front: #000000;
+  --success: #4F9B74;
+  --success-text: #2F7A55;
+  --success-bg: #DCF3E6;
+  --success-line: #A9D8C0;
+  --danger: #E8442F;
+  --danger-text: #B32B1E;
+  --danger-bg: #FFE3DE;
+  --danger-line: #F0C2B8;
+  --warn-bg: #FFF1D5;
+  --warn-text: #8A5A1C;
+}
+
+.theme-obsidian {
+  --bg: #12100C;
+  --card: #1E1A13;
+  --panel: #2A2419;
+  --panel-deep: #1A1610;
+  --ink: #F0E2C0;
+  --edge: #C9A65F;
+  --edge-deep: #A98B4C;
+  --shadow: #453818;
+  --shadow-soft: #3A3222;
+  --text-2: #A08E6A;
+  --text-3: #86765A;
+  --text-4: #6E6049;
+  --text-warm: #D9BC7C;
+  --text-mid: #C8A661;
+  --text-dim: #B0986A;
+  --on-panel: #FBEFCF;
+  --on-panel-warm: #FFD977;
+  --accent-text: #FFDE9E;
+  --accent-bg: #2E2820;
+  --cream-1: #241F17;
+  --cream-2: #2B251B;
+  --cream-3: #221D15;
+  --cream-4: #26211A;
+  --line: #3A3222;
+  --line-2: #332C1F;
+  --line-strong: #4A3E28;
+  --track: #2A2419;
+  --bar-target: #5A4A2C;
+  --bar-incomplete: #4A4030;
+  --chip-neutral: #3A3222;
+  --primary: #E7C066;
+  --primary-2: #CBA24C;
+  --primary-3: #B7903F;
+  --on-primary: #241F16;
+  --nav: #1E1A13;
+  --nav-front: #F0E2C0;
+  --success: #7FB69A;
+  --success-text: #A2D4B9;
+  --success-bg: #22352B;
+  --success-line: #3E7A5E;
+  --danger: #FF7A66;
+  --danger-text: #FF9A88;
+  --danger-bg: #3A2320;
+  --danger-line: #8C5348;
+  --warn-bg: #3A3020;
+  --warn-text: #E0BE72;
+}
+
+/* THEME-TOKENS:END */
+
+/* 主色底上的文字统一用 --on-primary，深色主题下才看得清 */
+.primary-button, .modal-confirm, .pause-button { color: var(--on-primary); }
+
+/* ---- 公共顶栏（四个端口径一致，改这里全站生效） ---- */
+.topbar { box-sizing: border-box; height: 88px; padding: 35px 14px 0; padding-top: max(35px, calc(env(safe-area-inset-top) + 3px)); display: flex; align-items: center; gap: 7px; color: var(--ink); background: var(--nav); border-bottom: 1.5px solid var(--edge); }
+.topbar-title { flex: 1; min-width: 0; overflow: hidden; color: var(--ink); text-align: center; white-space: nowrap; font-size: 18px; font-weight: 900; line-height: 1.2; letter-spacing: 1px; }
+.back-icon { flex: 0 0 35px; width: 35px !important; min-width: 35px !important; max-width: 35px; height: 30px; margin: 0; padding: 0; display: flex; align-items: center; justify-content: center; color: var(--ink); background: transparent; border: 0; font-size: 30px; font-weight: 300; line-height: 1; }
+.topbar-spacer { flex: 0 0 35px; width: 35px; height: 30px; }
+
+page { background: var(--bg); }
+
+.stats-page { min-height: 100vh; background: var(--bg); color: var(--ink); }
+
+.stats-body { height: calc(100vh - 88px); padding: 4px 14px 30px; box-sizing: border-box; }
+
+/* ===== 今日总览 ===== */
+.hero-card { padding: 13px 14px; background: var(--panel); border: 1.5px solid var(--edge); border-radius: 15px; box-shadow: 3.5px 4px 0 var(--shadow); }
+.hero-top { display: flex; align-items: center; justify-content: space-between; }
+.hero-eyebrow { color: var(--on-panel); font-size: 11px; font-weight: 800; letter-spacing: 0.5px; }
+.hero-mode { padding: 3px 8px; color: var(--on-panel); background: rgba(255, 255, 255, .18); border: 1px solid var(--on-panel-warm); border-radius: 499.5px; font-size: 9px; font-weight: 900; }
+.hero-percent { margin-top: 3px; display: flex; align-items: flex-end; }
+.hero-num { color: var(--on-panel); font-size: 64px; font-weight: 900; line-height: 1; }
+.hero-unit { margin-left: 4px; padding-bottom: 7px; color: var(--on-panel-warm); font-size: 19px; font-weight: 900; }
+.hero-bar { margin-top: 9px; height: 9px; background: rgba(255, 255, 255, .22); border: 1px solid rgba(255, 255, 255, .35); border-radius: 499.5px; overflow: hidden; }
+.hero-bar-fill { height: 100%; background: var(--primary); border-radius: 499.5px; }
+.hero-meta { margin-top: 7px; color: var(--on-panel-warm); font-size: 10px; font-weight: 700; }
+
+/* ===== 本周 / 连续 ===== */
+.metric-row { margin-top: 10px; display: flex; gap: 8px; }
+.metric-card { flex: 1; min-width: 0; padding: 10px 11px; background: var(--card); border: 1px solid var(--edge); border-radius: 12px; box-shadow: 2.5px 3px 0 var(--shadow-soft); }
+.metric-accent { background: var(--cream-2); }
+.metric-label { color: var(--text-2); font-size: 10px; font-weight: 800; }
+.metric-value { margin-top: 4px; font-size: 18px; font-weight: 900; line-height: 1.2; }
+.metric-sub { margin-top: 3px; color: var(--text-3); font-size: 9px; }
+
+/* ===== 通用面板 ===== */
+.panel { margin-top: 10px; padding: 11px 12px; background: var(--card); border: 1px solid var(--edge); border-radius: 13px; box-shadow: 2.5px 3px 0 var(--shadow-soft); }
+.panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; }
+.panel-title { font-size: 13px; font-weight: 900; }
+.panel-sub { color: var(--text-3); font-size: 9px; }
+.panel-empty { margin-top: 8px; padding: 15px 4px; color: var(--text-3); font-size: 10px; line-height: 1.6; text-align: center; }
+
+/* ===== 打卡海报 ===== */
+.poster-card { margin-top: 8px; background: var(--card); border: 1.5px solid var(--edge); border-radius: 13px; box-shadow: 3px 3.5px 0 var(--shadow); overflow: hidden; }
+.pc-head { padding: 10px 12px 11px; background: var(--panel); }
+.pc-brand { color: var(--on-panel-warm); font-size: 9px; font-weight: 900; letter-spacing: 1px; }
+.pc-row { margin-top: 5px; display: flex; align-items: baseline; justify-content: space-between; }
+.pc-title { color: var(--on-panel); font-size: 16px; font-weight: 900; letter-spacing: 1px; }
+.pc-date { color: var(--on-panel); font-size: 10px; font-weight: 700; }
+.pc-body { padding: 14px 12px 10px; }
+.pc-pct-row { display: flex; align-items: baseline; gap: 4px; }
+.pc-pct { color: var(--ink); font-size: 48px; font-weight: 900; line-height: 1; }
+.pc-unit { color: var(--text-2); font-size: 16px; font-weight: 900; }
+.pc-pct-sub { margin-left: auto; color: var(--text-2); font-size: 9.5px; font-weight: 700; }
+.pc-bar { margin-top: 9px; height: 10px; overflow: hidden; background: var(--cream-2); border-radius: 499.5px; }
+.pc-bar-fill { height: 100%; background: var(--primary); border-radius: 499.5px; }
+.pc-hero-sub { margin-top: 6px; color: var(--text-2); font-size: 9.5px; font-weight: 700; }
+.pc-stats { margin-top: 13px; display: flex; padding-top: 11px; border-top: 1px solid var(--line); }
+.pc-stat { flex: 1; min-width: 0; }
+.pc-stat + .pc-stat { padding-left: 10px; border-left: 1px solid var(--line); }
+.pc-label { color: var(--text-2); font-size: 9.5px; font-weight: 700; }
+.pc-value { margin-top: 3px; color: var(--ink); font-size: 15px; font-weight: 900; }
+.pc-cal { margin-top: 13px; padding-top: 11px; border-top: 1px solid var(--line); }
+.pc-cal-head { display: flex; align-items: baseline; justify-content: space-between; }
+.pc-cal-title { color: var(--ink); font-size: 11.5px; font-weight: 900; }
+.pc-cal-sub { color: var(--text-3); font-size: 9px; }
+.pc-cal-weekdays { margin-top: 7px; display: flex; gap: 3px; }
+.pc-cal-weekday { flex: 1; color: var(--text-3); text-align: center; font-size: 9px; font-weight: 800; }
+.pc-cal-row { margin-top: 3px; display: flex; gap: 3px; }
+.pc-cal-cell { flex: 1; height: 23px; display: flex; align-items: center; justify-content: center; color: var(--ink); background: var(--cream-2); border-radius: 4px; font-size: 8.5px; font-weight: 800; }
+.pc-cal-cell.empty { background: transparent; }
+.pc-cal-cell.level-1 { background: var(--cream-4); }
+.pc-cal-cell.level-2 { background: var(--primary); }
+.pc-cal-cell.level-3 { background: var(--primary-2); color: var(--on-primary); }
+.pc-cal-cell.level-4 { background: var(--panel); color: var(--on-panel); }
+.pc-cal-cell.level-none { background: transparent; }
+.pc-cal-cell.today { box-shadow: inset 0 0 0 1.5px var(--panel); }
+.pc-quote { margin: 10px 12px 0; padding: 11px 9px; background: var(--panel); }
+.pc-quote-line { display: flex; align-items: center; gap: 5px; color: var(--on-panel); font-size: 10.5px; font-weight: 800; }
+.pc-star { color: var(--on-panel-warm); font-size: 11px; }
+.pc-quote-sub { margin-top: 5px; color: var(--cream-2); font-size: 9px; }
+.pc-foot { padding: 9px 12px 12px; display: flex; align-items: center; justify-content: space-between; color: var(--text-3); font-size: 9px; }
+.poster-actions { margin-top: 8px; display: flex; gap: 6px; }
+.mini-action { flex: 1; margin: 0; padding: 8px 0; color: var(--ink); background: var(--cream-1); border: 1px solid var(--edge); border-radius: 499.5px; font-size: 10px; font-weight: 900; line-height: 1.2; }
+.mini-action.primary { color: var(--on-primary); background: var(--primary); }
+.poster-canvas { position: fixed; left: -2000px; top: 0; width: 375px; height: 1180px; }
+
+/* ===== 弱项追踪 ===== */
+.weak-list { margin-top: 8px; }
+.weak-row { display: flex; align-items: flex-start; gap: 6px; padding: 5px 0; }
+.weak-rank { flex: 0 0 17px; width: 17px; height: 17px; margin-top: 1px; display: flex; align-items: center; justify-content: center; color: var(--text-mid); background: var(--cream-2); border: 1px solid var(--line-strong); border-radius: 499.5px; font-size: 10px; }
+.weak-main { flex: 1; min-width: 0; }
+.weak-top { display: flex; align-items: baseline; justify-content: space-between; gap: 5px; }
+.weak-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink); font-size: 12px; font-weight: 800; }
+.weak-pct { color: var(--ink); font-size: 12px; font-weight: 900; }
+.weak-track { margin-top: 4px; height: 6px; overflow: hidden; background: var(--track); border: 1px solid var(--line); border-radius: 499.5px; }
+.weak-fill { height: 100%; background: var(--primary-2); border-radius: 499.5px; }
+.weak-sub { margin-top: 3px; color: var(--text-3); font-size: 9px; }
+
+/* ===== 成绩趋势 ===== */
+.trend-legend { margin: 7px 0 2px; display: flex; flex-wrap: wrap; gap: 5px 9px; }
+.trend-key { display: flex; align-items: center; gap: 4px; }
+.trend-dot { width: 9px; height: 9px; border-radius: 50%; border: 1px solid var(--edge); }
+.tk-0 { background: var(--primary); }
+.tk-1 { background: var(--primary-2); }
+.tk-2 { background: var(--success); }
+.trend-name { color: var(--ink); font-size: 10px; font-weight: 800; }
+.trend-last { color: var(--text-3); font-size: 9.5px; font-weight: 900; }
+.trend-canvas { width: 100%; height: 190px; margin-top: 3px; }
+
+/* ===== 页脚提示 ===== */
+.stats-tip { margin: 12px 2px 0; color: var(--text-3); font-size: 9px; line-height: 1.6; }
+
+
+
+</style></head><body><div class="viewport" style="width:375px;height:1500px;overflow:hidden;position:relative"><div class="stats-page theme-cream" style="width:375px;min-height:1500px">
+ <div class="topbar"><button class="back-icon">‹</button><div class="topbar-title">数据与打卡</div><div class="topbar-spacer"></div></div>
+ <div class="stats-body" style="height:auto;padding:8px 14px 30px">
+  <div class="hero-card"><div class="hero-top"><div class="hero-eyebrow">今日目标完成</div><div class="hero-mode">番茄钟</div></div><div class="hero-percent"><span class="hero-num num">68</span><span class="hero-unit">%</span></div><div class="hero-bar"><div class="hero-bar-fill" style="width:68%"></div></div><div class="hero-meta">今日 2 小时 2 分 · 目标 3 小时</div></div>
+  <div class="metric-row"><div class="metric-card"><div class="metric-label">本周累计</div><div class="metric-value num">3 小时 52 分</div><div class="metric-sub">出勤 2 天</div></div><div class="metric-card metric-accent"><div class="metric-label">连续打卡</div><div class="metric-value num">10 天</div><div class="metric-sub">累计 10 天</div></div></div>
+  <div class="panel poster-panel"><div class="panel-head"><div class="panel-title">打卡海报</div><div class="panel-sub">竖版 · 可保存或分享</div></div>
+   <div class="poster-card"><div class="pc-head"><div class="pc-brand">BUBBLE TIMER · DAILY</div><div class="pc-row"><div class="pc-title">今日专注打卡</div><div class="pc-date num">2026.11.17</div></div></div>
+    <div class="pc-body"><div class="pc-pct-row"><span class="pc-pct num">68</span><span class="pc-unit">%</span><span class="pc-pct-sub">今日目标完成</span></div><div class="pc-bar"><div class="pc-bar-fill" style="width:68%"></div></div><div class="pc-hero-sub">今日时长 2 小时 2 分 · 目标 3 小时</div>
+     <div class="pc-stats"><div class="pc-stat"><div class="pc-label">今日时长</div><div class="pc-value num">2 小时 2 分</div></div><div class="pc-stat"><div class="pc-label">本周累计</div><div class="pc-value num">3 小时 52 分</div></div><div class="pc-stat"><div class="pc-label">连续打卡</div><div class="pc-value num">10 天</div></div></div>
+     <div class="pc-cal"><div class="pc-cal-head"><span class="pc-cal-title">本月打卡 10 天</span><span class="pc-cal-sub">2026 年 11 月</span></div><div class="pc-cal-weekdays"><span class="pc-cal-weekday">一</span><span class="pc-cal-weekday">二</span><span class="pc-cal-weekday">三</span><span class="pc-cal-weekday">四</span><span class="pc-cal-weekday">五</span><span class="pc-cal-weekday">六</span><span class="pc-cal-weekday">日</span></div><div class="pc-cal-row"><div class="pc-cal-cell empty"></div><div class="pc-cal-cell empty"></div><div class="pc-cal-cell empty"></div><div class="pc-cal-cell empty"></div><div class="pc-cal-cell empty"></div><div class="pc-cal-cell empty"></div><div class="pc-cal-cell">1</div></div><div class="pc-cal-row"><div class="pc-cal-cell">2</div><div class="pc-cal-cell">3</div><div class="pc-cal-cell">4</div><div class="pc-cal-cell">5</div><div class="pc-cal-cell">6</div><div class="pc-cal-cell">7</div><div class="pc-cal-cell level-1">8</div></div><div class="pc-cal-row"><div class="pc-cal-cell level-1">9</div><div class="pc-cal-cell level-1">10</div><div class="pc-cal-cell level-2">11</div><div class="pc-cal-cell level-2">12</div><div class="pc-cal-cell level-2">13</div><div class="pc-cal-cell level-3">14</div><div class="pc-cal-cell level-3">15</div></div><div class="pc-cal-row"><div class="pc-cal-cell level-3">16</div><div class="pc-cal-cell level-4 today">17</div><div class="pc-cal-cell">18</div><div class="pc-cal-cell">19</div><div class="pc-cal-cell">20</div><div class="pc-cal-cell">21</div><div class="pc-cal-cell">22</div></div><div class="pc-cal-row"><div class="pc-cal-cell">23</div><div class="pc-cal-cell">24</div><div class="pc-cal-cell">25</div><div class="pc-cal-cell">26</div><div class="pc-cal-cell">27</div><div class="pc-cal-cell">28</div><div class="pc-cal-cell">29</div></div><div class="pc-cal-row"><div class="pc-cal-cell">30</div><div class="pc-cal-cell empty"></div><div class="pc-cal-cell empty"></div><div class="pc-cal-cell empty"></div><div class="pc-cal-cell empty"></div><div class="pc-cal-cell empty"></div><div class="pc-cal-cell empty"></div></div></div><div class="pc-quote"><div class="pc-quote-line"><span class="pc-star">★</span><span>把今天的专注记下来，明天继续。</span></div><div class="pc-quote-sub">累计打卡 10 天</div></div><div class="pc-foot"><span>泡泡计时器 · 备考训练计时</span><span>长按图片可保存或转发</span></div>
+   </div>
+   <div class="poster-actions"><button class="mini-action primary">保存相册</button><button class="mini-action">分享</button></div>
+  </div>
+  <div class="panel"><div class="panel-head"><div class="panel-title">弱项追踪</div><div class="panel-sub">最近 12 次 · 已忽略不足 1 分钟</div></div><div class="weak-list"><div class="weak-row"><div class="weak-rank num">1</div><div class="weak-main"><div class="weak-top"><span class="weak-name">资料分析</span><span class="weak-pct num">107%</span></div><div class="weak-track"><div class="weak-fill" style="width:100%"></div></div><div class="weak-sub">已练 4 次</div></div></div><div class="weak-row"><div class="weak-rank num">2</div><div class="weak-main"><div class="weak-top"><span class="weak-name">言语理解</span><span class="weak-pct num">103%</span></div><div class="weak-track"><div class="weak-fill" style="width:100%"></div></div><div class="weak-sub">已练 3 次</div></div></div><div class="weak-row"><div class="weak-rank num">3</div><div class="weak-main"><div class="weak-top"><span class="weak-name">常识判断</span><span class="weak-pct num">90%</span></div><div class="weak-track"><div class="weak-fill" style="width:60%"></div></div><div class="weak-sub">已练 2 次</div></div></div></div></div>
+  <div class="panel"><div class="panel-head"><div class="panel-title">成绩趋势</div><div class="panel-sub">最近 8 次 · 虚线为 100%</div></div><div class="trend-legend"><div class="trend-key"><div class="trend-dot tk-0"></div><span class="trend-name">资料分析</span><span class="trend-last num">107%</span></div><div class="trend-key"><div class="trend-dot tk-1"></div><span class="trend-name">判断推理</span><span class="trend-last num">97%</span></div><div class="trend-key"><div class="trend-dot tk-2"></div><span class="trend-name">言语理解</span><span class="trend-last num">92%</span></div></div><div class="trend-canvas" style="height:190px"><svg viewBox="0 0 300 150" width="100%" height="100%" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><line x1="16" y1="10.0" x2="288" y2="10.0" stroke="#FFF3D6" stroke-width="1"/><line x1="16" y1="48.0" x2="288" y2="48.0" stroke="#FFF3D6" stroke-width="1"/><line x1="16" y1="86.0" x2="288" y2="86.0" stroke="#FFF3D6" stroke-width="1"/><line x1="16" y1="124.0" x2="288" y2="124.0" stroke="#FFF3D6" stroke-width="1"/><line x1="16" y1="42.6" x2="288" y2="42.6" stroke="#8A7048" stroke-width="1.5" stroke-dasharray="4 3"/><polyline fill="none" stroke="#FFC94D" stroke-width="2.5" points="16.0,57.2 54.9,46.6 93.7,52.3 132.6,40.9 171.4,45.0 210.3,34.4 249.1,39.3 288.0,36.9"/><circle cx="16.0" cy="57.2" r="2.4" fill="#FFC94D"/><circle cx="54.9" cy="46.6" r="2.4" fill="#FFC94D"/><circle cx="93.7" cy="52.3" r="2.4" fill="#FFC94D"/><circle cx="132.6" cy="40.9" r="2.4" fill="#FFC94D"/><circle cx="171.4" cy="45.0" r="2.4" fill="#FFC94D"/><circle cx="210.3" cy="34.4" r="2.4" fill="#FFC94D"/><circle cx="249.1" cy="39.3" r="2.4" fill="#FFC94D"/><circle cx="288.0" cy="36.9" r="2.4" fill="#FFC94D"/><polyline fill="none" stroke="#E8A33D" stroke-width="2.5" points="16.0,62.1 54.9,52.3 93.7,54.8 132.6,49.1 171.4,50.7 210.3,45.8 249.1,47.5 288.0,45.0"/><circle cx="16.0" cy="62.1" r="2.4" fill="#E8A33D"/><circle cx="54.9" cy="52.3" r="2.4" fill="#E8A33D"/><circle cx="93.7" cy="54.8" r="2.4" fill="#E8A33D"/><circle cx="132.6" cy="49.1" r="2.4" fill="#E8A33D"/><circle cx="171.4" cy="50.7" r="2.4" fill="#E8A33D"/><circle cx="210.3" cy="45.8" r="2.4" fill="#E8A33D"/><circle cx="249.1" cy="47.5" r="2.4" fill="#E8A33D"/><circle cx="288.0" cy="45.0" r="2.4" fill="#E8A33D"/><polyline fill="none" stroke="#4F9B74" stroke-width="2.5" points="16.0,67.0 54.9,57.2 93.7,60.5 132.6,54.0 171.4,55.6 210.3,50.7 249.1,52.3 288.0,49.1"/><circle cx="16.0" cy="67.0" r="2.4" fill="#4F9B74"/><circle cx="54.9" cy="57.2" r="2.4" fill="#4F9B74"/><circle cx="93.7" cy="60.5" r="2.4" fill="#4F9B74"/><circle cx="132.6" cy="54.0" r="2.4" fill="#4F9B74"/><circle cx="171.4" cy="55.6" r="2.4" fill="#4F9B74"/><circle cx="210.3" cy="50.7" r="2.4" fill="#4F9B74"/><circle cx="249.1" cy="52.3" r="2.4" fill="#4F9B74"/><circle cx="288.0" cy="49.1" r="2.4" fill="#4F9B74"/></svg></div></div>
+ </div>
+</div></div></body></html>

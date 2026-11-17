@@ -1,8 +1,8 @@
-<view class="app theme-{{theme}}">
+<view class="app theme-{{theme}}" style="{{themeStyle}}">
   <view class="topbar">
     <button class="back-icon" bindtap="handleBack">‹</button>
     <view class="topbar-title" wx:if="{{view === 'report'}}">训练分析报告</view>
-    <view class="topbar-title" wx:else>小鱼计时器</view>
+    <view class="topbar-title" wx:else>小鱼时钟</view>
     <view class="topbar-spacer"></view>
   </view>
 
@@ -82,108 +82,69 @@
 
 
   <block wx:if="{{view === 'report'}}">
+    <scroll-view class="report-scroll" scroll-y enhanced show-scrollbar="{{false}}">
     <view class="page-content report-page">
-      <view class="report-hero">
-        <view class="report-hero-head">
-          <view class="report-hero-title">
-            <view class="report-kicker">模考训练分析</view>
-            <view class="report-meta"><text class="meta-chip">训练时间</text><text class="num">{{report.startedAtText}}</text></view>
-          </view>
-          <text class="status-tag">已完成</text>
+      <view class="rp-hero">
+        <view class="rp-hero-meta"><text class="num">{{report.startedAtText}}</text><text class="rp-dot">·</text><text>已完成</text></view>
+        <view class="rp-hero-main">
+          <text class="rp-percent num">{{report.passRate}}</text><text class="rp-percent-unit">%</text>
+          <text class="rp-percent-cap">模块达标率</text>
         </view>
-
-        <view class="report-hero-body">
-          <view class="score-ring">
-            <view class="score-value"><text class="num">{{report.passRate}}</text><text class="score-unit">%</text></view>
-            <text class="score-caption">模块达标率</text>
+        <view class="rp-metrics">
+          <view class="rp-metric">
+            <view class="rp-metric-v num">{{report.totalActualText}}</view>
+            <view class="rp-metric-k">实际用时</view>
           </view>
-          <view class="hero-stat-grid">
-            <view class="hero-stat">
-              <text class="hero-stat-label">实际用时</text>
-              <text class="hero-stat-value num">{{report.totalActualText}}</text>
-            </view>
-            <view class="hero-stat">
-              <text class="hero-stat-label">计划用时</text>
-              <text class="hero-stat-value num">{{report.totalTarget}}<text class="hero-stat-unit">分</text></text>
-            </view>
-            <view class="hero-stat">
-              <text class="hero-stat-label">超时模块</text>
-              <text class="hero-stat-value num warn">{{report.overtimeCount}}<text class="hero-stat-unit">/{{report.rows.length}}</text></text>
-            </view>
-            <view class="hero-stat">
-              <text class="hero-stat-label">未完成</text>
-              <text class="hero-stat-value num">{{report.incompleteCount}}<text class="hero-stat-unit">个</text></text>
-            </view>
+          <view class="rp-metric">
+            <view class="rp-metric-v num">{{report.totalTarget}}<text class="rp-metric-u">分</text></view>
+            <view class="rp-metric-k">计划用时</view>
+          </view>
+          <view class="rp-metric">
+            <view class="rp-metric-v num {{report.overtimeCount ? 'warn' : ''}}">{{report.overtimeCount}}</view>
+            <view class="rp-metric-k">超时模块</view>
           </view>
         </view>
       </view>
 
-      <view class="completion-card">
-        <view class="completion-head">
-          <text class="card-title">整体目标完成度</text>
-          <text class="completion-value num">{{report.totalActualPercent}}%</text>
+      <view class="rp-tips {{report.shortestName ? '' : 'single'}}" wx:if="{{report.slowestName}}">
+        <view class="rp-tip">
+          <view class="rp-tip-k">最耗时</view>
+          <view class="rp-tip-v">{{report.slowestName}} <text class="num">{{report.slowestText}}</text></view>
         </view>
-        <view class="track"><view class="track-fill" style="width:{{report.totalActualPercent}}%"></view></view>
-        <text class="rule-text">{{report.statusRuleText}}</text>
-      </view>
-
-      <view class="insight-card" wx:if="{{report.slowestName}}">
-        <view class="card-title">关键结论</view>
-        <view class="insight-row">
-          <text class="insight-tag">最耗时</text>
-          <text class="insight-name">{{report.slowestName}}</text>
-          <text class="insight-value num">{{report.slowestText}}</text>
-        </view>
-        <view class="insight-row" wx:if="{{report.worstName}}">
-          <text class="insight-tag warn">超时最多</text>
-          <text class="insight-name">{{report.worstName}}</text>
-          <text class="insight-value num warn">{{report.worstDeltaText}}</text>
-        </view>
-        <view class="insight-row">
-          <text class="insight-tag ok">按时完成</text>
-          <text class="insight-name">未超出目标的模块</text>
-          <text class="insight-value num">{{report.onTrackCount}}<text class="insight-sub">/{{report.rows.length}}</text></text>
+        <view class="rp-tip" wx:if="{{report.shortestName}}">
+          <view class="rp-tip-k">最短时</view>
+          <view class="rp-tip-v">{{report.shortestName}} <text class="num">{{report.shortestText}}</text></view>
         </view>
       </view>
 
-      <view class="compare-card">
-        <view class="compare-head-row">
-          <text class="card-title">模块用时对比</text>
-          <view class="legend"><text class="dot target"></text>目标<text class="dot actual"></text>实际</view>
+      <view class="rp-list">
+        <view class="rp-list-head">
+          <text class="rp-list-title">模块用时</text>
+          <text class="rp-list-sub">实际 / 目标</text>
         </view>
-        <block wx:for="{{reportView}}" wx:key="id">
-          <view class="compare-row">
-            <view class="compare-row-head">
-              <view class="compare-name"><text class="compare-index num">{{index < 9 ? '0' + (index + 1) : index + 1}}</text><text class="compare-title">{{item.name}}</text></view>
-              <text class="status-badge status-{{item.statusCode}}">{{item.statusLabel}}</text>
-            </view>
-            <view class="bar-line">
-              <text class="bar-label">目标</text>
-              <view class="bar-track"><view class="bar-target" style="width:{{item.targetPercent}}%"></view></view>
-              <text class="bar-value num">{{item.targetMinutes}}:00</text>
-            </view>
-            <view class="bar-line">
-              <text class="bar-label">实际</text>
-              <view class="bar-track"><view class="bar-actual bar-{{item.statusCode}}" style="width:{{item.actualPercent}}%"></view></view>
-              <text class="bar-value num">{{item.actualText}}</text>
-            </view>
-            <view class="compare-foot {{item.statusCode === 'overtime' ? 'negative' : item.statusCode === 'on-track' || item.statusCode === 'near' ? 'positive' : 'muted-foot'}}"><text class="num">{{item.deltaText}}</text></view>
+        <view class="rp-item" wx:for="{{reportView}}" wx:key="id">
+          <view class="rp-item-head">
+            <view class="rp-item-name"><text class="rp-item-index num">{{item.indexLabel}}</text>{{item.name}}</view>
+            <view class="rp-item-time"><text class="num">{{item.actualText}}</text><text class="rp-item-target">/ {{item.targetMinutes}}:00</text></view>
           </view>
-        </block>
-        <view class="report-expand" wx:if="{{report.rows.length > 5}}" bindtap="toggleReportRows"><text wx:if="{{reportExpanded}}">收起模块</text><text wx:else>查看全部 <text class="num">{{report.rows.length}}</text> 个模块</text></view>
+          <view class="rp-item-track"><view class="rp-item-fill fill-{{item.statusCode}}" style="width:{{item.actualPercent}}%"></view></view>
+          <view class="rp-item-foot"><text class="rp-item-status s-{{item.statusCode}}">{{item.statusLabel}}</text><text class="rp-item-delta num">{{item.actualPercent}}%</text></view>
+        </view>
+        <view class="rp-more" wx:if="{{report.rows.length > 5}}" bindtap="toggleReportRows">{{reportExpanded ? '收起' : '展开全部 ' + report.rows.length + ' 个'}}</view>
       </view>
 
-      <view class="quote-card"><text class="quote-mark">★</text><text class="quote-text">{{report.quote}}</text></view>
+      <view class="rp-quote">{{report.quote}}</view>
 
-      <view class="report-actions">
-        <button class="secondary-button" bindtap="previewReport">预览</button>
-        <button class="secondary-button" bindtap="exportReport">保存</button>
-        <button class="secondary-button" bindtap="shareReport">分享</button>
-        <button class="danger-button" bindtap="restartTraining">重跑</button>
+      <view class="rp-actions">
+        <view class="rp-action-row">
+          <button class="rp-btn primary" bindtap="exportReport">保存图片</button>
+          <button class="rp-btn" bindtap="shareReport">分享</button>
+          <button class="rp-btn rp-btn-rerun" bindtap="restartTraining">↻ 再练一次</button>
+        </view>
       </view>
-      <view class="report-saved">已自动保存在本机</view>
       <canvas canvas-id="reportCanvas" class="report-canvas" />
     </view>
+    </scroll-view>
   </block>
 
   <view class="modal-mask" wx:if="{{presetSheetOpen}}" catchtouchmove="blockTouch" bindtap="closePresetSheet">

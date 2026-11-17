@@ -2,13 +2,13 @@ const app = getApp()
 
 Page({
   data: {
-    theme: 'cream',
+    theme: 'cream', themeStyle: '',
     records: []
   },
 
   onLoad() {
     const theme = app.getTheme ? app.getTheme() : { key: 'cream' }
-    this.setData({ theme: theme.key })
+    this.setData({ theme: theme.key, themeStyle: theme.style || '' })
     if (app.applyNavBar) app.applyNavBar()
     this.loadRecords()
   },
@@ -28,15 +28,37 @@ Page({
     this.backToIndex()
   },
 
+  // 重跑直接进计时页，不再回首页
   rerunRecord(event) {
     const record = this.data.records[Number(event.currentTarget.dataset.index)]
-    if (!record || !record.rows) return
-    wx.setStorageSync('exam-timer-pending-modules', record.rows.map(item => ({
+    if (!record || !record.rows || !record.rows.length) return
+    const runtimeModules = record.rows.map(item => ({
       id: item.id,
       name: item.name,
-      targetMinutes: item.targetMinutes
-    })))
-    this.backToIndex()
+      targetMinutes: item.targetMinutes,
+      elapsedSeconds: 0,
+      status: item.targetMinutes === 0 ? 'done' : 'pending'
+    }))
+    const firstIndex = runtimeModules.findIndex(item => item.status !== 'done')
+    if (firstIndex === -1) {
+      wx.showToast({ title: '这条记录没有有效模块', icon: 'none' })
+      return
+    }
+    runtimeModules[firstIndex].status = 'current'
+    const mode = record.mode || wx.getStorageSync(app.globalData.modeKey) || 'countup'
+    const totalTargetSeconds = runtimeModules.reduce((sum, item) => sum + (item.targetMinutes || 0) * 60, 0)
+    wx.setStorageSync(app.globalData.modeKey, mode)
+    wx.setStorageSync(app.globalData.storageKey, {
+      modules: runtimeModules,
+      startedAt: Date.now(),
+      currentIndex: firstIndex,
+      globalSeconds: 0,
+      moduleSeconds: 0,
+      isPaused: false,
+      mode,
+      totalTargetSeconds
+    })
+    wx.navigateTo({ url: '/pages/timer/timer' })
   },
 
   removeRecord(event) {

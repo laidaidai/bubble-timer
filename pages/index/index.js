@@ -48,7 +48,7 @@ Page({
     settleStyle: '',
     templateModalOpen: false,
     newTemplateName: '',
-    theme: 'cream',
+    theme: 'cream', themeStyle: '',
     themeName: '蜂蜜奶霜',
     sliderActive: '#E8A33D',
     sliderTrack: '#F0E2C2',
@@ -66,6 +66,7 @@ Page({
     const modeInfo = modes.find(item => item.key === savedMode) || modes[0]
     this.setData({
       theme: theme.key,
+      themeStyle: theme.style || '',
       themeName: theme.name,
       sliderActive: theme.sliderActive,
       sliderTrack: theme.sliderTrack,
@@ -125,13 +126,29 @@ Page({
         const template = templates.find(item => item.name === habitApply.name)
         if (template && template.modules && template.modules.length) {
           this.setData({ modules: this.withIds(template.modules), templateName: habitApply.name, templates, view: 'config' }, this.refreshConfig)
+        } else if (habitApply.name === '常规') {
+          this.setData({ modules: this.withIds(DEFAULT_MODULES), templateName: '常规', templates, view: 'config' }, this.refreshConfig)
         }
+      }
+    }
+    // 兜底：模板存储里的当前模板变了就同步（防止一次标记丢失导致首页不变）
+    const storedTpl = wx.getStorageSync(app.globalData.templateKey)
+    if (storedTpl && storedTpl.currentName && storedTpl.currentName !== this.data.templateName) {
+      const templates = this.readTemplates()
+      const template = templates.find(item => item.name === storedTpl.currentName)
+      if (template && template.modules && template.modules.length) {
+        this.setData({
+          modules: this.withIds(template.modules),
+          templateName: template.name,
+          templates,
+          view: 'config'
+        }, this.refreshConfig)
       }
     }
     if (app.getTheme) {
       const theme = app.getTheme()
-      if (theme.key !== this.data.theme) {
-        this.setData({ theme: theme.key, themeName: theme.name, sliderActive: theme.sliderActive, sliderTrack: theme.sliderTrack, sliderBlock: theme.sliderBlock })
+      if (theme.key !== this.data.theme || (theme.style || '') !== this.data.themeStyle) {
+        this.setData({ theme: theme.key, themeStyle: theme.style || '', themeName: theme.name, sliderActive: theme.sliderActive, sliderTrack: theme.sliderTrack, sliderBlock: theme.sliderBlock })
       }
       if (app.applyNavBar) app.applyNavBar()
     }
@@ -161,7 +178,7 @@ Page({
     }
     const total = this.data.modules.reduce((sum, item) => sum + (Number(item.targetMinutes) || 0), 0)
     return {
-      title: `用小鱼计时器练 ${this.data.modules.length} 个模块、${total} 分钟`,
+      title: `用泡泡计时器练 ${this.data.modules.length} 个模块、${total} 分钟`,
       path: '/pages/index/index'
     }
   },
@@ -169,7 +186,7 @@ Page({
   onShareTimeline() {
     const total = this.data.modules.reduce((sum, item) => sum + (Number(item.targetMinutes) || 0), 0)
     return {
-      title: `小鱼计时器 · ${this.data.modules.length} 个模块 ${total} 分钟备考计划`,
+      title: `泡泡计时器 · ${this.data.modules.length} 个模块 ${total} 分钟备考计划`,
       query: ''
     }
   },
@@ -188,6 +205,12 @@ Page({
     const totalMinutes = this.data.modules.reduce((sum, item) => sum + item.targetMinutes, 0)
     this.setData({ totalMinutes })
     setTimeout(() => this.measureConfigScroll(), 150)
+  },
+
+  decorateRows(rows) {
+    return (rows || []).map((row, index) => Object.assign({}, row, {
+      indexLabel: index < 9 ? `0${index + 1}` : `${index + 1}`
+    }))
   },
 
   prepareReport(report) {
@@ -232,7 +255,7 @@ Page({
       }
     })
     const slowest = rows.filter(item => (item.elapsedSeconds || 0) > 0).sort((a, b) => (b.elapsedSeconds || 0) - (a.elapsedSeconds || 0))[0]
-    const worst = rows.slice().sort((a, b) => (b.elapsedSeconds - b.targetMinutes * 60) - (a.elapsedSeconds - a.targetMinutes * 60))[0]
+    const shortest = rows.filter(item => (item.elapsedSeconds || 0) > 0).sort((a, b) => (a.elapsedSeconds || 0) - (b.elapsedSeconds || 0))[0]
     return {
       ...report,
       startedAtText: report.startedAt ? formatDateTime(report.startedAt) : report.startedAtText,
@@ -243,24 +266,23 @@ Page({
       passRate: completedRows.length ? Math.round(completedRows.filter(item => (item.elapsedSeconds || 0) <= (item.targetMinutes || 0) * 60).length / completedRows.length * 100) : 0,
       totalTargetSeconds,
       totalActualPercent: Math.min(100, Math.round(totalActualSeconds / Math.max(1, totalTargetSeconds) * 100)),
-      statusRuleText: '达标：未超过目标；接近：达到目标 85%；超时：超过目标；未完成：实际用时为 0',
       slowestName: slowest ? slowest.name : '',
       slowestText: slowest ? slowest.actualText : '',
-      worstName: worst && worst.statusCode === 'overtime' ? worst.name : '',
-      worstDeltaText: worst && worst.statusCode === 'overtime' ? worst.deltaText : '',
+      shortestName: shortest ? shortest.name : '',
+      shortestText: shortest ? shortest.actualText : '',
       rows
     }
   },
 
   showReport(record) {
     const report = this.prepareReport(record)
-    this.setData({ view: 'report', report, reportView: fold(report.rows, false, 5), reportExpanded: false })
+    this.setData({ view: 'report', report, reportView: fold(this.decorateRows(report.rows), false, 5), reportExpanded: false })
   },
 
   toggleReportRows() {
     const expanded = !this.data.reportExpanded
     const rows = (this.data.report && this.data.report.rows) || []
-    this.setData({ reportExpanded: expanded, reportView: fold(rows, expanded, 5) })
+    this.setData({ reportExpanded: expanded, reportView: fold(this.decorateRows(rows), expanded, 5) })
   },
 
   changeModuleName(event) {
@@ -659,8 +681,9 @@ Page({
     })
   },
 
-  startTraining() {
-    const runtimeModules = this.data.modules.map(item => ({
+  // 唯一的开始入口：写 session 后直接进计时页
+  beginTraining(modules, mode) {
+    const runtimeModules = (modules || []).map(item => ({
       ...clone(item),
       elapsedSeconds: 0,
       status: item.targetMinutes === 0 ? 'done' : 'pending'
@@ -672,9 +695,9 @@ Page({
     }
     runtimeModules[firstIndex].status = 'current'
     const startedAt = Date.now()
-    const mode = this.data.mode || 'countup'
+    const useMode = mode || 'countup'
     const totalTargetSeconds = runtimeModules.reduce((sum, item) => sum + (item.targetMinutes || 0) * 60, 0)
-    wx.setStorageSync(app.globalData.modeKey, mode)
+    wx.setStorageSync(app.globalData.modeKey, useMode)
     wx.setStorageSync(app.globalData.storageKey, {
       modules: runtimeModules,
       startedAt,
@@ -682,10 +705,14 @@ Page({
       globalSeconds: 0,
       moduleSeconds: 0,
       isPaused: false,
-      mode,
+      mode: useMode,
       totalTargetSeconds
     })
     wx.navigateTo({ url: '/pages/timer/timer' })
+  },
+
+  startTraining() {
+    this.beginTraining(this.data.modules, this.data.mode || 'countup')
   },
 
   handleBack() {
@@ -702,8 +729,15 @@ Page({
   },
 
   restartTraining() {
-    this.setOrientation('portrait')
-    this.setData({ modules: this.data.report.rows.map(item => ({ id: item.id, name: item.name, targetMinutes: item.targetMinutes })), view: 'config' }, this.refreshConfig)
+    const rows = this.data.report && this.data.report.rows ? this.data.report.rows : []
+    if (!rows.length) {
+      wx.showToast({ title: '没有可重练的模块', icon: 'none' })
+      return
+    }
+    this.beginTraining(
+      rows.map(item => ({ id: item.id, name: item.name, targetMinutes: item.targetMinutes })),
+      this.data.report.mode || this.data.mode || 'countup'
+    )
   },
 
   backToConfig() {
@@ -734,10 +768,7 @@ Page({
     wx.showToast({ title: '当前已是首页', icon: 'none' })
   },
 
-  restartTraining() {
-    this.setOrientation('portrait')
-    this.setData({ modules: this.data.report.rows.map(item => ({ id: item.id, name: item.name, targetMinutes: item.targetMinutes })), view: 'config' }, this.refreshConfig)
-  },
+
 
   backToConfig() {
     this.setOrientation('portrait')
@@ -816,10 +847,6 @@ Page({
         fail: (error) => wx.showModal({ title: '导出失败', content: error.errMsg || '请手动截图保存报告', showCancel: false })
       }, this)
     })
-  },
-
-  previewReport() {
-    this.createReportImage(tempFilePath => wx.previewImage({ current: tempFilePath, urls: [tempFilePath] }))
   },
 
   exportReport() {

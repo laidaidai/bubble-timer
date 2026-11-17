@@ -1,4 +1,4 @@
-<view class="todo-page theme-{{theme}}">
+<view class="todo-page theme-{{theme}}" style="{{themeStyle}}">
   <view class="topbar">
     <button class="back-icon" bindtap="handleBack">‹</button>
     <view class="topbar-title">待办清单</view>
@@ -7,36 +7,42 @@
 
   <scroll-view class="todo-body" scroll-y>
     <view class="todo-hero">
-      <view class="todo-hero-top">
-        <view class="todo-eyebrow">今日完成度 · {{doneCount}}/{{total}}</view>
-        <view class="todo-percent"><text class="num">{{percent}}</text><text class="todo-unit">%</text></view>
+      <view class="hero-line">
+        <view class="hero-eyebrow">今日完成</view>
+        <view class="hero-percent"><text class="num">{{percent}}</text><text class="hero-unit">%</text></view>
       </view>
-      <view class="todo-bar"><view class="todo-fill" style="width: {{percent}}%;"></view></view>
-      <view class="todo-hint" wx:if="{{total}}">已完成 {{doneCount}} 项，还剩 {{total - doneCount}} 项</view>
-      <view class="todo-hint" wx:else>把今天要练的模块写下来，一条条勾掉</view>
+      <view class="hero-bar"><view class="hero-fill" style="width: {{percent}}%;"></view></view>
+      <view class="hero-meta">{{doneCount}} / {{total}} 项完成</view>
     </view>
 
-    <view class="add-row">
-      <input class="add-input" value="{{inputValue}}" placeholder="写一条待办，比如 判断推理 35 分钟" placeholder-class="add-placeholder" bindinput="onInput" confirm-type="done" bindconfirm="addTodo" />
-      <button class="add-button" bindtap="addTodo">添加</button>
+    <view class="sched-card">
+      <view class="sched-head">
+        <view class="sched-nav" data-step="-1" bindtap="shiftScheduleMonth">‹</view>
+        <view class="sched-title">{{schedTitle}}</view>
+        <view class="sched-nav" data-step="1" bindtap="shiftScheduleMonth">›</view>
+      </view>
+      <view class="sched-week"><text wx:for="{{schedLabels}}" wx:key="*this">{{item}}</text></view>
+      <view class="sched-row" wx:for="{{schedRows}}" wx:key="key">
+        <view class="sched-cell {{cell.empty ? 'empty' : ''}} {{cell.today ? 'today' : ''}} {{cell.selected ? 'selected' : ''}}" wx:for="{{item.cells}}" wx:for-item="cell" wx:key="key" data-key="{{cell.key}}" bindtap="selectScheduleDate">
+          <text class="sched-day num" wx:if="{{!cell.empty}}">{{cell.day}}</text>
+          <view class="sched-dot" wx:if="{{cell.count}}"></view>
+        </view>
+      </view>
+      <view class="sched-filter" wx:if="{{filterText}}">
+        <text class="sched-filter-text">{{filterText}} · {{viewTodos.length}} 项</text>
+        <text class="sched-clear" bindtap="clearScheduleFilter">显示全部</text>
+      </view>
+      <view class="sched-tip" wx:else>带圆点的日期有待办，点一下只看那天</view>
     </view>
 
-    <view class="time-row">
-      <picker mode="date" value="{{dueDate}}" bindchange="onDateChange">
-        <view class="time-chip"><text class="chip-label">日期</text>{{dueDate}}</view>
-      </picker>
-      <picker mode="time" value="{{dueTime}}" bindchange="onTimeChange">
-        <view class="time-chip"><text class="chip-label">时间</text>{{dueTime}}</view>
-      </picker>
+    <view class="list-head" wx:if="{{viewTodos.length}}">
+      <text class="list-title">清单</text>
+      <text class="list-clear" wx:if="{{doneCount}}" bindtap="clearDone">清空已完成</text>
     </view>
 
-    <view class="remind-row">
-      <view class="remind-chip {{remindBefore === item.key ? 'active' : ''}}" wx:for="{{remindOptions}}" wx:key="key" data-key="{{item.key}}" bindtap="setRemind">{{item.label}}</view>
-    </view>
-
-    <view class="todo-list" wx:if="{{total}}">
-      <view class="todo-item {{item.done ? 'done' : ''}}" wx:for="{{todos}}" wx:key="id" data-id="{{item.id}}" bindtap="toggleTodo" bindlongpress="removeTodo">
-        <view class="todo-check {{item.done ? 'checked' : ''}}">
+    <view class="todo-list" wx:if="{{viewTodos.length}}">
+      <view class="todo-item {{item.done ? 'done' : ''}}" wx:for="{{viewTodos}}" wx:key="id" data-id="{{item.id}}" bindtap="toggleTodo" bindlongpress="removeTodo">
+        <view class="todo-check {{item.done ? 'checked' : ''}}" data-id="{{item.id}}" catchtap="toggleTodo">
           <text class="check-mark" wx:if="{{item.done}}">✓</text>
         </view>
         <view class="todo-main">
@@ -46,20 +52,90 @@
             <text class="todo-remind" wx:if="{{item.remindText}}">{{item.remindText}}</text>
           </view>
         </view>
+        <view class="todo-edit" data-id="{{item.id}}" catchtap="openEdit">›</view>
       </view>
     </view>
 
-    <view class="empty-card" wx:else>
+    <view class="empty-card" wx:if="{{total && !viewTodos.length}}">
+      <view class="empty-icon">☾</view>
+      <view class="empty-title">这天没有待办</view>
+      <view class="empty-desc">点日期可切换到别的日子，或新增一条</view>
+    </view>
+    <view class="empty-card" wx:if="{{!total}}">
       <view class="empty-icon">＋</view>
       <view class="empty-title">还没有待办</view>
-      <view class="empty-desc">在上面输入框写一条，训练时照着勾掉就行</view>
+      <view class="empty-desc">点右下角的按钮，写下要练的模块和时间</view>
     </view>
 
-    <view class="todo-actions">
-      <button class="todo-action" bindtap="clearDone">清空已完成</button>
-      <button class="todo-action primary" bindtap="pushReminder">开启学习提醒</button>
-    </view>
-
-    <view class="todo-foot">待办只存在本机；到点提醒需要你同意「订阅消息」，否则只在小程序打开时弹提示。</view>
+    <view class="todo-foot">待办只存在本机 · 提醒会写入手机日历</view>
   </scroll-view>
+
+  <view class="fab" bindtap="openCreate"><text class="fab-plus">＋</text></view>
+
+  <view class="sheet-mask" wx:if="{{sheetOpen}}" catchtouchmove="blockTouch" bindtap="closeSheet"></view>
+  <view class="sheet {{sheetOpen ? 'open' : ''}} {{keyboardHeight ? 'kb-open' : ''}}" wx:if="{{sheetOpen}}" style="bottom: {{keyboardHeight}}px;" catchtap="blockTouch">
+    <view class="sheet-head">
+      <view class="sheet-title">{{editingId ? '编辑待办' : '新建待办'}}</view>
+      <view class="sheet-del" wx:if="{{editingId}}" bindtap="removeInSheet">删除</view>
+    </view>
+
+    <scroll-view class="sheet-body" scroll-y>
+      <textarea class="sheet-textarea" value="{{draftText}}" focus="{{sheetOpen && !pickerPanel}}" auto-height="{{false}}" adjust-position="{{false}}" cursor-spacing="24" placeholder="要做什么？例如 判断推理 35 分钟" placeholder-class="sheet-placeholder" maxlength="60" bindinput="onDraftInput" bindkeyboardheightchange="onKeyboardHeightChange" show-confirm-bar="{{false}}" />
+
+      <view class="pick-row">
+        <view class="pick-btn {{pickerPanel === 'calendar' ? 'on' : ''}}" data-panel="calendar" bindtap="openPicker">
+          <text class="pick-k">日期</text>
+          <text class="pick-v">{{draftDateText}}</text>
+        </view>
+        <view class="pick-btn {{pickerPanel === 'time' ? 'on' : ''}}" data-panel="time" bindtap="openPicker">
+          <text class="pick-k">时间</text>
+          <text class="pick-v num">{{draftHour}}:{{draftMinute}}</text>
+        </view>
+      </view>
+
+      <view class="picker-panel" wx:if="{{pickerPanel === 'calendar'}}">
+        <view class="pp-head">
+          <text class="pp-title">选择日期</text>
+          <text class="pp-done" bindtap="closePicker">完成</text>
+        </view>
+        <view class="cal-head">
+          <view class="cal-nav" data-step="-1" bindtap="shiftMonth">‹</view>
+          <view class="cal-title">{{calTitle}}</view>
+          <view class="cal-nav" data-step="1" bindtap="shiftMonth">›</view>
+        </view>
+        <view class="cal-weekdays">
+          <text class="cal-weekday" wx:for="{{calWeekLabels}}" wx:key="*this">{{item}}</text>
+        </view>
+        <view class="cal-row" wx:for="{{calRows}}" wx:key="key">
+          <view class="cal-cell {{cell.empty ? 'empty' : ''}} {{cell.selected ? 'selected' : ''}} {{cell.today ? 'today' : ''}}" wx:for="{{item.cells}}" wx:for-item="cell" wx:key="key" data-key="{{cell.key}}" bindtap="selectDay">{{cell.day}}</view>
+        </view>
+      </view>
+
+      <view class="picker-panel" wx:if="{{pickerPanel === 'time'}}">
+        <view class="pp-head">
+          <text class="pp-title">选择时间</text>
+          <text class="pp-done" bindtap="closePicker">完成</text>
+        </view>
+        <picker-view class="time-picker" indicator-style="height: 72rpx;" value="{{timeValue}}" bindchange="onTimeChange">
+          <picker-view-column>
+            <view class="time-item num" wx:for="{{hours}}" wx:key="*this">{{item}}</view>
+          </picker-view-column>
+          <picker-view-column>
+            <view class="time-item num" wx:for="{{minutes}}" wx:key="*this">{{item}}</view>
+          </picker-view-column>
+        </picker-view>
+      </view>
+
+      <view class="remind-head">提醒</view>
+      <view class="remind-row">
+        <view class="remind-chip {{remindBefore === item.key ? 'active' : ''}}" wx:for="{{remindOptions}}" wx:key="key" data-key="{{item.key}}" bindtap="setRemind">{{item.label}}</view>
+      </view>
+      <view class="remind-tip" wx:if="{{remindBefore}}">保存后会写入手机日历，关闭小程序也能收到系统提醒</view>
+    </scroll-view>
+
+    <view class="sheet-actions">
+      <button class="sheet-btn" bindtap="closeSheet">取消</button>
+      <button class="sheet-btn primary" bindtap="confirmSheet">{{editingId ? '保存修改' : '添加待办'}}</button>
+    </view>
+  </view>
 </view>

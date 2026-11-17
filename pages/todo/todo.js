@@ -1,4 +1,5 @@
 const app = getApp()
+const { pad, dateKey } = require('../../utils/format')
 
 const REMIND_OPTIONS = [
   { key: 0, label: '不提醒' },
@@ -7,13 +8,30 @@ const REMIND_OPTIONS = [
   { key: 60, label: '提前 1 小时' }
 ]
 
-const { pad, dateKey, timeKey } = require('../../utils/format')
+const HOURS = Array.from({ length: 24 }, (_, i) => pad(i))
+const MINUTES = Array.from({ length: 60 }, (_, i) => pad(i))
+const WEEK_LABELS = ['一', '二', '三', '四', '五', '六', '日']
 
-function parseDue(dateText, timeText) {
+function strip(item) {
+  const { dueText, overdue, remindText, ...rest } = item
+  return rest
+}
+
+function dateLabel(dateText) {
+  if (!dateText) return ''
+  const parts = dateText.split('-').map(Number)
+  const key = dateText
+  const today = dateKey(new Date())
+  const tomorrow = dateKey(new Date(Date.now() + 24 * 3600 * 1000))
+  if (key === today) return `今天 ${parts[1]}月${parts[2]}日`
+  if (key === tomorrow) return `明天 ${parts[1]}月${parts[2]}日`
+  return `${parts[1]} 月 ${parts[2]} 日`
+}
+
+function parseDue(dateText, hour, minute) {
   if (!dateText) return 0
   const parts = dateText.split('-').map(Number)
-  const clock = (timeText || '23:59').split(':').map(Number)
-  return new Date(parts[0], (parts[1] || 1) - 1, parts[2] || 1, clock[0] || 0, clock[1] || 0, 0).getTime()
+  return new Date(parts[0], (parts[1] || 1) - 1, parts[2] || 1, Number(hour) || 0, Number(minute) || 0, 0).getTime()
 }
 
 function dueLabel(dueAt) {
@@ -28,28 +46,54 @@ function dueLabel(dueAt) {
 
 Page({
   data: {
-    theme: 'cream',
+    theme: 'cream', themeStyle: '',
     todos: [],
+    viewTodos: [],
+    schedTitle: '',
+    schedRows: [],
+    schedLabels: WEEK_LABELS,
+    schedOffset: 0,
+    filterDate: '',
+    filterText: '',
     total: 0,
     doneCount: 0,
     percent: 0,
-    inputValue: '',
-    focus: false,
-    dueDate: '',
-    dueTime: '',
     remindOptions: REMIND_OPTIONS,
+    hours: HOURS,
+    minutes: MINUTES,
+    // 编辑面板
+    sheetOpen: false,
+    keyboardHeight: 0,
+    editingId: '',
+    draftText: '',
+    draftDate: '',
+    draftDateText: '',
+    pickerPanel: '',
+    draftHour: '09',
+    draftMinute: '00',
     remindBefore: 0,
-    remindLabel: '不提醒',
-    dueHint: ''
+    timeValue: [9, 0],
+    calTitle: '',
+    calWeekLabels: WEEK_LABELS,
+    calRows: []
   },
 
   onLoad() {
     const theme = app.getTheme ? app.getTheme() : { key: 'cream' }
-    const now = new Date()
-    const next = new Date(now.getTime() + 60 * 60 * 1000)
-    this.setData({ theme: theme.key, dueDate: dateKey(next), dueTime: timeKey(next) })
+    this.setData({ theme: theme.key, themeStyle: theme.style || '' })
     if (app.applyNavBar) app.applyNavBar()
     this.loadTodos()
+    // 键盘高度 → 底部面板整体抬升，避免输入法盖住输入框
+    this.onKeyboard = (res) => {
+      const height = Math.max(0, Number(res && res.height) || 0)
+      if (height !== this.data.keyboardHeight) this.setData({ keyboardHeight: height })
+    }
+    if (wx.onKeyboardHeightChange) wx.onKeyboardHeightChange(this.onKeyboard)
+  },
+
+  onKeyboardHeightChange(event) {
+    const height = Math.max(0, Number(event.detail && event.detail.height) || 0)
+    if (height !== this.data.keyboardHeight) this.setData({ keyboardHeight: height })
   },
 
   onShow() {
@@ -66,11 +110,11 @@ Page({
   onUnload() {
     clearInterval(this.timer)
     this.timer = null
+    if (wx.offKeyboardHeightChange && this.onKeyboard) wx.offKeyboardHeightChange(this.onKeyboard)
   },
 
   loadTodos() {
-    const todos = wx.getStorageSync(app.globalData.todoKey) || []
-    this.setTodos(todos)
+    this.setTodos(wx.getStorageSync(app.globalData.todoKey) || [])
     this.checkReminders()
   },
 
@@ -83,89 +127,330 @@ Page({
       overdue: !!item.dueAt && !item.done && item.dueAt < Date.now(),
       remindText: item.remindBefore ? `提前 ${item.remindBefore >= 60 ? `${item.remindBefore / 60} 小时` : `${item.remindBefore} 分钟`}` : ''
     }))
+    const filterDate = this.data.filterDate
+    const viewTodos = filterDate
+      ? list.filter(item => item.dueAt && dateKey(new Date(item.dueAt)) === filterDate)
+      : list
+    const sched = this.buildSchedule(list)
     this.setData({
       todos: list,
+      viewTodos,
       total,
       doneCount,
-      percent: total ? Math.round(doneCount / total * 100) : 0
+      percent: total ? Math.round(doneCount / total * 100) : 0,
+      schedTitle: sched.title,
+      schedRows: sched.rows,
+      filterText: filterDate ? dateLabel(filterDate) : ''
     })
-    wx.setStorageSync(app.globalData.todoKey, list.map(({ dueText, overdue, remindText, ...rest }) => rest))
+    wx.setStorageSync(app.globalData.todoKey, list.map(strip))
   },
 
-  onInput(event) {
-    this.setData({ inputValue: event.detail.value })
+  // ---------- 月度日程 ----------
+  buildSchedule(list, overrideDate) {
+    const base = new Date()
+    const target = new Date(base.getFullYear(), base.getMonth() + (this.data.schedOffset || 0), 1)
+    // target 本身就是当月 1 号，直接用它算星期几（周一为 0）
+    const lead = (target.getDay() + 6) % 7
+    const days = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate()
+    const todayKey = dateKey(new Date())
+    const filterDate = overrideDate === undefined ? this.data.filterDate : overrideDate
+    const counts = {};
+    (list || []).forEach(item => {
+      if (!item.dueAt) return
+      const key = dateKey(new Date(item.dueAt))
+      counts[key] = (counts[key] || 0) + 1
+    })
+    const cells = []
+    for (let i = 0; i < lead; i += 1) cells.push({ key: `pad-${i}`, empty: true })
+    for (let d = 1; d <= days; d += 1) {
+      const key = dateKey(new Date(target.getFullYear(), target.getMonth(), d))
+      cells.push({
+        key,
+        day: d,
+        empty: false,
+        count: counts[key] || 0,
+        today: key === todayKey,
+        selected: key === filterDate
+      })
+    }
+    while (cells.length % 7 !== 0) cells.push({ key: `tail-${cells.length}`, empty: true })
+    const rows = []
+    for (let i = 0; i < cells.length; i += 7) rows.push({ key: `srow-${i}`, cells: cells.slice(i, i + 7) })
+    return { rows, title: `${target.getFullYear()} 年 ${target.getMonth() + 1} 月` }
   },
 
-  onDateChange(event) {
-    this.setData({ dueDate: event.detail.value })
+  shiftScheduleMonth(event) {
+    const step = Number(event.currentTarget.dataset.step) || 0
+    this.setData({ schedOffset: (this.data.schedOffset || 0) + step }, () => {
+      const sched = this.buildSchedule(this.data.todos)
+      this.setData({ schedTitle: sched.title, schedRows: sched.rows })
+    })
+  },
+
+  selectScheduleDate(event) {
+    const key = event.currentTarget.dataset.key
+    if (!key || key.indexOf('pad-') === 0 || key.indexOf('tail-') === 0) return
+    const filterDate = this.data.filterDate === key ? '' : key
+    const list = this.data.todos
+    const viewTodos = filterDate
+      ? list.filter(item => item.dueAt && dateKey(new Date(item.dueAt)) === filterDate)
+      : list
+    const sched = this.buildSchedule(list, filterDate)
+    this.setData({
+      filterDate,
+      filterText: filterDate ? dateLabel(filterDate) : '',
+      viewTodos,
+      schedTitle: sched.title,
+      schedRows: sched.rows
+    })
+  },
+
+  clearScheduleFilter() {
+    const sched = this.buildSchedule(this.data.todos, '')
+    this.setData({ filterDate: '', filterText: '', viewTodos: this.data.todos, schedRows: sched.rows })
+  },
+
+  // ---------- 编辑面板 ----------
+  buildCalendar(year, month, selectedKey) {
+    const first = new Date(year, month, 1)
+    const lead = (first.getDay() + 6) % 7
+    const days = new Date(year, month + 1, 0).getDate()
+    const todayKey = dateKey(new Date())
+    const cells = []
+    for (let i = 0; i < lead; i += 1) cells.push({ key: `pad-${i}`, empty: true })
+    for (let d = 1; d <= days; d += 1) {
+      const key = dateKey(new Date(year, month, d))
+      cells.push({ key, day: d, empty: false, selected: key === selectedKey, today: key === todayKey })
+    }
+    while (cells.length % 7 !== 0) cells.push({ key: `tail-${cells.length}`, empty: true })
+    const rows = []
+    for (let i = 0; i < cells.length; i += 7) rows.push({ key: `row-${i}`, cells: cells.slice(i, i + 7) })
+    return { rows, title: `${year} 年 ${month + 1} 月` }
+  },
+
+  refreshCalendar(dateText) {
+    const parts = (dateText || dateKey(new Date())).split('-').map(Number)
+    const cal = this.buildCalendar(parts[0], parts[1] - 1, dateText)
+    this.setData({ calRows: cal.rows, calTitle: cal.title })
+  },
+
+  openPicker(event) {
+    const panel = event.currentTarget.dataset.panel
+    if (!panel) return
+    if (panel === 'calendar') this.refreshCalendar(this.data.draftDate)
+    this.setData({ pickerPanel: panel })
+  },
+
+  closePicker() {
+    this.setData({ pickerPanel: '' })
+  },
+
+  shiftMonth(event) {
+    const step = Number(event.currentTarget.dataset.step) || 0
+    const parts = (this.data.draftDate || dateKey(new Date())).split('-').map(Number)
+    const target = new Date(parts[0], parts[1] - 1 + step, 1)
+    const maxDay = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate()
+    const next = new Date(target.getFullYear(), target.getMonth(), Math.min(parts[2] || 1, maxDay))
+    const dateText = dateKey(next)
+    this.setData({ draftDate: dateText, draftDateText: dateLabel(dateText) })
+    this.refreshCalendar(dateText)
+  },
+
+  selectDay(event) {
+    const key = event.currentTarget.dataset.key
+    if (!key) return
+    this.setData({ draftDate: key, draftDateText: dateLabel(key) })
+    this.refreshCalendar(key)
   },
 
   onTimeChange(event) {
-    this.setData({ dueTime: event.detail.value })
+    const value = event.detail.value || [0, 0]
+    this.setData({
+      timeValue: value,
+      draftHour: HOURS[value[0]] || '00',
+      draftMinute: MINUTES[value[1]] || '00'
+    })
+  },
+
+  openCreate() {
+    const now = new Date()
+    now.setMinutes(now.getMinutes() + 30)
+    const todayKey = dateKey(new Date())
+    // 日程里选中了某天时，新增默认落到那一天
+    const picked = this.data.filterDate
+    const dateText = picked || dateKey(now)
+    const isToday = dateText === todayKey
+    const hour = isToday ? pad(now.getHours()) : '09'
+    const minute = isToday ? pad(now.getMinutes()) : '00'
+    this.setData({
+      sheetOpen: true,
+      editingId: '',
+      draftText: '',
+      draftDate: dateText,
+      draftDateText: dateLabel(dateText),
+      pickerPanel: '',
+      draftHour: hour,
+      draftMinute: minute,
+      timeValue: [Number(hour), Number(minute)],
+      remindBefore: 0
+    })
+    this.refreshCalendar(dateText)
+  },
+
+  openEdit(event) {
+    const id = event.currentTarget.dataset.id
+    const item = this.data.todos.find(todo => todo.id === id)
+    if (!item) return
+    const due = item.dueAt ? new Date(item.dueAt) : new Date()
+    const dateText = dateKey(due)
+    const hour = pad(due.getHours())
+    const minute = pad(due.getMinutes())
+    this.setData({
+      sheetOpen: true,
+      editingId: id,
+      draftText: item.text,
+      draftDate: dateText,
+      draftDateText: dateLabel(dateText),
+      pickerPanel: '',
+      draftHour: hour,
+      draftMinute: minute,
+      timeValue: [Number(hour), Number(minute)],
+      remindBefore: item.remindBefore || 0
+    })
+    this.refreshCalendar(dateText)
+  },
+
+  closeSheet() {
+    this.setData({ sheetOpen: false, pickerPanel: '', keyboardHeight: 0 })
+  },
+
+  blockTouch() {},
+
+  onDraftInput(event) {
+    this.setData({ draftText: event.detail.value })
   },
 
   setRemind(event) {
-    const key = Number(event.currentTarget.dataset.key)
-    const option = REMIND_OPTIONS.find(item => item.key === key)
-    this.setData({ remindBefore: key, remindLabel: option ? option.label : '不提醒' })
+    this.setData({ remindBefore: Number(event.currentTarget.dataset.key) || 0 })
   },
 
-  addTodo() {
-    const text = (this.data.inputValue || '').trim()
+  confirmSheet() {
+    const text = (this.data.draftText || '').trim()
     if (!text) {
       wx.showToast({ title: '先写点内容', icon: 'none' })
       return
     }
-    const dueAt = parseDue(this.data.dueDate, this.data.dueTime)
-    const todo = {
-      id: `t-${Date.now()}`,
-      text,
-      done: false,
-      createdAt: Date.now(),
-      dueAt,
-      remindBefore: this.data.remindBefore,
-      notified: false
+    const dueAt = parseDue(this.data.draftDate, this.data.draftHour, this.data.draftMinute)
+    const remindBefore = this.data.remindBefore
+    const base = this.data.todos.map(strip)
+    const targetId = this.data.editingId || `t-${Date.now()}`
+    let todos
+    if (this.data.editingId) {
+      const previous = base.find(item => item.id === this.data.editingId) || {}
+      const timeChanged = previous.dueAt !== dueAt || (previous.remindBefore || 0) !== remindBefore
+      todos = base.map(item => item.id === this.data.editingId
+        ? {
+          ...item,
+          text,
+          dueAt,
+          remindBefore,
+          notified: false,
+          // 时间或提醒方式变了才重新写入日历，避免每次编辑都加一条
+          calendarKey: timeChanged ? '' : (item.calendarKey || '')
+        }
+        : item)
+    } else {
+      todos = base.concat([{
+        id: targetId,
+        text,
+        done: false,
+        createdAt: Date.now(),
+        dueAt,
+        remindBefore,
+        notified: false,
+        calendarKey: ''
+      }])
     }
-    const todos = this.data.todos.map(({ dueText, overdue, remindText, ...rest }) => rest).concat([todo])
-    this.setData({ inputValue: '' })
+    this.setData({ sheetOpen: false })
     this.setTodos(todos)
     if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
-    if (this.data.remindBefore > 0) this.requestSubscribe(todo)
+    if (remindBefore > 0) {
+      const saved = todos.find(item => item.id === targetId)
+      if (saved) this.syncPhoneCalendar(saved)
+    }
   },
 
-  requestSubscribe(todo) {
-    const tmplId = app.globalData.notifyTmplId
-    if (!tmplId || !wx.requestSubscribeMessage) return
-    wx.requestSubscribeMessage({
-      tmplIds: [tmplId],
-      success: ({ [tmplId]: status }) => {
-        wx.showToast({ title: status === 'accept' ? '已授权，到点在小程序内提醒' : '未授权，仅在本页提醒', icon: 'none' })
+  // 把待办写入手机系统日历，关闭小程序后由系统提醒
+  syncPhoneCalendar(item) {
+    const dueAt = Number(item.dueAt) || 0
+    const remind = Number(item.remindBefore) || 0
+    if (!dueAt || !remind || dueAt <= Date.now()) return
+    const key = `${dueAt}-${remind}`
+    if (item.calendarKey === key) return
+    if (!wx.addPhoneCalendar) {
+      wx.showToast({ title: '当前微信版本不支持日历提醒', icon: 'none' })
+      return
+    }
+    const startTime = Math.floor(dueAt / 1000)
+    const remindText = remind >= 60 ? `${remind / 60} 小时` : `${remind} 分钟`
+    wx.addPhoneCalendar({
+      title: `泡泡计时器 · ${item.text}`,
+      startTime,
+      endTime: startTime + 30 * 60,
+      alarm: true,
+      alarmOffset: remind * 60,
+      description: `提前 ${remindText} 提醒 · 来自泡泡计时器待办`,
+      success: () => {
+        this.markCalendarSynced(item.id, key)
+        wx.showToast({ title: '已加入手机日历', icon: 'none' })
       },
-      fail: () => wx.showToast({ title: '订阅失败，可稍后再试', icon: 'none' })
+      fail: (error) => {
+        const message = String((error && error.errMsg) || '')
+        if (message.indexOf('auth') >= 0 || message.indexOf('deny') >= 0) {
+          wx.showModal({
+            title: '需要日历权限',
+            content: '允许添加到日历后，才能把待办写进手机系统日历。',
+            confirmText: '去设置',
+            success: ({ confirm }) => {
+              if (confirm && wx.openSetting) wx.openSetting()
+            }
+          })
+          return
+        }
+        wx.showToast({ title: '日历没加上，仍会在小程序内提醒', icon: 'none' })
+      }
     })
   },
 
-  checkReminders() {
-    const todos = (this.data.todos || []).filter(item => item.dueAt && !item.done)
-    if (!todos.length) return
-    const now = Date.now()
-    const due = todos.find(item => !item.notified && now >= item.dueAt - (item.remindBefore || 0) * 60000 && now <= item.dueAt + 30 * 60000)
-    if (!due) return
-    const marked = this.data.todos.map(item => (item.id === due.id ? { ...item, notified: true } : item))
-    this.setTodos(marked.map(({ dueText, overdue, remindText, ...rest }) => rest))
-    if (wx.vibrateLong) wx.vibrateLong({ fail: () => {} })
+  markCalendarSynced(id, key) {
+    const next = this.data.todos.map(item => (item.id === id ? { ...item, calendarKey: key } : item))
+    this.setTodos(next.map(strip))
+  },
+
+  removeInSheet() {
+    const id = this.data.editingId
+    if (!id) {
+      this.setData({ sheetOpen: false })
+      return
+    }
     wx.showModal({
-      title: due.dueAt <= now ? '待办已到时间' : '待办快到时间',
-      content: `${due.text}\n计划时间 ${dueLabel(due.dueAt)}`,
-      showCancel: false,
-      confirmText: '知道了'
+      title: '删除这条待办？',
+      content: this.data.draftText,
+      confirmText: '删除',
+      confirmColor: '#E8442F',
+      success: ({ confirm }) => {
+        if (!confirm) return
+        this.setData({ sheetOpen: false })
+        this.setTodos(this.data.todos.filter(item => item.id !== id).map(strip))
+      }
     })
   },
 
+  // ---------- 列表 ----------
   toggleTodo(event) {
     const id = event.currentTarget.dataset.id
     const todos = this.data.todos.map(item => (item.id === id ? { ...item, done: !item.done } : item))
-    this.setTodos(todos.map(({ dueText, overdue, remindText, ...rest }) => rest))
+    this.setTodos(todos.map(strip))
     const target = todos.find(item => item.id === id)
     if (target && target.done) {
       if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
@@ -186,8 +471,7 @@ Page({
       confirmColor: '#E8442F',
       success: ({ confirm }) => {
         if (!confirm) return
-        const kept = this.data.todos.filter(item => item.id !== id).map(({ dueText, overdue, remindText, ...rest }) => rest)
-        this.setTodos(kept)
+        this.setTodos(this.data.todos.filter(item => item.id !== id).map(strip))
       }
     })
   },
@@ -204,28 +488,34 @@ Page({
       confirmColor: '#E8442F',
       success: ({ confirm }) => {
         if (!confirm) return
-        this.setTodos(this.data.todos.filter(item => !item.done).map(({ dueText, overdue, remindText, ...rest }) => rest))
+        this.setTodos(this.data.todos.filter(item => !item.done).map(strip))
         wx.showToast({ title: '已清空', icon: 'none' })
       }
     })
   },
 
-  pushReminder() {
-    const tmplId = app.globalData.notifyTmplId
-    if (!tmplId || !wx.requestSubscribeMessage) {
-      wx.showModal({ title: '订阅消息暂不可用', content: '当前环境不支持订阅消息，请在小程序内使用待办提醒。', showCancel: false, confirmText: '知道了' })
-      return
-    }
-    wx.requestSubscribeMessage({
-      tmplIds: [tmplId],
-      success: ({ [tmplId]: status }) => {
-        wx.showToast({ title: status === 'accept' ? '已授权提醒' : '未授权，可稍后再试', icon: 'none' })
-      },
-      fail: () => wx.showToast({ title: '订阅失败', icon: 'none' })
+  checkReminders() {
+    const todos = (this.data.todos || []).filter(item => item.dueAt && !item.done)
+    if (!todos.length) return
+    const now = Date.now()
+    const due = todos.find(item => !item.notified && now >= item.dueAt - (item.remindBefore || 0) * 60000 && now <= item.dueAt + 30 * 60000)
+    if (!due) return
+    const marked = this.data.todos.map(item => (item.id === due.id ? { ...item, notified: true } : item))
+    this.setTodos(marked.map(strip))
+    if (wx.vibrateLong) wx.vibrateLong({ fail: () => {} })
+    wx.showModal({
+      title: due.dueAt <= now ? '待办已到时间' : '待办快到时间',
+      content: `${due.text}\n计划时间 ${dueLabel(due.dueAt)}`,
+      showCancel: false,
+      confirmText: '知道了'
     })
   },
 
   handleBack() {
+    if (this.data.sheetOpen) {
+      this.setData({ sheetOpen: false })
+      return
+    }
     const pages = getCurrentPages()
     if (pages.length > 1) wx.navigateBack()
     else wx.reLaunch({ url: '/pages/index/index' })

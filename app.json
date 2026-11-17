@@ -8,7 +8,7 @@
     "pages/todo/todo"
   ],
   "window": {
-    "navigationBarTitleText": "小鱼计时器",
+    "navigationBarTitleText": "泡泡计时器",
     "navigationBarBackgroundColor": "#FFD874",
     "navigationBarTextStyle": "black",
     "backgroundColor": "#FBF3DF"
