@@ -27,8 +27,7 @@ project.private.config.json
 *.iml
 .history/
 
-# Claude Code 本机私有目录，不随项目上传
-.claude/
+
 
 # 临时与备份文件
 *.tmp
