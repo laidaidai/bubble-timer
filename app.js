@@ -141,7 +141,8 @@ const DEFAULT_SETTINGS = {
   overtimeAlert: true,
   tickSound: false,
   tickDefaultOff: true,
-  homePrimary: 'timer'
+  homePrimary: 'timer',
+  incentiveType: 'tomato'
 }
 
 App({

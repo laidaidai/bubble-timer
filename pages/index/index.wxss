@@ -12,13 +12,25 @@
 .total-target { color:var(--ink); font-size: 64rpx; font-weight: 900; line-height: 1.1; }
 .unit { margin-left: 8rpx; color:var(--text-warm); font-size: 24rpx; font-weight: 800; }
 .hero-sub { color:var(--text-mid); font-size: 22rpx; font-weight: 600; }
-.tomato-board { flex: 0 0 184rpx; width: 184rpx; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 7rpx; }
-.tomato-grid { width: 150rpx; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6rpx; }
+.tomato-board { flex: 0 0 48%; width: 48%; min-width: 0; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 7rpx; }
+.tomato-grid { width: 100%; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 5rpx; }
 .tomato { position: relative; width: 28rpx; height: 25rpx; box-sizing: border-box; background: #F2603C; border: 2rpx solid var(--edge); border-radius: 48% 48% 52% 52%; box-shadow: 2rpx 3rpx 0 var(--shadow); }
 .tomato::before { content: ""; position: absolute; top: -6rpx; left: 7rpx; width: 12rpx; height: 7rpx; box-sizing: border-box; background: #5F9B58; border: 2rpx solid var(--edge); border-radius: 50% 50% 40% 40%; transform: rotate(-8deg); }
 .tomato::after { content: ""; position: absolute; left: 5rpx; top: 5rpx; width: 6rpx; height: 8rpx; background: rgba(255, 255, 255, .38); border-radius: 50%; transform: rotate(24deg); }
 .tomato.ghost { background: var(--cream-3); border-style: dashed; box-shadow: none; opacity: .8; }
 .tomato.ghost::before { opacity: .55; }
+.tomato.star { width: 28rpx; height: 28rpx; background: var(--primary); border: 0; border-radius: 0; box-shadow: none; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
+.tomato.star::before, .tomato.star::after { display: none; }
+.tomato.star.ghost { background: var(--cream-3); opacity: .55; }
+.tomato.bubble { width: 26rpx; height: 26rpx; margin: 2rpx; background: var(--primary); border-radius: 50%; }
+.tomato.bubble::before { top: 5rpx; left: 5rpx; width: 7rpx; height: 7rpx; background: rgba(255, 255, 255, .55); border: 0; border-radius: 50%; transform: none; }
+.tomato.bubble::after { display: none; }
+.tomato.bubble.ghost { background: var(--cream-3); border-style: dashed; }
+.tomato.fish { width: 31rpx; height: 22rpx; background: var(--primary); }
+.tomato.fish::before { top: 3rpx; left: auto; right: -7rpx; width: 0; height: 0; background: none; border: 5rpx solid transparent; border-left-color: var(--primary); border-radius: 0; transform: none; }
+.tomato.fish::after { left: 6rpx; top: 7rpx; width: 5rpx; height: 5rpx; background: var(--ink); border-radius: 50%; transform: none; }
+.tomato.fish.ghost { background: var(--cream-3); }
+.tomato.fish.ghost::before { border-left-color: var(--cream-3); }
 .tomato-empty { display: flex; align-items: center; gap: 8rpx; }
 .tomato-empty-text { color: var(--text-mid); font-size: 18rpx; font-weight: 800; }
 .tomato-caption { max-width: 100%; color: var(--text-mid); font-size: 18rpx; font-weight: 800; line-height: 1.35; text-align: right; }

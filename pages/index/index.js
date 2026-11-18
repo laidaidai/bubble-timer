@@ -10,7 +10,7 @@ const DEFAULT_MODULES = [
 
 const QUOTES = ['稳定节奏，持续精进。', '今天的坚持，是明天的底气。', '把时间用在真正重要的事情上。']
 const WEEK_LABELS = ['一', '二', '三', '四', '五', '六', '日']
-const TOMATO_SHOW_LIMIT = 8
+const TOMATO_SHOW_LIMIT = 27
 const app = getApp()
 
 function importantDateText(key) {
@@ -80,6 +80,7 @@ Page({
     tomatoCount: 0,
     tomatoIcons: [],
     tomatoCaption: '完成计时收番茄',
+    incentiveType: 'tomato',
     tomatoPop: false,
     homePrimary: 'timer',
     homeTimerOverride: false,
@@ -251,12 +252,10 @@ Page({
   // ---- 重要日子倒计时 ----
   loadHomeConfig() {
     const settings = app.getSettings ? app.getSettings() : {}
-    let primary = settings.homePrimary || 'timer'
-    if (primary === 'todo') {
-      primary = 'timer'
-      if (app.saveSettings) app.saveSettings({ homePrimary: 'timer' })
-    }
-    this.setData({ homePrimary: primary })
+    this.setData({
+      homePrimary: settings.homePrimary || 'timer',
+      incentiveType: settings.incentiveType || 'tomato'
+    })
   },
 
   loadHomeTodo() {
@@ -514,15 +513,22 @@ Page({
   // ---- 番茄激励 ----
   loadTomatoes() {
     const count = app.getTomatoCount ? app.getTomatoCount() : 0
-    const shown = Math.min(count, TOMATO_SHOW_LIMIT)
-    const icons = Array.from({ length: shown }, (_, index) => index)
+    const settings = app.getSettings ? app.getSettings() : {}
+    const incentiveType = settings.incentiveType || this.data.incentiveType || 'tomato'
+    const icons = count === 0
+      ? [{ id: 0, filled: false }]
+      : Array.from({ length: Math.min(count, TOMATO_SHOW_LIMIT) }, (_, index) => ({
+        id: index,
+        filled: true
+      }))
     const previous = this.lastTomatoCount
     const pop = typeof previous === 'number' && count > previous
     this.lastTomatoCount = count
     this.setData({
       tomatoCount: count,
       tomatoIcons: icons,
-      tomatoCaption: count ? `${count} 颗番茄` : '完成计时收番茄',
+      incentiveType,
+      tomatoCaption: count > TOMATO_SHOW_LIMIT ? `+${count - TOMATO_SHOW_LIMIT}` : '',
       tomatoPop: pop
     })
     if (pop) {

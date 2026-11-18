@@ -38,8 +38,16 @@ Page({
     homePrimary: 'timer',
     homePrimaryOptions: [
       { key: 'timer', name: '计时' },
+      { key: 'todo', name: '待办' },
       { key: 'important', name: '重要日子' },
       { key: 'stats', name: '打卡' }
+    ],
+    incentiveType: 'tomato',
+    incentiveOptions: [
+      { key: 'tomato', name: '番茄' },
+      { key: 'star', name: '星星' },
+      { key: 'bubble', name: '泡泡' },
+      { key: 'fish', name: '小鱼' }
     ],
     habitPresets: [],
     presetView: [],
@@ -119,7 +127,8 @@ Page({
       exitGuard: !!settings.exitGuard,
       overtimeAlert: !!settings.overtimeAlert,
       tickSound: settings.tickSound === true,
-      homePrimary: settings.homePrimary === 'todo' ? 'timer' : (settings.homePrimary || 'timer'),
+      homePrimary: settings.homePrimary || 'timer',
+      incentiveType: settings.incentiveType || 'tomato',
       hasCustomRing: (app.getRings ? app.getRings() : []).some(item => String(item.key).indexOf('cr-') === 0 || item.key === 'custom')
     }
 
@@ -403,6 +412,14 @@ Page({
     this.refresh()
     if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
     wx.showToast({ title: '已设为首页', icon: 'none', duration: 1000 })
+  },
+
+  setIncentive(event) {
+    const key = event.currentTarget.dataset.key
+    if (!key) return
+    app.saveSettings({ incentiveType: key })
+    this.refresh()
+    wx.showToast({ title: '已切换激励', icon: 'none', duration: 1000 })
   },
 
   selectSection(event) {

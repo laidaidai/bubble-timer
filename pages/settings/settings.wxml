@@ -19,6 +19,10 @@
           <text class="home-primary-name">{{item.name}}</text>
         </view>
       </view>
+      <view class="pane-sub">完成激励</view>
+      <view class="opt-grid">
+        <view class="opt {{incentiveType === item.key ? 'active' : ''}}" wx:for="{{incentiveOptions}}" wx:key="key" data-key="{{item.key}}" bindtap="setIncentive">{{item.name}}</view>
+      </view>
     </view>
 
     <view class="pane" wx:if="{{section === 'theme'}}">
