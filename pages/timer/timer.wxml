@@ -9,10 +9,6 @@
       </view>
       <view class="fs-exit {{(immersive || immersiveLeaving) ? 'show' : ''}}"><text class="fs-exit-char">‹</text></view>
     </view>
-    <view class="mode-chip {{phaseLabel ? (phaseLabel === '专注' ? 'focus' : 'rest') : ''}}">
-      <text>{{modeName}}</text>
-      <text class="mode-phase" wx:if="{{phaseLabel}}">{{phaseLabel}}</text>
-    </view>
     <view class="clock-stage" bindtap="cycleClockStyle">
       <!-- 翻页时钟：抽到 components/flip-clock，timer 仅透传状态 -->
       <flip-clock wx:if="{{clockStyle === 'flip'}}"
@@ -60,6 +56,10 @@
         <view class="progress-logo" style="left: {{progressPercent}}%;">
           <image class="progress-logo-img" src="/assets/brand/logo-mark.png" mode="aspectFit"></image>
         </view>
+      </view>
+      <view class="mode-chip {{phaseLabel ? (phaseLabel === '专注' ? 'focus' : 'rest') : ''}}">
+        <text>{{modeName}}</text>
+        <text class="mode-phase" wx:if="{{phaseLabel}}">{{phaseLabel}}</text>
       </view>
       <view class="stage-meta">
         <text class="meta-module">{{currentModule.name || '训练完成'}}</text>

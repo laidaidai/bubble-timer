@@ -95,8 +95,7 @@ Page({
     clockData: {},
     laps: [],
     finishBurst: false,
-    finishBubbles: [],
-    landscape: false
+    finishBubbles: []
   },
 
   onLoad(options = {}) {
@@ -104,7 +103,6 @@ Page({
     this.dockToggleRequested = !!(options && options.docktoggle === '1')
     this.dockPauseRequested = !!(options && options.dockpause === '1')
     this.syncTheme()
-    if (wx.setDeviceOrientation) wx.setDeviceOrientation({ value: 'portrait', fail: () => {} })
     const savedStyle = wx.getStorageSync(app.globalData.clockStyleKey)
     const style = resolveClockStyle(savedStyle)
     this.setData({ clockStyle: style.key, clockStyleName: style.name })
@@ -158,7 +156,6 @@ Page({
     this.saveQuickState()
     this.stopTicker()
     if (this.finishBurstTimer) clearTimeout(this.finishBurstTimer)
-    if (this.data.landscape && wx.setDeviceOrientation) wx.setDeviceOrientation({ value: 'portrait', fail: () => {} })
   },
 
   readQuickState() {
@@ -510,7 +507,11 @@ Page({
     this.stopwatchMs = Math.max(0, ms)
     const showMs = text.main.length <= 5 && ms > 0
     const payload = text.main !== this.lastClockText ? this.buildClockPayload(text.main, undefined, text.ms) : {}
-    const msCells = showMs ? text.ms.split('').map((char, index) => ({ key: `q-ms-${index}`, text: char })) : []
+    const msCells = showMs ? text.ms.split('').map((char, index) => ({
+      key: `q-ms-${index}`,
+      text: char,
+      segs: LED_PATTERNS[char] || [0, 0, 0, 0, 0, 0, 0]
+    })) : []
     this.setData({
       msText: showMs ? text.ms : '',
       running: !!running,
@@ -591,22 +592,6 @@ Page({
     this.setCountdown(minutes * 60000)
   },
 
-  toggleLandscape() {
-    const next = !this.data.landscape
-    if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
-    if (!wx.setDeviceOrientation) {
-      wx.showToast({ title: '当前设备不支持横屏', icon: 'none' })
-      return
-    }
-    this.setData({ landscape: next })
-    wx.setDeviceOrientation({
-      value: next ? 'landscape' : 'portrait',
-      fail: () => {
-        this.setData({ landscape: !next })
-        wx.showToast({ title: '横屏切换失败', icon: 'none' })
-      }
-    })
-  },
 
   toggleRun() {
     if (this.data.running) {
@@ -795,7 +780,11 @@ Page({
 
   clockMsPatch(ms) {
     const showMs = String(this.data.mainText || '').length <= 5
-    const msCells = showMs ? ms.split('').map((char, index) => ({ key: `q-ms-${index}`, text: char })) : []
+    const msCells = showMs ? ms.split('').map((char, index) => ({
+      key: `q-ms-${index}`,
+      text: char,
+      segs: LED_PATTERNS[char] || [0, 0, 0, 0, 0, 0, 0]
+    })) : []
     return {
       msText: showMs ? ms : '',
       'clockData.msShow': showMs && !!ms,
@@ -831,7 +820,11 @@ Page({
     // 秒表 / 计时器 / 番茄钟都显示毫秒；进入小时后主时间变成 HH:MM:SS，空间让给小时，毫秒自动收起
     const hasHours = text.length > 5
     const showMs = !!ms && !hasHours
-    const msCells = showMs ? ms.split('').map((char, index) => ({ key: `q-ms-${index}`, text: char })) : []
+    const msCells = showMs ? ms.split('').map((char, index) => ({
+      key: `q-ms-${index}`,
+      text: char,
+      segs: LED_PATTERNS[char] || [0, 0, 0, 0, 0, 0, 0]
+    })) : []
     return {
       mainText: text,
       msText: showMs ? ms : '',

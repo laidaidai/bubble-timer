@@ -84,7 +84,8 @@
       <!-- 重要日子 -->
       <view class="important-grid count-{{importantPreview.length}}" wx:if="{{importantPreview.length}}">
         <view class="important-tool-item {{item.soon ? 'soon' : ''}} {{item.isPast ? 'past' : ''}}" wx:for="{{importantPreview}}" wx:key="id" bindtap="openImportantPage">
-          <view class="important-tool-name-row">
+          <view class="important-tool-line">
+            <view class="important-tool-dot {{item.soon ? 'soon' : ''}}"></view>
             <text class="important-tool-name">{{item.name}}</text>
           </view>
           <view class="important-tool-count">

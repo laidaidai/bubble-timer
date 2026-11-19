@@ -1,9 +1,9 @@
 @import "../../styles/clocks.wxss";
 .quick-page { height: 100vh; min-height: 0; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); overflow: hidden; }
-.quick-tabs { flex: 0 0 auto; margin: 0 24rpx; padding: 8rpx; display: flex; gap: 8rpx; background: var(--cream-1); border: 2rpx solid var(--line-strong); border-radius: 999rpx; }
+.quick-tabs { flex: 0 0 auto; margin: 18rpx 24rpx 0; padding: 8rpx; display: flex; gap: 8rpx; background: var(--cream-1); border: 2rpx solid var(--line-strong); border-radius: 999rpx; }
 .quick-tab { flex: 1; padding: 13rpx 0; color: var(--text-2); text-align: center; border-radius: 999rpx; font-size: 25rpx; font-weight: 900; }
 .quick-tab.on { color: var(--ink); background: var(--primary); border: 2rpx solid var(--edge); box-shadow: 3rpx 4rpx 0 var(--shadow); }
-.quick-body { flex: 1; min-height: 0; padding: 10rpx 24rpx calc(env(safe-area-inset-bottom) + 18rpx); display: flex; flex-direction: column; gap: 14rpx; overflow-y: auto; }
+.quick-body { flex: 1; min-height: 0; padding: 22rpx 24rpx calc(env(safe-area-inset-bottom) + 18rpx); display: flex; flex-direction: column; gap: 14rpx; overflow-y: auto; }
 .quick-clock-card { position: relative; flex: 1; min-height: 0; width: 100%; margin-top: 0; padding: 10rpx 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12rpx; background: transparent; border: 0; border-radius: 0; box-shadow: none; }
 .quick-clock-card.picker-mode { flex: 0 0 auto; padding-top: 2rpx; }
 
@@ -343,81 +343,6 @@
 .q-clock-long .q-block-colon { font-size: 28rpx; }
 .q-clock-long .q-led-num { font-size: 76rpx; }
 
-/* 快捷计时：手动切换横竖屏 */
-.quick-orient {
-  flex: 0 0 58rpx;
-  width: 58rpx;
-  height: 58rpx;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--cream-1);
-  border: 2rpx solid var(--line-strong);
-  border-radius: 50%;
-  transition: background .18s ease, transform .18s ease;
-}
-.quick-orient:active { transform: scale(.94); }
-.quick-orient.on { background: var(--primary); border-color: var(--edge); box-shadow: 3rpx 3rpx 0 var(--shadow-soft); }
-.quick-orient-glyph {
-  position: relative;
-  width: 40rpx;
-  height: 40rpx;
-}
-.quick-orient-phone {
-  position: absolute;
-  left: 4rpx;
-  top: 3rpx;
-  width: 18rpx;
-  height: 30rpx;
-  box-sizing: border-box;
-  border: 2rpx solid var(--ink);
-  border-radius: 5rpx;
-  transform: rotate(-16deg);
-  transition: transform .2s ease;
-}
-.quick-orient-phone::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  bottom: 3rpx;
-  width: 8rpx;
-  height: 2rpx;
-  background: var(--ink);
-  border-radius: 999rpx;
-  transform: translateX(-50%);
-}
-.quick-orient-arrow {
-  position: absolute;
-  right: -1rpx;
-  bottom: 0;
-  width: 24rpx;
-  height: 24rpx;
-  box-sizing: border-box;
-  border: 2rpx solid var(--text-2);
-  border-left-color: transparent;
-  border-bottom-color: transparent;
-  border-radius: 50%;
-  transform: rotate(-18deg);
-}
-.quick-orient-arrow::before {
-  content: '';
-  position: absolute;
-  right: -1rpx;
-  top: -5rpx;
-  width: 7rpx;
-  height: 7rpx;
-  box-sizing: border-box;
-  border-top: 2rpx solid var(--text-2);
-  border-right: 2rpx solid var(--text-2);
-  transform: rotate(18deg);
-}
-.quick-orient.on .quick-orient-phone { transform: rotate(74deg); }
-
-.quick-page.landscape .quick-body { padding: 6rpx 72rpx calc(env(safe-area-inset-bottom) + 10rpx); gap: 8rpx; }
-.quick-page.landscape .quick-clock-card { padding: 0; }
-.quick-page.landscape .preset-wrap { width: 100%; max-width: 760rpx; margin: 0 auto; }
-.quick-page.landscape .quick-actions { width: 100%; max-width: 620rpx; margin-left: auto; margin-right: auto; }
 
 /* 毫秒跟随主时钟样式：不再是一条裸文字 */
 .q-flip-card-ms { width: 58rpx; height: 104rpx; }
@@ -474,71 +399,6 @@
 .q-led-clock .q-clock-ms { flex: 0 0 auto; margin-left: 4rpx; }
 .q-led-clock .q-ms-dot { align-self: flex-end; line-height: 1; }
 
-/* 横屏按钮：斜手机 + 上下两条顺时针弯箭头 */
-.quick-orient-glyph { width: 42rpx; height: 42rpx; }
-.quick-orient-phone { left: 12rpx; top: 9rpx; width: 17rpx; height: 27rpx; border-radius: 5rpx; transform: rotate(-24deg); z-index: 2; }
-.quick-orient-phone::after { bottom: 2rpx; width: 7rpx; height: 2rpx; }
-.quick-orient-arc { position: absolute; left: 1rpx; width: 40rpx; height: 16rpx; box-sizing: border-box; border: 2rpx solid var(--ink); }
-.quick-orient-arc.top { top: 0; border-bottom: 0; border-radius: 50% 50% 0 0; }
-.quick-orient-arc.bottom { bottom: 0; border-top: 0; border-radius: 0 0 50% 50%; }
-.quick-orient-arc.top::after { content: ''; position: absolute; right: -1rpx; bottom: -4rpx; width: 7rpx; height: 7rpx; box-sizing: border-box; border-right: 2rpx solid var(--ink); border-bottom: 2rpx solid var(--ink); transform: rotate(45deg); }
-.quick-orient-arc.bottom::after { content: ''; position: absolute; left: -1rpx; top: -4rpx; width: 7rpx; height: 7rpx; box-sizing: border-box; border-left: 2rpx solid var(--ink); border-top: 2rpx solid var(--ink); transform: rotate(45deg); }
-.quick-orient.on .quick-orient-phone { transform: rotate(66deg); }
-
-/* 横屏图标 v2：手机居中，两段短弯箭头分居右上/左下，不再围成一圈椭圆 */
-.quick-orient-glyph { width: 40rpx; height: 40rpx; }
-.quick-orient-phone {
-  left: 12rpx;
-  top: 6rpx;
-  width: 16rpx;
-  height: 28rpx;
-  border-width: 2rpx;
-  border-radius: 5rpx;
-  transform: rotate(-8deg);
-  z-index: 2;
-}
-.quick-orient-phone::after { bottom: 2rpx; width: 6rpx; height: 2rpx; }
-.quick-orient-arc {
-  width: 15rpx;
-  height: 15rpx;
-  border-width: 2rpx;
-  border-color: var(--ink);
-}
-.quick-orient-arc.top {
-  left: auto;
-  right: 0;
-  top: 1rpx;
-  border-left: 0;
-  border-bottom: 0;
-  border-radius: 0 50% 0 0;
-}
-.quick-orient-arc.bottom {
-  left: 0;
-  right: auto;
-  bottom: 1rpx;
-  border-right: 0;
-  border-top: 0;
-  border-radius: 0 0 0 50%;
-}
-.quick-orient-arc.top::after {
-  right: -1rpx;
-  bottom: -2rpx;
-  width: 6rpx;
-  height: 6rpx;
-  border-right: 2rpx solid var(--ink);
-  border-bottom: 2rpx solid var(--ink);
-  transform: rotate(45deg);
-}
-.quick-orient-arc.bottom::after {
-  left: -1rpx;
-  top: -2rpx;
-  width: 6rpx;
-  height: 6rpx;
-  border-left: 2rpx solid var(--ink);
-  border-top: 2rpx solid var(--ink);
-  transform: rotate(45deg);
-}
-.quick-orient.on .quick-orient-phone { transform: rotate(82deg); }
 
 /* ===== 时钟样式调整：翻页/积木去背景，数字/极简加框，极简手写，新增果冻 ===== */
 .q-clock-shell.q-shell-flip,
@@ -603,23 +463,6 @@
   text-shadow: 3rpx 4rpx 0 var(--primary-2), 5rpx 6rpx 0 var(--edge);
 }
 .q-shell-jelly .q-ms-dot { color: var(--ink); }
-
-/* 横屏按钮：只保留一个倾斜的手机，不再画旋转箭头 */
-.quick-orient-glyph { width: 40rpx; height: 40rpx; }
-.quick-orient-phone {
-  left: 11rpx;
-  top: 5rpx;
-  width: 18rpx;
-  height: 30rpx;
-  border-width: 2rpx;
-  border-radius: 5rpx;
-  transform: rotate(-22deg);
-  transition: transform .22s ease;
-  z-index: 2;
-}
-.quick-orient-phone::after { bottom: 2rpx; width: 6rpx; height: 2rpx; }
-.quick-orient.on .quick-orient-phone { transform: rotate(72deg); }
-.quick-orient-arc { display: none; }
 
 /* 翻页 / 积木去掉背景后，用中缝和投影保留各自识别度 */
 .q-flip-split {
@@ -727,3 +570,19 @@
 .q-clock-ms.led .q-ms-inline { color: var(--primary-2); font-family: "Courier New", "Menlo", monospace; font-weight: 900; font-size: 54rpx; letter-spacing: 1rpx; padding-bottom: 16rpx; text-shadow: 0 0 8rpx var(--primary-2); }
 .q-clock-long .q-clock-ms.blocks .q-ms-inline { font-size: 46rpx; }
 .q-clock-long .q-clock-ms.led .q-ms-inline { font-size: 44rpx; }
+
+/* 积木 / LED 的毫秒：与主数字同款且同尺寸，整行等比收进屏宽 */
+.q-block-ms { display: flex; align-items: center; gap: 6rpx; margin-left: 12rpx; }
+.q-block-ms-dot { color: var(--clk-ink); font-family: "Courier New", "Menlo", monospace; font-size: 34rpx; font-weight: 900; line-height: 1; padding: 0 2rpx; align-self: flex-end; padding-bottom: 26rpx; }
+.q-block-tile-ms { width: 78rpx; height: 136rpx; border-width: 3rpx; border-radius: 12rpx; box-shadow: 4rpx 5rpx 0 var(--shadow-soft); }
+.q-block-num-ms { font-size: 70rpx; }
+
+.q-led-ms { display: flex; align-items: flex-end; gap: 4rpx; margin-left: 12rpx; padding-bottom: 0; }
+.q-led-ms-dot { color: var(--clk-glow); font-family: "Courier New", "Menlo", monospace; font-size: 30rpx; font-weight: 900; line-height: 1; padding-bottom: 6rpx; }
+.q-led-digit-ms { flex: 0 0 64rpx; width: 64rpx; height: 112rpx; }
+
+.q-clock-long .q-block-tile-ms { width: 56rpx; height: 100rpx; border-width: 2rpx; }
+.q-clock-long .q-block-num-ms { font-size: 48rpx; }
+.q-clock-long .q-block-ms-dot { font-size: 26rpx; padding-bottom: 18rpx; }
+.q-clock-long .q-led-digit-ms { flex-basis: 52rpx; width: 52rpx; height: 92rpx; }
+
