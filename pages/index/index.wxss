@@ -486,7 +486,7 @@
 
 .tomato-board { gap: 8rpx; }
 .tomato-grid { display: flex; flex-wrap: wrap; align-content: center; justify-content: flex-start; gap: 8rpx 6rpx; width: 100%; }
-.tomato-grid.single { justify-content: center; }
+.tomato-grid.single { justify-content: flex-start; }
 .tomato { width: 33rpx; height: 30rpx; }
 .tomato::before { top: -7rpx; left: 8rpx; width: 14rpx; height: 8rpx; }
 .tomato.star, .tomato.star.ghost { width: 33rpx; height: 33rpx; }
@@ -1447,7 +1447,7 @@
   margin-bottom: 0;
 }
 .tomato-row.single {
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 /* 最后一行保持左对齐；整行铺满只作用于前面的完整行 */
@@ -1456,7 +1456,7 @@
   column-gap: 8rpx;
 }
 .tomato-row.last.single {
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 /* ===== 分析报告 v5：一个部分一个框（沿用首页训练模块的粗描边 + 硬阴影） ===== */

@@ -26,7 +26,28 @@
     "wxext14566970e7e9f62": "2.27.3"
   },
   "packOptions": {
-    "ignore": [],
+    "ignore": [
+      {
+        "type": "folder",
+        "value": "tools"
+      },
+      {
+        "type": "folder",
+        "value": ".vscode"
+      },
+      {
+        "type": "file",
+        "value": "HANDOFF.md"
+      },
+      {
+        "type": "file",
+        "value": "README.md"
+      },
+      {
+        "type": "file",
+        "value": "assets/brand/logo-app-icon.png"
+      }
+    ],
     "include": []
   },
   "appid": "wx94c4673cd56b09ad",
