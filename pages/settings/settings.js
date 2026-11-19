@@ -1,5 +1,5 @@
 const app = getApp()
-const { fold } = require('../../utils/format')
+const { fold, CLOCK_STYLES, resolveClockStyle } = require('../../utils/format')
 
 const SOUND_MODES = [
   { key: 'both', name: '震动 + 铃声', desc: '到时间同时响铃和震动' },
@@ -59,10 +59,14 @@ Page({
     sections: [
       { key: 'home', name: '首页' },
       { key: 'theme', name: '主题' },
+      { key: 'clock', name: '时钟' },
       { key: 'remind', name: '提醒' },
       { key: 'guard', name: '专注' },
       { key: 'habit', name: '模板' }
     ],
+    clockStyles: [],
+    clockStyle: 'flip',
+    clockPreviewText: '25:00',
     // 自定义主题编辑器
     showEditor: false,
     editorKey: '',
@@ -75,9 +79,20 @@ Page({
   },
 
   onLoad() {
+    this.clockPreviewTicks = 0
     this.refresh()
     this.loadHabit()
     if (app.applyNavBar) app.applyNavBar()
+    // 时钟预览：每 1.5s 在 25:00 / 24:59 间切换，展示数字样式动效
+    this.clockPreviewTimer = setInterval(() => {
+      if (this.data.section !== 'clock') return
+      this.clockPreviewTicks = (this.clockPreviewTicks || 0) + 1
+      this.setData({ clockPreviewText: this.clockPreviewTicks % 2 === 0 ? '25:00' : '24:59' })
+    }, 1500)
+  },
+
+  onUnload() {
+    if (this.clockPreviewTimer) clearInterval(this.clockPreviewTimer)
   },
 
   refresh() {
@@ -132,6 +147,14 @@ Page({
       hasCustomRing: (app.getRings ? app.getRings() : []).some(item => String(item.key).indexOf('cr-') === 0 || item.key === 'custom')
     }
 
+    // 时钟样式：当前生效 + 全部候选，带预览标记
+    const savedClock = wx.getStorageSync(app.globalData.clockStyleKey)
+    const currentClock = resolveClockStyle(savedClock)
+    payload.clockStyle = currentClock.key
+    payload.clockStyleName = currentClock.name
+    payload.clockStyles = CLOCK_STYLES.map(item => ({ ...item, active: item.key === currentClock.key }))
+    payload.clockPreviewText = (this.clockPreviewTicks || 0) % 2 === 0 ? '25:00' : '24:59'
+
     // 当前主题是已保存的自定义主题时，编辑器同步显示它的名字和颜色
     if (String(current.key).indexOf('ct-') === 0) {
       const entry = customThemes.find(item => item.key === current.key)
@@ -145,7 +168,24 @@ Page({
         payload.colorGroups = buildGroups(entry)
       }
     }
-    this.setData(payload)
+    this.setData({
+      ...payload,
+      clockPreviewText: this.clockPreviewTicks % 2 === 0 ? '25:00' : '24:59'
+    })
+  },
+
+  selectClockStyle(event) {
+    const key = event.currentTarget.dataset.key
+    if (!key || key === this.data.clockStyle) return
+    const next = resolveClockStyle(key)
+    wx.setStorageSync(app.globalData.clockStyleKey, next.key)
+    this.setData({
+      clockStyle: next.key,
+      clockStyleName: next.name,
+      clockStyles: this.data.clockStyles.map(item => ({ ...item, active: item.key === next.key }))
+    })
+    if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
+    wx.showToast({ title: `已切换为${next.name}`, icon: 'none', duration: 1200 })
   },
 
   selectTheme(event) {

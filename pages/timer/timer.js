@@ -30,7 +30,7 @@ const LONG_REST_EVERY = 4
 
 Page({
   data: {
-    runtimeModules: [], currentModule: {}, currentIndex: 0,
+    runtimeModules: [], currentModule: {}, currentIndex: 0, moduleScrollTarget: 'module-0',
     globalSeconds: 0, moduleSeconds: 0,
     globalTimeText: '00:00:00', moduleTimeText: '00:00:00', mainTimeText: '00:00:00',
     progressPercent: 0, isPaused: false, isOvertime: false, isHolding: false,
@@ -394,7 +394,7 @@ Page({
     this.lastTimeText = mainTimeText
     if (flipCells.some(item => item.changed)) this.flipPhase = !this.flipPhase
 
-    this.setData({
+    const patch = {
       currentModule,
       globalTimeText: globalText,
       moduleTimeText: moduleText,
@@ -410,7 +410,12 @@ Page({
       flipDigits,
       ledDigits,
       flipPhase: !!this.flipPhase
-    })
+    }
+    if (this.lastScrollIndex !== this.data.currentIndex) {
+      this.lastScrollIndex = this.data.currentIndex
+      patch.moduleScrollTarget = `module-${this.data.currentIndex}`
+    }
+    this.setData(patch)
   },
 
   toggleImmersive() {

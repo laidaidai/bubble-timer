@@ -268,6 +268,10 @@ Page({
     })
   },
 
+  openQuick() {
+    wx.navigateTo({ url: '/pages/quick/quick' })
+  },
+
   openTodo() {
     wx.navigateTo({ url: '/pages/todo/todo' })
   },

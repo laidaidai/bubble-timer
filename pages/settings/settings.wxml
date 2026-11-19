@@ -54,6 +54,28 @@
       </view>
     </view>
 
+    <view class="pane" wx:if="{{section === 'clock'}}">
+      <view class="clock-preview">
+        <view class="clock-preview-card q-shell-{{clockStyle}} {{clockPreviewText.length > 5 ? 'q-clock-long' : ''}}">
+          <text class="q-plain-num glow">{{clockPreviewText}}</text>
+        </view>
+        <view class="clock-preview-hint">当前样式 · {{clockStyleName}}</view>
+      </view>
+      <view class="pane-sub">点击切换，预览即时生效</view>
+      <view class="clock-style-list">
+        <view class="clock-style-card {{item.active ? 'on' : ''}}" wx:for="{{clockStyles}}" wx:key="key" data-key="{{item.key}}" bindtap="selectClockStyle">
+          <view class="clock-style-sample q-shell-{{item.key}}">
+            <text class="q-plain-num glow">25:00</text>
+          </view>
+          <view class="clock-style-text">
+            <text class="clock-style-name">{{item.name}}</text>
+            <text class="clock-style-desc">{{item.desc}}</text>
+          </view>
+          <view class="clock-style-radio" wx:if="{{item.active}}">✓</view>
+        </view>
+      </view>
+    </view>
+
     <view class="pane" wx:if="{{section === 'remind'}}">
       <view class="row" data-key="tickSound" bindtap="toggleSwitch">
         <view class="row-main">

@@ -1,12 +1,13 @@
 const MODULE_LIMIT = 8
 const DEFAULT_MODULES = [
-  { name: '资料分析', targetMinutes: 25 },
-  { name: '判断推理', targetMinutes: 35 },
-  { name: '言语理解', targetMinutes: 34 },
-  { name: '政治理论', targetMinutes: 12 },
-  { name: '常识判断', targetMinutes: 9 },
-  { name: '数量关系', targetMinutes: 5 }
+  { name: '课程学习', targetMinutes: 30 },
+  { name: '知识梳理', targetMinutes: 20 },
+  { name: '专项练习', targetMinutes: 30 },
+  { name: '错题复盘', targetMinutes: 15 },
+  { name: '阅读积累', targetMinutes: 15 },
+  { name: '总结回顾', targetMinutes: 10 }
 ]
+const LEGACY_DEFAULT_MODULE_NAMES = ['资料分析', '判断推理', '言语理解', '政治理论', '常识判断', '数量关系']
 
 const QUOTES = ['稳定节奏，持续精进。', '今天的坚持，是明天的底气。', '把时间用在真正重要的事情上。']
 const WEEK_LABELS = ['一', '二', '三', '四', '五', '六', '日']
@@ -27,6 +28,7 @@ Page({
     modules: [],
     totalMinutes: 0,
     templateName: '常规',
+    reportAnimTimer: null,
     dragIndex: -1,
     progressPercent: 0,
     completedCount: 0,
@@ -79,7 +81,9 @@ Page({
     // 番茄激励
     tomatoCount: 0,
     tomatoIcons: [],
-    tomatoCaption: '完成计时收番茄',
+    tomatoProgress: 0,
+    tomatoTarget: 5,
+    tomatoCaption: '',
     incentiveType: 'tomato',
     tomatoPop: false,
     homePrimary: 'timer',
@@ -98,7 +102,8 @@ Page({
   onLoad() {
     this.setOrientation('portrait')
     const theme = app.getTheme ? app.getTheme() : { key: 'rose' }
-    const modes = (app.modes || []).map(item => ({ ...item }))
+    // 首页只保留模块化计时；番茄钟独立在快捷计时里，不再和模块混用
+    const modes = (app.modes || []).filter(item => item.key !== 'pomodoro').map(item => ({ ...item }))
     const savedMode = wx.getStorageSync(app.globalData.modeKey) || 'countup'
     const modeInfo = modes.find(item => item.key === savedMode) || modes[0]
     this.setData({
@@ -116,12 +121,24 @@ Page({
     const savedSession = wx.getStorageSync(app.globalData.storageKey)
     const savedTemplates = this.readTemplates()
     const savedCurrentName = (wx.getStorageSync(app.globalData.templateKey) || {}).currentName
-    const savedTemplate = savedTemplates.find(item => item.name === savedCurrentName) || savedTemplates[0]
+    let savedTemplate = savedTemplates.find(item => item.name === savedCurrentName) || savedTemplates[0]
+    // 老版本默认模板是国考行测模块，迁移成通用学习模块；用户自己改过的模板不动
+    const isLegacyDefault = savedTemplate && Array.isArray(savedTemplate.modules) &&
+      savedTemplate.modules.length === LEGACY_DEFAULT_MODULE_NAMES.length &&
+      savedTemplate.modules.every((item, index) => item.name === LEGACY_DEFAULT_MODULE_NAMES[index])
+    let templatesForView = savedTemplates
+    if (isLegacyDefault) {
+      templatesForView = savedTemplates.map(item => item.name === savedTemplate.name
+        ? { ...item, modules: clone(DEFAULT_MODULES) }
+        : item)
+      savedTemplate = templatesForView.find(item => item.name === savedTemplate.name)
+      wx.setStorageSync(app.globalData.templateKey, { currentName: savedTemplate.name, templates: templatesForView })
+    }
     const modules = savedTemplate && savedTemplate.modules && savedTemplate.modules.length ? savedTemplate.modules : DEFAULT_MODULES
     this.setData({
       modules: this.withIds(modules),
       templateName: savedTemplate && savedTemplate.name ? savedTemplate.name : '常规',
-      templates: savedTemplates
+      templates: templatesForView
     }, this.refreshConfig)
     if (savedSession && savedSession.modules && savedSession.startedAt) {
       wx.showModal({
@@ -247,6 +264,7 @@ Page({
     clearTimeout(this.settleTimer2)
     clearTimeout(this.templateSwitchTimer)
     clearTimeout(this.tomatoPopTimer)
+    if (this.reportAnimTimer) clearTimeout(this.reportAnimTimer)
   },
 
   // ---- 重要日子倒计时 ----
@@ -515,6 +533,7 @@ Page({
     const count = app.getTomatoCount ? app.getTomatoCount() : 0
     const settings = app.getSettings ? app.getSettings() : {}
     const incentiveType = settings.incentiveType || this.data.incentiveType || 'tomato'
+    const tomatoTarget = 5
     const icons = count === 0
       ? [{ id: 0, filled: false }]
       : Array.from({ length: Math.min(count, TOMATO_SHOW_LIMIT) }, (_, index) => ({
@@ -524,11 +543,14 @@ Page({
     const previous = this.lastTomatoCount
     const pop = typeof previous === 'number' && count > previous
     this.lastTomatoCount = count
+    const progress = Math.min(100, Math.round((count / tomatoTarget) * 100))
     this.setData({
       tomatoCount: count,
       tomatoIcons: icons,
+      tomatoProgress: progress,
+      tomatoTarget: tomatoTarget,
       incentiveType,
-      tomatoCaption: count > TOMATO_SHOW_LIMIT ? `+${count - TOMATO_SHOW_LIMIT}` : '',
+      tomatoCaption: count > TOMATO_SHOW_LIMIT ? `+${count - TOMATO_SHOW_LIMIT}` : (count === 0 ? '完成计时收番茄' : ''),
       tomatoPop: pop
     })
     if (pop) {
@@ -605,6 +627,7 @@ Page({
       onTrackCount: rows.filter(item => item.statusCode === 'on-track' || item.statusCode === 'near').length,
       passRate: completedRows.length ? Math.round(completedRows.filter(item => (item.elapsedSeconds || 0) <= (item.targetMinutes || 0) * 60).length / completedRows.length * 100) : 0,
       totalTargetSeconds,
+      totalTarget: report.totalTarget !== undefined ? report.totalTarget : Math.round(totalTargetSeconds / 60),
       totalActualPercent: Math.min(100, Math.round(totalActualSeconds / Math.max(1, totalTargetSeconds) * 100)),
       slowestName: slowest ? slowest.name : '',
       slowestText: slowest ? slowest.actualText : '',
@@ -620,10 +643,36 @@ Page({
     const activeRows = rows.filter(item => (item.elapsedSeconds || 0) > 0)
     this.setData({
       view: 'report',
-      report,
+      report: { ...report, passRate: 0, totalActualPercent: 0, totalTarget: 0 },
       reportView: activeRows.length ? activeRows : rows,
       reportExpanded: false
     })
+    this.animateReportNumbers(report.passRate, report.totalActualPercent, report.totalTarget || Math.round(report.totalTargetSeconds / 60))
+  },
+
+  animateReportNumbers(targetRate, targetActual, targetTargetMinutes) {
+    if (this.reportAnimTimer) clearTimeout(this.reportAnimTimer)
+    const duration = 400
+    const startAt = Date.now()
+    const step = () => {
+      const elapsed = Date.now() - startAt
+      const progress = Math.min(1, elapsed / duration)
+      const eased = 1 - Math.pow(1 - progress, 3)
+      const currentRate = Math.round(targetRate * eased)
+      const currentActual = Math.round(targetActual * eased)
+      const currentTarget = Math.round(targetTargetMinutes * eased)
+      this.setData({
+        'report.passRate': currentRate,
+        'report.totalActualPercent': currentActual,
+        'report.totalTarget': currentTarget
+      })
+      if (progress < 1) {
+        this.reportAnimTimer = setTimeout(step, 16)
+      } else {
+        this.reportAnimTimer = null
+      }
+    }
+    step()
   },
 
   changeModuleName(event) {

@@ -1,0 +1,116 @@
+<template name="quickClock">
+  <view class="q-clock-shell q-shell-{{clockStyle}} {{long ? 'q-clock-long' : ''}}">
+    <block wx:if="{{clockStyle === 'flip'}}">
+      <view class="q-flip-row">
+        <block wx:for="{{flipCells}}" wx:key="key">
+          <view class="q-flip-colon" wx:if="{{item.sep}}">:</view>
+          <view class="q-flip-card {{item.changed ? (flipPhase ? 'flip-a' : 'flip-b') : ''}}" wx:else>
+            <view class="q-flip-face q-flip-face-top"><text class="q-flip-num">{{item.text}}</text></view>
+            <view class="q-flip-face q-flip-face-bottom"><text class="q-flip-num">{{item.text}}</text></view>
+            <view class="q-flip-face q-flip-face-bottom q-flip-face-old" wx:if="{{item.changed}}"><text class="q-flip-num">{{item.oldText}}</text></view>
+            <view class="q-flip-flap q-flip-flap-top" wx:if="{{item.changed}}">
+              <view class="q-flip-flap-face"><text class="q-flip-num">{{item.oldText}}</text></view>
+            </view>
+            <view class="q-flip-flap q-flip-flap-bottom" wx:if="{{item.changed}}">
+              <view class="q-flip-flap-face q-flip-flap-face-bottom"><text class="q-flip-num">{{item.text}}</text></view>
+            </view>
+            <view class="q-flip-split"></view>
+          </view>
+        </block>
+      </view>
+    </block>
+
+    <view class="q-plain-clock" wx:else>
+      <text class="q-plain-num">{{mainText}}</text>
+    </view>
+
+    <view class="q-clock-ms {{clockStyle}}" wx:if="{{msShow}}">
+      <block wx:if="{{clockStyle === 'flip'}}">
+        <text class="q-ms-dot">.</text>
+        <view class="q-flip-card q-flip-card-ms" wx:for="{{msCells}}" wx:key="key">
+          <view class="q-flip-face q-flip-face-top"><text class="q-flip-num">{{item.text}}</text></view>
+          <view class="q-flip-face q-flip-face-bottom"><text class="q-flip-num">{{item.text}}</text></view>
+          <view class="q-flip-split"></view>
+        </view>
+      </block>
+      <block wx:else>
+        <text class="q-ms-dot">.</text>
+        <text class="q-ms-inline">{{msText}}</text>
+      </block>
+    </view>
+  </view>
+</template>
+
+<view class="quick-page theme-{{theme}}" style="{{themeStyle}}">
+  <view class="topbar">
+    <button class="back-icon" bindtap="goBack">‹</button>
+    <view class="topbar-title">快捷计时</view>
+    <view class="topbar-spacer"></view>
+  </view>
+
+  <view class="quick-tabs">
+    <view class="quick-tab {{tab === 'stopwatch' ? 'on' : ''}}" data-tab="stopwatch" bindtap="switchTab">秒表</view>
+    <view class="quick-tab {{tab === 'countdown' ? 'on' : ''}}" data-tab="countdown" bindtap="switchTab">计时器</view>
+    <view class="quick-tab {{tab === 'pomodoro' ? 'on' : ''}}" data-tab="pomodoro" bindtap="switchTab">番茄钟</view>
+  </view>
+
+  <view class="quick-body">
+    <view class="quick-clock-card {{tab === 'countdown' && !countdownStarted ? 'picker-mode' : ''}}">
+      <view class="pomo-chip {{pomodoroPhase === 'focus' ? 'focus' : 'rest'}}" wx:if="{{tab === 'pomodoro'}}">
+        <text class="pomo-dot {{running ? 'on' : ''}}"></text>
+        <text>{{pomodoroPhase === 'focus' ? '专注' : '休息'}}</text>
+        <text class="pomo-cycle num">{{pomodoroCycle}}/4</text>
+      </view>
+
+      <view class="time-picker-wrap" wx:if="{{tab === 'countdown' && !countdownStarted}}">
+        <picker-view class="time-picker" indicator-style="height: 88rpx;" value="{{pickerValue}}" bindchange="onTimeChange">
+          <picker-view-column>
+            <view class="picker-item" wx:for="{{hourOptions}}" wx:key="key">{{item.label}}</view>
+          </picker-view-column>
+          <picker-view-column>
+            <view class="picker-item" wx:for="{{minuteOptions}}" wx:key="key">{{item.label}}</view>
+          </picker-view-column>
+          <picker-view-column>
+            <view class="picker-item" wx:for="{{secondOptions}}" wx:key="key">{{item.label}}</view>
+          </picker-view-column>
+        </picker-view>
+        <view class="picker-units">
+          <text>时</text><text>分</text><text>秒</text>
+        </view>
+      </view>
+
+      <view class="quick-clock-stage" wx:else bindtap="cycleClockStyle">
+        <view class="clock-display">
+          <template is="quickClock" data="{{...clockData}}"/>
+        </view>
+      </view>
+
+      <scroll-view class="lap-list" wx:if="{{tab === 'stopwatch' && laps.length}}" scroll-y="true" enhanced="true" show-scrollbar="false">
+        <view class="lap-row" wx:for="{{laps}}" wx:key="key">
+          <text class="lap-no num">#{{item.no}}</text>
+          <text class="lap-total num">{{item.total}}</text>
+          <text class="lap-split num">{{item.split}}</text>
+        </view>
+      </scroll-view>
+    </view>
+
+    <view class="preset-wrap" wx:if="{{tab === 'countdown' && !countdownStarted}}">
+      <view class="preset-head">
+        <text class="preset-title">预设时间</text>
+        <text class="preset-hint" wx:if="{{recommended}}">常用推荐</text>
+      </view>
+      <view class="preset-grid">
+        <view class="preset-chip {{selectedPreset === item.minutes ? 'on' : ''}}" wx:for="{{presets}}" wx:key="minutes" data-minutes="{{item.minutes}}" bindtap="selectPreset">
+          <text>{{item.label}}</text>
+          <text class="preset-badge" wx:if="{{item.minutes === recommended}}">推荐</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="quick-actions">
+      <button class="quick-primary" bindtap="toggleRun">{{running ? '暂停' : (sessionStarted ? '继续' : '开始')}}</button>
+      <button class="quick-lap" wx:if="{{tab === 'stopwatch' && sessionStarted}}" bindtap="recordLap">计次</button>
+      <button class="quick-reset" bindtap="reset">重置</button>
+    </view>
+  </view>
+</view>

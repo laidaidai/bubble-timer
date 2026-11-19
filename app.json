@@ -4,6 +4,7 @@
     "pages/tools/tools",
     "pages/settings/settings",
     "pages/timer/timer",
+    "pages/quick/quick",
     "pages/stats/stats",
     "pages/history/history",
     "pages/todo/todo"

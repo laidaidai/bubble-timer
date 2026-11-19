@@ -79,3 +79,31 @@
 .data-title { color: var(--ink); font-size: 25rpx; font-weight: 900; }
 .data-desc { margin-top: 8rpx; color: var(--text-2); font-size: 20rpx; line-height: 1.7; }
 .data-clear-btn { display: flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box; margin: 20rpx 0 0; padding: 18rpx 10rpx; color: #FFFFFF; background: var(--danger); border: 2rpx solid var(--edge); border-radius: 999rpx; box-shadow: 4rpx 5rpx 0 var(--shadow); font-size: 23rpx; font-weight: 900; line-height: 1.3; }
+
+/* 时钟样式：预览 + 列表 */
+.clock-preview { display: flex; flex-direction: column; align-items: center; gap: 16rpx; padding: 34rpx 24rpx; background: var(--card); border: 2rpx solid var(--edge); border-radius: 26rpx; box-shadow: 5rpx 5rpx 0 var(--shadow-soft); }
+.clock-preview-card { padding: 12rpx 30rpx; background: var(--panel); border: 2rpx solid var(--edge-deep); border-radius: 22rpx; box-shadow: 5rpx 6rpx 0 var(--shadow-soft); }
+.clock-preview-card .q-plain-num { font-family: "Courier New", Menlo, monospace; font-size: 88rpx; font-weight: 900; line-height: 1.1; letter-spacing: 2rpx; color: var(--on-panel-warm); text-shadow: 0 0 14rpx rgba(255, 209, 102, .55); }
+.clock-preview-hint { color: var(--text-mid); font-size: 22rpx; font-weight: 800; }
+.clock-style-list { display: flex; flex-direction: column; gap: 14rpx; }
+.clock-style-card { display: flex; align-items: center; gap: 20rpx; padding: 20rpx 22rpx; background: var(--card); border: 2rpx solid var(--edge); border-radius: 22rpx; box-shadow: 4rpx 5rpx 0 var(--shadow-soft); }
+.clock-style-card.on { background: var(--cream-2); border-width: 3rpx; box-shadow: 5rpx 6rpx 0 var(--shadow); }
+.clock-style-sample { flex: 0 0 150rpx; height: 92rpx; display: flex; align-items: center; justify-content: center; background: var(--cream-1); border: 2rpx solid var(--line-strong); border-radius: 16rpx; overflow: hidden; }
+.clock-style-sample .q-plain-num { font-family: "Courier New", Menlo, monospace; font-size: 44rpx; font-weight: 900; line-height: 1; color: var(--ink); }
+.clock-style-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4rpx; }
+.clock-style-name { font-size: 26rpx; font-weight: 900; }
+.clock-style-desc { color: var(--text-2); font-size: 20rpx; font-weight: 700; }
+.clock-style-radio { flex: 0 0 40rpx; width: 40rpx; height: 40rpx; color: var(--on-primary); background: var(--primary); border: 2rpx solid var(--edge); border-radius: 50%; font-size: 24rpx; font-weight: 900; line-height: 40rpx; text-align: center; }
+
+/* 时钟样式预览：霓虹 / 描边 / 极简 */
+.q-shell-neon { background: var(--ink); border-color: transparent; box-shadow: 0 0 22rpx rgba(255, 60, 172, .35), inset 0 0 26rpx rgba(80, 220, 255, .16); }
+.q-shell-neon .q-plain-num { color: #FFE9F4; text-shadow: 0 0 6rpx #FF3CAC, 0 0 18rpx #FF3CAC, 0 0 36rpx rgba(80, 220, 255, .75); letter-spacing: 3rpx; }
+.q-shell-outline { background: transparent; border: 4rpx solid var(--ink); box-shadow: none; }
+.q-shell-outline .q-plain-num { color: transparent; -webkit-text-stroke: 3rpx var(--ink); text-shadow: none; letter-spacing: 3rpx; }
+.q-shell-minimal { background: transparent; border: 0; box-shadow: none; }
+.q-shell-minimal .q-plain-num { font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif; font-weight: 200; color: var(--ink); text-shadow: none; letter-spacing: 4rpx; }
+.q-shell-digital { background: transparent; border: 0; box-shadow: none; }
+.q-shell-digital .q-plain-num { background: transparent; color: var(--accent-text); text-shadow: none; }
+.q-shell-flip { background: var(--cream-2); }
+.q-shell-flip .q-plain-num { color: var(--ink); text-shadow: none; background: var(--panel); padding: 4rpx 12rpx; border-radius: 8rpx; box-shadow: 3rpx 3rpx 0 var(--shadow-soft); }
+.q-clock-long .q-plain-num { font-size: 60rpx; }

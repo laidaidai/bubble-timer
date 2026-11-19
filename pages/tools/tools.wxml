@@ -7,60 +7,80 @@
 
   <scroll-view class="tools-body" scroll-y enhanced show-scrollbar="{{false}}">
     <view class="page-content">
-      <view class="tool-icon-grid">
-        <view class="tool-icon-tile" bindtap="openHome">
-          <view class="tool-icon-box"><view class="glyph-clock"></view></view>
-          <text class="tool-icon-label">计时</text>
+      <view class="quick-feature" bindtap="openQuick">
+        <view class="quick-feature-icon">
+          <view class="glyph-stopwatch">
+            <view class="stopwatch-crown"></view>
+            <view class="stopwatch-hand"></view>
+          </view>
         </view>
-        <view class="tool-icon-tile" bindtap="openTodo">
-          <view class="tool-icon-box">
+        <view class="quick-feature-copy">
+          <text class="quick-feature-title">快捷计时</text>
+          <view class="quick-feature-modes">
+            <text>秒表</text>
+            <text>计时器</text>
+            <text>番茄钟</text>
+          </view>
+        </view>
+        <text class="quick-feature-arrow">›</text>
+      </view>
+
+      <view class="tool-grid">
+        <view class="tool-tile" bindtap="openHome">
+          <view class="tool-tile-icon"><view class="glyph-clock"></view></view>
+          <text class="tool-tile-label">训练</text>
+        </view>
+        <view class="tool-tile" bindtap="openTodo">
+          <view class="tool-tile-icon">
             <view class="glyph-todo">
               <view class="todo-check"></view>
               <view class="todo-line l1"></view>
               <view class="todo-line l2"></view>
               <view class="todo-line l3"></view>
             </view>
-            <text class="tool-icon-meta" wx:if="{{todoTodayPending}}">{{todoTodayPending}}</text>
           </view>
-          <text class="tool-icon-label">待办</text>
+          <text class="tool-tile-label">待办</text>
+          <text class="tool-tile-badge" wx:if="{{todoTodayPending}}">{{todoTodayPending}}</text>
         </view>
-        <view class="tool-icon-tile" bindtap="openImportantModal">
-          <view class="tool-icon-box">
+        <view class="tool-tile" bindtap="openImportantModal">
+          <view class="tool-tile-icon">
             <view class="glyph-calendar">
               <view class="cal-top"></view>
               <view class="cal-ring r1"></view>
               <view class="cal-ring r2"></view>
             </view>
-            <text class="tool-icon-meta" wx:if="{{importantDates.length}}">{{importantDates.length}}</text>
           </view>
-          <text class="tool-icon-label">重要日子</text>
+          <text class="tool-tile-label">重要日子</text>
+          <text class="tool-tile-badge" wx:if="{{importantDates.length}}">{{importantDates.length}}</text>
         </view>
-        <view class="tool-icon-tile" bindtap="openStats">
-          <view class="tool-icon-box">
+        <view class="tool-tile" bindtap="openStats">
+          <view class="tool-tile-icon">
             <view class="glyph-chart">
               <view class="chart-bar b1"></view>
               <view class="chart-bar b2"></view>
               <view class="chart-bar b3"></view>
             </view>
-            <text class="tool-icon-meta" wx:if="{{todayPercent}}">{{todayPercent}}%</text>
           </view>
-          <text class="tool-icon-label">打卡</text>
-        </view>
-        <view class="tool-icon-tile" bindtap="openSettings">
-          <view class="tool-icon-box">
-            <view class="di-gear">
-              <view class="gear-tooth g1"></view><view class="gear-tooth g2"></view>
-              <view class="gear-tooth g3"></view><view class="gear-tooth g4"></view>
-              <view class="gear-tooth g5"></view><view class="gear-tooth g6"></view>
-              <view class="gear-tooth g7"></view><view class="gear-tooth g8"></view>
-              <view class="gear-core"></view><view class="gear-hole"></view>
-            </view>
-          </view>
-          <text class="tool-icon-label">设置</text>
+          <text class="tool-tile-label">打卡</text>
+          <text class="tool-tile-badge" wx:if="{{todayPercent}}">{{todayPercent}}%</text>
         </view>
       </view>
 
-      <view class="todo-preview {{todoPreview.length === 1 ? 'single' : ''}}" wx:if="{{todoPreview.length}}" bindtap="openTodo">
+      <view class="settings-bar" bindtap="openSettings">
+        <view class="settings-bar-icon">
+          <view class="di-gear">
+            <view class="gear-tooth g1"></view><view class="gear-tooth g2"></view>
+            <view class="gear-tooth g3"></view><view class="gear-tooth g4"></view>
+            <view class="gear-tooth g5"></view><view class="gear-tooth g6"></view>
+            <view class="gear-tooth g7"></view><view class="gear-tooth g8"></view>
+            <view class="gear-core"></view><view class="gear-hole"></view>
+          </view>
+        </view>
+        <text class="settings-bar-label">设置</text>
+        <text class="settings-bar-arrow">›</text>
+      </view>
+
+      <view class="todo-preview count-{{todoPreview.length}}" wx:if="{{todoPreview.length}}" bindtap="openTodo">
         <view class="todo-preview-row" wx:for="{{todoPreview}}" wx:key="id">
           <view class="todo-preview-line">
             <view class="todo-preview-dot"></view>

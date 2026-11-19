@@ -34,6 +34,10 @@
 .tomato-empty { display: flex; align-items: center; gap: 8rpx; }
 .tomato-empty-text { color: var(--text-mid); font-size: 18rpx; font-weight: 800; }
 .tomato-caption { max-width: 100%; color: var(--text-mid); font-size: 18rpx; font-weight: 800; line-height: 1.35; text-align: right; }
+.tomato-progress { width: 100%; display: flex; flex-direction: column; align-items: flex-end; gap: 4rpx; }
+.tomato-progress-track { width: 100%; height: 8rpx; overflow: hidden; background: var(--cream-3); border: 1.5rpx solid var(--line-strong); border-radius: 999rpx; }
+.tomato-progress-fill { height: 100%; background: var(--primary); border-radius: 999rpx; transition: width .3s ease; }
+.tomato-progress-text { color: var(--text-mid); font-size: 16rpx; font-weight: 800; }
 .tomato-board.pop .tomato { animation: tomato-pop 520ms cubic-bezier(.2, .8, .3, 1); }
 @keyframes tomato-pop { 0% { transform: scale(.55); opacity: .4; } 55% { transform: scale(1.18); } 100% { transform: scale(1); opacity: 1; } }
 

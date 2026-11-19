@@ -54,6 +54,19 @@ const fold = (list, expanded, limit) => {
   return expanded ? source : source.slice(0, limit)
 }
 
+// 时钟样式目录（timer / quick / settings 共用，改一处即全局生效）
+const CLOCK_STYLES = [
+  { key: 'flip', name: '翻页时钟', desc: '机械翻页，复古有质感' },
+  { key: 'digital', name: '数字时钟', desc: '等宽数字，清晰克制' },
+  { key: 'neon', name: '霓虹发光', desc: '夜色霓虹，夜间醒目' },
+  { key: 'outline', name: '描边空心', desc: '空心描边，轻盈现代' },
+  { key: 'minimal', name: '极简细体', desc: '细字无衬线，安静专注' }
+]
+
+const DEFAULT_CLOCK_STYLE = 'flip'
+
+const resolveClockStyle = key => CLOCK_STYLES.find(item => item.key === key) || CLOCK_STYLES[0]
+
 module.exports = {
   pad,
   clock,
@@ -64,5 +77,8 @@ module.exports = {
   dateTimeText,
   startOfDay,
   clone,
-  fold
+  fold,
+  CLOCK_STYLES,
+  DEFAULT_CLOCK_STYLE,
+  resolveClockStyle
 }

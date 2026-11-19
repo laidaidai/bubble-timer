@@ -23,5 +23,16 @@
         <button class="history-report-button" data-index="{{index}}" bindtap="openReport">查看报告</button>
       </view>
     </view>
+
+    <view class="history-empty" wx:if="{{!records.length}}">
+      <view class="empty-fish">
+        <view class="fish-body"></view>
+        <view class="fish-eye"></view>
+        <view class="fish-tail"></view>
+      </view>
+      <text class="empty-title">还没有训练记录</text>
+      <text class="empty-sub">完成一次计时后，报告会出现在这里</text>
+      <view class="empty-tip">点击首页「开始计时」试试 →</view>
+    </view>
   </scroll-view>
 </view>

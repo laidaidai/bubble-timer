@@ -22,6 +22,12 @@
                 <view class="tomato-grid">
                   <view class="tomato {{incentiveType}} {{item.filled ? '' : 'ghost'}}" wx:for="{{tomatoIcons}}" wx:key="id"></view>
                 </view>
+                <view class="tomato-progress" wx:if="{{!tomatoCaption}}">
+                  <view class="tomato-progress-track">
+                    <view class="tomato-progress-fill" style="width: {{tomatoProgress}}%;"></view>
+                  </view>
+                  <text class="tomato-progress-text">{{tomatoCount}}/{{tomatoTarget || 5}}</text>
+                </view>
                 <text class="tomato-caption" wx:if="{{tomatoCaption}}">{{tomatoCaption}}</text>
               </view>
             </view>

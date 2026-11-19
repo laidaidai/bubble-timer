@@ -93,8 +93,8 @@
     </view>
   </view>
 
-  <scroll-view class="module-side" scroll-y="true" enhanced="true" show-scrollbar="false">
-    <view class="module-list {{item.status === 'current' ? 'selected' : ''}}" wx:for="{{runtimeModules}}" wx:key="id" data-index="{{index}}" bindtap="selectModule">
+  <scroll-view class="module-side" scroll-y="true" enhanced="true" show-scrollbar="false" scroll-into-view="{{moduleScrollTarget}}" scroll-with-animation="true">
+    <view id="module-{{index}}" class="module-list {{item.status === 'current' ? 'selected' : ''}}" wx:for="{{runtimeModules}}" wx:key="id" data-index="{{index}}" bindtap="selectModule">
       <view class="module-index num">{{item.status === 'done' ? '✓' : index + 1}}</view>
       <view class="module-info"><text>{{item.name}}</text><text class="num">{{item.targetMinutes}} 分</text></view>
     </view>

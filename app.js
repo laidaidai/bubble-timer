@@ -236,9 +236,6 @@ App({
       { name: '完形填空', targetMinutes: 15 }, { name: '阅读理解', targetMinutes: 70 }, { name: '新题型', targetMinutes: 20 },
       { name: '翻译', targetMinutes: 20 }, { name: '作文', targetMinutes: 55 }
     ] },
-    { key: 'pomodoro', name: '番茄专注', desc: '4 模块 · 100 分钟', modules: [
-      { name: '专注 1', targetMinutes: 25 }, { name: '专注 2', targetMinutes: 25 }, { name: '专注 3', targetMinutes: 25 }, { name: '专注 4', targetMinutes: 25 }
-    ] },
     { key: 'zhiye', name: '事业单位职测', desc: '5 模块 · 90 分钟', modules: [
       { name: '常识判断', targetMinutes: 10 }, { name: '言语理解', targetMinutes: 20 }, { name: '数量关系', targetMinutes: 15 },
       { name: '判断推理', targetMinutes: 25 }, { name: '资料分析', targetMinutes: 20 }
