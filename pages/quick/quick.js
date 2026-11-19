@@ -70,7 +70,7 @@ function formatTimerParts(ms) {
 
 Page({
   data: {
-    theme: 'rose',
+    theme: 'pearl',
     themeStyle: '',
     tab: 'stopwatch',
     running: false,

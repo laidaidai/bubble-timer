@@ -5,6 +5,7 @@ const THEMES = PALETTE.map(theme => ({
   name: theme.name,
   desc: theme.desc,
   swatch: theme.swatch,
+  css: theme.css,
   nav: theme.nav,
   front: theme.front,
   sliderActive: theme.slider.active,
@@ -133,7 +134,7 @@ const MODES = [
 ]
 
 const DEFAULT_SETTINGS = {
-  theme: 'rose',
+  theme: 'pearl',
   soundMode: 'both',
   ring: 'chime',
   keepScreenOn: true,
@@ -170,6 +171,15 @@ App({
     if (saved && !saved.tickDefaultOff) {
       saved.tickSound = false
       saved.tickDefaultOff = true
+      wx.setStorageSync(this.globalData.settingsKey, saved)
+    }
+    // 参考图新皮肤上线：旧默认粉色一次性迁到「奶油白」，之后仍可在设置里切回
+    if (saved && !saved.pearlMigrated) {
+      if (saved.theme === 'rose') {
+        saved.theme = 'pearl'
+        wx.setStorageSync(this.globalData.themeKey, 'pearl')
+      }
+      saved.pearlMigrated = true
       wx.setStorageSync(this.globalData.settingsKey, saved)
     }
   },
@@ -263,7 +273,7 @@ App({
       if (entry) return buildCustomTheme(entry, { name: entry.name, key: entry.key })
     }
     if (key === 'custom') return buildCustomTheme(settings.customTheme)
-    return THEMES.find(item => item.key === key) || THEMES.find(item => item.key === 'rose') || THEMES[0]
+    return THEMES.find(item => item.key === key) || THEMES.find(item => item.key === 'pearl') || THEMES[0]
   },
 
   // 自定义主题列表（带旧数据兼容）

@@ -10,8 +10,8 @@ Component({
   data: {
     selected: 0,
     list: TABS,
-    activeColor: '#E36F8B',
-    inactiveColor: '#8A7078',
+    activeColor: '#1F1F1F',
+    inactiveColor: '#A6A6AC',
     tabStyle: ''
   },
 
@@ -30,15 +30,19 @@ Component({
   methods: {
     sync() {
       const theme = app.getTheme ? app.getTheme() : null
-      const swatch = (theme && theme.swatch) || ['#FFF7F8', '#E36F8B', '#8A7078']
+      const swatch = (theme && theme.swatch) || ['#F5F5F7', '#FFD54F', '#1F1F1F']
+      const css = (theme && theme.css) || {}
+      const pearl = theme && theme.key === 'pearl'
       const pages = getCurrentPages()
       const current = pages.length ? pages[pages.length - 1].route : ''
       const selected = Math.max(0, TABS.findIndex(item => item.route === current))
       this.setData({
         selected,
-        activeColor: swatch[1] || '#E36F8B',
-        inactiveColor: swatch[2] || '#8A7078',
-        tabStyle: `background:${swatch[0] || '#FFF7F8'};border-top-color:${swatch[1] || '#E36F8B'};`
+        activeColor: pearl ? (css.ink || '#1F1F1F') : (swatch[1] || '#1F1F1F'),
+        inactiveColor: pearl ? (css['text-3'] || '#A6A6AC') : (swatch[2] || '#A6A6AC'),
+        tabStyle: pearl
+          ? 'background:#FFFFFF;border-top-color:transparent;'
+          : `background:${swatch[0]};border-top-color:${swatch[1]};`
       })
     },
 

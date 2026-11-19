@@ -11,7 +11,7 @@ function importantDateText(key) {
 
 Page({
   data: {
-    theme: 'rose',
+    theme: 'pearl',
     themeStyle: '',
     todayPercent: 0,
     todoTodayPending: 0,

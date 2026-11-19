@@ -46,7 +46,7 @@ function dueLabel(dueAt) {
 
 Page({
   data: {
-    theme: 'rose', themeStyle: '',
+    theme: 'pearl', themeStyle: '',
     todos: [],
     viewTodos: [],
     schedTitle: '',

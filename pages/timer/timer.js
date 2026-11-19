@@ -35,7 +35,7 @@ Page({
     globalTimeText: '00:00:00', moduleTimeText: '00:00:00', mainTimeText: '00:00:00',
     progressPercent: 0, isPaused: false, isOvertime: false, isHolding: false,
     clockStyle: 'flip', clockStyleName: '翻页时钟', flipCells: [], flipDigits: [], ledDigits: [], flipPhase: false,
-    msText: '000', theme: 'rose', themeStyle: '',
+    msText: '000', theme: 'pearl', themeStyle: '',
     isLastModule: false, isFirstModule: true,
     mode: 'countup', modeName: '正计时', mainLabel: '总用时',
     phaseLabel: '', phaseText: '', tickMuted: true, compact: true, immersive: false

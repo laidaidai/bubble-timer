@@ -155,3 +155,73 @@
 .important-cal-cell.empty { background: transparent; border-color: transparent; }
 .important-cal-cell.today { color: var(--text-warm); border-color: var(--line-strong); }
 .important-cal-cell.selected { color: var(--on-primary); background: var(--primary); border-color: var(--edge); box-shadow: 2rpx 2rpx 0 var(--shadow); }
+
+/* 奶油白主题：参考图的大圆角白卡与黄色主卡 */
+.tools-page.theme-pearl .quick-feature {
+  padding: 22rpx 22rpx 22rpx 20rpx;
+  border: 1rpx solid #F2C62B;
+  border-radius: 28rpx;
+  box-shadow: 0 12rpx 28rpx rgba(217, 169, 0, .20);
+}
+.tools-page.theme-pearl .quick-feature-icon {
+  flex-basis: 92rpx;
+  width: 92rpx;
+  height: 92rpx;
+  border-radius: 20rpx;
+}
+.tools-page.theme-pearl .quick-feature-title {
+  font-size: 32rpx;
+  font-weight: 800;
+}
+.tools-page.theme-pearl .quick-feature-modes text {
+  color: var(--ink);
+  background: #FFFFFF;
+  border: 1rpx solid rgba(31, 31, 31, .10);
+}
+.tools-page.theme-pearl .tool-tile {
+  min-height: 120rpx;
+  padding: 18rpx 18rpx 18rpx 16rpx;
+  border: 1rpx solid var(--line);
+  border-radius: 24rpx;
+  box-shadow: 0 8rpx 22rpx rgba(31, 31, 31, .05);
+}
+.tools-page.theme-pearl .tool-tile-icon {
+  flex-basis: 60rpx;
+  width: 60rpx;
+  height: 60rpx;
+  background: var(--cream-2);
+  border-radius: 16rpx;
+}
+.tools-page.theme-pearl .tool-tile-label {
+  font-size: 26rpx;
+  font-weight: 800;
+}
+.tools-page.theme-pearl .tool-tile-badge {
+  color: var(--ink);
+  background: var(--primary);
+  border: 0;
+  box-shadow: 0 4rpx 10rpx rgba(31, 31, 31, .08);
+}
+.tools-page.theme-pearl .settings-bar {
+  padding: 15rpx 20rpx;
+  background: #FFFFFF;
+  border: 1rpx solid var(--line);
+  border-radius: 20rpx;
+}
+.tools-page.theme-pearl .settings-bar-label {
+  color: var(--text-mid);
+}
+.tools-page.theme-pearl .todo-preview-row {
+  background: #FFFFFF;
+  border: 1rpx solid var(--line);
+  border-radius: 18rpx;
+}
+.tools-page.theme-pearl .important-tool-item {
+  background: var(--cream-1);
+  border: 1rpx solid var(--line);
+  border-radius: 18rpx;
+}
+.tools-page.theme-pearl .important-tool-item.soon {
+  background: var(--cream-2);
+  border-color: #F2C62B;
+}

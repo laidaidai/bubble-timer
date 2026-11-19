@@ -58,7 +58,7 @@ Page({
     settleStyle: '',
     templateModalOpen: false,
     newTemplateName: '',
-    theme: 'rose', themeStyle: '',
+    theme: 'pearl', themeStyle: '',
     themeName: '蜜桃雪酪',
     sliderActive: '#EE7E99',
     sliderTrack: '#F7E2E8',

@@ -4,7 +4,7 @@ const poster = require('../../utils/poster')
 
 Page({
   data: {
-    theme: 'rose', themeStyle: '',
+    theme: 'pearl', themeStyle: '',
     todayText: '0 分钟',
     todayPercent: 0,
     todayTarget: '3 小时',

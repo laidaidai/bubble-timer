@@ -2,7 +2,7 @@ const app = getApp()
 
 Page({
   data: {
-    theme: 'rose', themeStyle: '',
+    theme: 'pearl', themeStyle: '',
     records: []
   },
 

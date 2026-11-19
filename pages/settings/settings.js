@@ -23,7 +23,7 @@ const buildGroups = (conf) => {
 
 Page({
   data: {
-    theme: 'rose',
+    theme: 'pearl',
     themeName: '蜜桃雪酪',
     themeStyle: '',
     themes: [],
@@ -298,7 +298,7 @@ Page({
         if (!confirm) return
         const list = (settings.customThemes || []).filter(item => item.key !== key)
         const patch = { customThemes: list, customTheme: null }
-        if (settings.theme === key) patch.theme = 'rose'
+        if (settings.theme === key) patch.theme = 'pearl'
         app.saveSettings(patch)
         this.setData({ showEditor: false, editorKey: '', customName: '' })
         this.refresh()

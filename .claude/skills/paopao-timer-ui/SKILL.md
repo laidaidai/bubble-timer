@@ -1,16 +1,16 @@
 ---
 name: paopao-timer-ui
-description: 维护「泡泡计时器」微信小程序的界面与主题时使用。覆盖首页、横屏计时页、训练报告、数据与打卡、待办、设置六个页面的奶黄 neo-brutalist 视觉规则、主题 token 改法、组件与交互约定、验收流程。任何新增页面、改布局、换配色、调字号、改按钮或做视觉审查都应先读本 Skill。
+description: 维护「泡泡计时器」微信小程序的界面与主题时使用。覆盖首页、工具、记录、横屏计时、快捷计时、训练报告、数据与打卡、待办、设置页面的奶油白参考皮肤与 6 套 neo-brutalist 主题规则、主题 token 改法、组件与交互约定、验收流程。任何新增页面、改布局、换配色、调字号、改按钮或做视觉审查都应先读本 Skill。
 ---
 
 #  UI
 
-原生微信小程序，`navigationStyle: custom`，6 个页面。视觉是「奶黄 neo-brutalist」：米黄底、深棕描边、硬阴影、圆角胶囊，信息密度低，数字全部加粗。
+原生微信小程序，`navigationStyle: custom`，8 个页面。默认是参考电商卡片风的「奶油白」皮肤：浅灰底、白色大圆角卡片、轻阴影、柠檬黄点缀；其余 6 套主题保留奶黄 / 粉 / 蓝 / 绿 / 深色的 neo-brutalist 描边与硬阴影。信息密度低，数字全部加粗。
 
 ## 先定位，再动手
 
 - 项目根：用户当前打开的「计时器」目录（根下有 `app.js`、`app.json`、`pages/`）。
-- 页面：`pages/index`（首页 + 报告）、`pages/timer`（横屏计时）、`pages/stats`（数据与打卡）、`pages/history`、`pages/todo`、`pages/settings`。
+- 页面：`pages/index`（首页 + 报告）、`pages/tools`（工具）、`pages/history`（记录）、`pages/timer`（横屏计时）、`pages/quick`（快捷计时）、`pages/stats`（数据与打卡）、`pages/todo`、`pages/settings`。
 - 主题唯一数据源：`theme/palette.js`；生成后的 CSS 变量在 `app.wxss` 的 `THEME-TOKENS:START/END` 之间。
 - 通用时间格式化：`utils/format.js`；海报文案：`utils/poster.js`。
 
@@ -30,15 +30,23 @@ description: 维护「泡泡计时器」微信小程序的界面与主题时使�
 
 ## 主题怎么改
 
-- 内置 5 套：cream 蜂蜜奶霜 / rose 蜜桃雪酪 / sky 晴空苏打 / mint 薄荷青瓷 / obsidian 曜石鎏金。每套 46 个变量 + `nav/front/swatch/slider/canvas`。
-- 流程：改 `theme/palette.js` → `node tools/gen-theme-wxss.js` → 确认 `app.wxss` 里恰好 5 组 `.theme-*`。**不要手改生成区**。
+- 内置 7 套：pearl 奶油白（默认）/ cream 蜂蜜奶霜 / tomato 红黄汽水 / rose 蜜桃雪酪 / sky 晴空苏打 / mint 薄荷青瓷 / obsidian 曜石鎏金。每套 46 个变量 + `nav/front/swatch/slider/canvas`。
+- 流程：改 `theme/palette.js` → `node tools/gen-theme-wxss.js` → 确认 `app.wxss` 里恰好 7 组 `.theme-*`。**不要手改生成区**。
 - 新主题同时补 `canvas`（海报画布色）与 `slider`（取色器色），否则海报/自定义主题编辑器会缺色。
 - 自定义主题由 `app.buildCustomTheme()` 推导变量；页面根节点写 `class="... theme-{{theme}}" style="{{themeStyle}}"`，`ct-*` 主题靠内联变量生效。新增页面必须带这两项。
 - 页面 `onShow` 重新读主题，切换后各页立即生效；导航栏用 `app.applyNavBar()`。
 
+## 奶油白默认皮肤（`.theme-pearl`）
+
+- 页面底 `var(--bg)` 浅灰，卡片 `var(--card)` 纯白，顶栏 `var(--nav)` 白色；主色 `var(--primary)` 柠檬黄只用于主 CTA、主卡、选中态和角标。
+- 卡片不再用 2–3rpx 深色描边和硬投影：改成 `1rpx solid var(--line)` + `0 10rpx 30rpx rgba(31,31,31,.05)`，圆角 22–28rpx；参考图是商品白卡，不堆叠多层边框。
+- 工具页：顶部黄色「快捷计时」主卡，下面 2×2 白卡（训练 / 待办 / 重要日子 / 打卡），设置收成白色次级条；不要回到六等大图标。
+- 顶栏白底、细分割线、轻阴影；底部 Dock 白底，选中图标用 `var(--ink)`，未选中用 `var(--text-3)`，不要高饱和色块。
+- 其他 6 套主题仍按上面的 neo-brutalist 规则，不要用奶油白皮肤覆盖它们的描边和硬阴影。
+
 ## 页面约定
 
-- **首页**：顶部时钟图标是设置入口；模式胶囊（正计时/倒计时/番茄钟）；模板横向卡片；模块列表可拖动排序，拖动期间页面绝不能滚动（`catchtouchmove` + 固定 scroll 区域）；底部 dock 四项（首页/数据/待办/设置）纯图标。
+- **首页**：模式胶囊（正计时/倒计时）；模板横向卡片；模块列表可拖动排序，拖动期间页面绝不能滚动（`catchtouchmove` + 固定 scroll 区域）；底部 Dock 三项（首页/工具/记录），设置从工具页进入，顶栏右侧不放控件。
 - **报告**：顶栏固定，内容放独立 `scroll-view`；结论两张并排（最耗时/最短时），只有一张时整行铺满；底部三按钮同行等宽：保存图片（主色）/ 分享 / 再练一次；「再练一次」直接进计时页，不回首页。
 - **计时页**：大数字总时间，小数字当前模块；表盘轻点背景切换并记住；毫秒小字灰且不抢眼；完成键只显示 `✓`；模块时间最多 `mm : ss`，中间留空格。
 - **数据与打卡**：今日总览深色卡 + 两张指标卡 + 竖版海报 + 弱项追踪 + 成绩趋势；不足 1 分钟的训练不计入弱项/曲线；海报和 canvas 导出色一致。
@@ -49,7 +57,7 @@ description: 维护「泡泡计时器」微信小程序的界面与主题时使�
 
 1. `node --check` 所有改过的 js。
 2. WXML：`{{}}` 配平、所有 `bindtap/catchtap` 在 js 中存在；WXSS：花括号配平。
-3. 主题生成后检查 `.theme-*` 仍是 5 组、没有未定义变量（`var(--x)` 必须能在 `.theme-cream` 找到）。
+3. 主题生成后检查 `.theme-*` 仍是 7 组、没有未定义变量（`var(--x)` 必须能在 `.theme-cream` 找到）。
 4. 视觉预览：375px 宽、`rpx` 按 0.5 转 px；mock 必须 `div{display:block} span{display:inline}`，fixed 元素在 mock 里可能被裁切，只作参考，最终以微信开发者工具为准。
 5. 交付时说清改了哪些文件、可能影响哪些页面；不要声称「已在 IDE 编译通过」，编译只能由用户在开发者工具点。
 
