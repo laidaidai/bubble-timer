@@ -1,12 +1,15 @@
-<view class="tools-page theme-{{theme}}" style="{{themeStyle}}">
+<view class="tools-page theme-{{theme}} {{toolsReveal ? 'reveal' : ''}}" style="{{themeStyle}}">
   <view class="topbar">
-    <view class="topbar-spacer"></view>
+    <view class="back-icon" bindtap="handleBack" aria-label="返回">‹</view>
     <view class="topbar-title">工具</view>
     <view class="topbar-spacer"></view>
   </view>
 
+  <brand-dock theme-style="{{themeStyle}}" dim="{{dockDim}}" above-tabbar="{{true}}"></brand-dock>
+
   <scroll-view class="tools-body" scroll-y enhanced show-scrollbar="{{false}}">
     <view class="page-content">
+      <!-- 快捷计时主卡 -->
       <view class="quick-feature" bindtap="openQuick">
         <view class="quick-feature-icon">
           <view class="glyph-stopwatch">
@@ -25,6 +28,7 @@
         <text class="quick-feature-arrow">›</text>
       </view>
 
+      <!-- 工具卡片 -->
       <view class="tool-grid">
         <view class="tool-tile" bindtap="openHome">
           <view class="tool-tile-icon"><view class="glyph-clock"></view></view>
@@ -42,7 +46,7 @@
           <text class="tool-tile-label">待办</text>
           <text class="tool-tile-badge" wx:if="{{todoTodayPending}}">{{todoTodayPending}}</text>
         </view>
-        <view class="tool-tile" bindtap="openImportantModal">
+        <view class="tool-tile" bindtap="openImportantPage">
           <view class="tool-tile-icon">
             <view class="glyph-calendar">
               <view class="cal-top"></view>
@@ -66,20 +70,7 @@
         </view>
       </view>
 
-      <view class="settings-bar" bindtap="openSettings">
-        <view class="settings-bar-icon">
-          <view class="di-gear">
-            <view class="gear-tooth g1"></view><view class="gear-tooth g2"></view>
-            <view class="gear-tooth g3"></view><view class="gear-tooth g4"></view>
-            <view class="gear-tooth g5"></view><view class="gear-tooth g6"></view>
-            <view class="gear-tooth g7"></view><view class="gear-tooth g8"></view>
-            <view class="gear-core"></view><view class="gear-hole"></view>
-          </view>
-        </view>
-        <text class="settings-bar-label">设置</text>
-        <text class="settings-bar-arrow">›</text>
-      </view>
-
+      <!-- 待办 -->
       <view class="todo-preview count-{{todoPreview.length}}" wx:if="{{todoPreview.length}}" bindtap="openTodo">
         <view class="todo-preview-row" wx:for="{{todoPreview}}" wx:key="id">
           <view class="todo-preview-line">
@@ -90,8 +81,9 @@
         </view>
       </view>
 
+      <!-- 重要日子 -->
       <view class="important-grid count-{{importantPreview.length}}" wx:if="{{importantPreview.length}}">
-        <view class="important-tool-item {{item.soon ? 'soon' : ''}} {{item.isPast ? 'past' : ''}}" wx:for="{{importantPreview}}" wx:key="id" data-id="{{item.id}}" bindtap="editImportant" bindlongpress="removeImportant">
+        <view class="important-tool-item {{item.soon ? 'soon' : ''}} {{item.isPast ? 'past' : ''}}" wx:for="{{importantPreview}}" wx:key="id" bindtap="openImportantPage">
           <view class="important-tool-name-row">
             <text class="important-tool-name">{{item.name}}</text>
           </view>
@@ -101,37 +93,51 @@
           </view>
         </view>
       </view>
+
     </view>
   </scroll-view>
 
-  <view class="modal-mask" wx:if="{{importantModalOpen}}" catchtouchmove="blockTouch" bindtap="closeImportantModal">
-    <view class="modal-card important-modal" catchtap="blockTouch">
-      <view class="modal-title">{{importantEditingId ? '编辑重要日子' : '添加重要日子'}}</view>
-      <input class="modal-input" value="{{importantName}}" placeholder="例如：考研初试、妈妈的生日" maxlength="16" focus="{{importantModalOpen}}" confirm-type="done" bindinput="onImportantNameInput" bindconfirm="saveImportantDate" />
-      <view class="important-form-row">
-        <view class="important-date-btn {{importantCalendarOpen ? 'on' : ''}}" bindtap="toggleImportantCalendar">
-          <text class="important-date-label">日期</text>
-          <text class="important-date-value">{{importantDateText}}</text>
-        </view>
-        <view class="important-yearly {{importantYearly ? 'on' : ''}}" bindtap="toggleImportantYearly">每年重复</view>
+  <!-- 设置：固定悬浮在工具页右下角 -->
+  <view class="settings-entry" bindtap="openSettings" aria-label="设置">
+    <view class="settings-entry-icon">
+      <view class="di-gear">
+        <view class="gear-tooth g1"></view><view class="gear-tooth g2"></view>
+        <view class="gear-tooth g3"></view><view class="gear-tooth g4"></view>
+        <view class="gear-tooth g5"></view><view class="gear-tooth g6"></view>
+        <view class="gear-tooth g7"></view><view class="gear-tooth g8"></view>
+        <view class="gear-core"></view><view class="gear-hole"></view>
       </view>
-      <view class="important-calendar" wx:if="{{importantCalendarOpen}}">
-        <view class="important-cal-head">
-          <view class="important-cal-nav" data-step="-1" catchtap="shiftImportantMonth">‹</view>
-          <text class="important-cal-title">{{importantCalTitle}}</text>
-          <view class="important-cal-nav" data-step="1" catchtap="shiftImportantMonth">›</view>
-        </view>
-        <view class="important-cal-weekdays">
-          <text class="important-cal-weekday" wx:for="{{importantCalWeekLabels}}" wx:key="*this">{{item}}</text>
-        </view>
-        <view class="important-cal-row" wx:for="{{importantCalRows}}" wx:key="key" wx:for-item="row">
-          <view class="important-cal-cell {{cell.empty ? 'empty' : ''}} {{cell.selected ? 'selected' : ''}} {{cell.today ? 'today' : ''}}" wx:for="{{row.cells}}" wx:for-item="cell" wx:key="key" data-key="{{cell.key}}" bindtap="selectImportantDay">{{cell.day}}</view>
-        </view>
+    </view>
+  </view>
+</view>
+
+<view class="modal-mask" wx:if="{{importantModalOpen}}" catchtouchmove="blockTouch" bindtap="closeImportantModal">
+  <view class="modal-card important-modal" catchtap="blockTouch">
+    <view class="modal-title">{{importantEditingId ? '编辑重要日子' : '添加重要日子'}}</view>
+    <input class="modal-input" value="{{importantName}}" placeholder="例如：考研初试、妈妈的生日" maxlength="16" focus="{{importantModalOpen}}" confirm-type="done" bindinput="onImportantNameInput" bindconfirm="saveImportantDate" />
+    <view class="important-form-row">
+      <view class="important-date-btn {{importantCalendarOpen ? 'on' : ''}}" bindtap="toggleImportantCalendar">
+        <text class="important-date-label">日期</text>
+        <text class="important-date-value">{{importantDateText}}</text>
       </view>
-      <view class="modal-actions">
-        <button class="modal-cancel" bindtap="closeImportantModal">取消</button>
-        <button class="modal-confirm" bindtap="saveImportantDate">{{importantEditingId ? '保存修改' : '添加'}}</button>
+      <view class="important-yearly {{importantYearly ? 'on' : ''}}" bindtap="toggleImportantYearly">每年重复</view>
+    </view>
+    <view class="important-calendar" wx:if="{{importantCalendarOpen}}">
+      <view class="important-cal-head">
+        <view class="important-cal-nav" data-step="-1" catchtap="shiftImportantMonth">‹</view>
+        <text class="important-cal-title">{{importantCalTitle}}</text>
+        <view class="important-cal-nav" data-step="1" catchtap="shiftImportantMonth">›</view>
       </view>
+      <view class="important-cal-weekdays">
+        <text class="important-cal-weekday" wx:for="{{importantCalWeekLabels}}" wx:key="*this">{{item}}</text>
+      </view>
+      <view class="important-cal-row" wx:for="{{importantCalRows}}" wx:key="key" wx:for-item="row">
+        <view class="important-cal-cell {{cell.empty ? 'empty' : ''}} {{cell.selected ? 'selected' : ''}} {{cell.today ? 'today' : ''}}" wx:for="{{row.cells}}" wx:for-item="cell" wx:key="key" data-key="{{cell.key}}" bindtap="selectImportantDay">{{cell.day}}</view>
+      </view>
+    </view>
+    <view class="modal-actions">
+      <button class="modal-cancel" bindtap="closeImportantModal">取消</button>
+      <button class="modal-confirm" bindtap="saveImportantDate">{{importantEditingId ? '保存修改' : '添加'}}</button>
     </view>
   </view>
 </view>

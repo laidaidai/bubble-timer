@@ -1,0 +1,51 @@
+<view class="brand-dock {{aboveTabbar ? 'above-tab' : ''}} {{expanded ? 'open' : ''}} {{dim ? 'soft' : ''}} {{celebrate ? 'celebrate' : ''}}" style="{{themeStyle}}">
+  <view class="dock-mask" wx:if="{{expanded}}" bindtap="close" catchtouchmove="noop"></view>
+
+  <view class="dock-panel" wx:if="{{expanded}}">
+    <view class="dock-summary">
+      <text class="dock-summary-kicker">今日</text>
+      <text class="dock-summary-main">{{todayMinutes}} 分钟</text>
+      <text class="dock-summary-rate">{{progress}}%</text>
+    </view>
+
+    <view class="dock-actions">
+      <view class="dock-action act-continue" wx:if="{{hasContinue}}" bindtap="continueLast" hover-class="dock-action-hover">
+        <view class="dock-dot dot-continue"></view>
+        <view class="dock-action-copy">
+          <text class="dock-action-title">继续上次训练</text>
+          <text class="dock-action-sub">{{continueSub}}</text>
+        </view>
+      </view>
+
+      <view class="dock-action act-timer" bindtap="startTimer" hover-class="dock-action-hover">
+        <view class="dock-dot dot-timer"></view>
+        <view class="dock-action-copy">
+          <text class="dock-action-title">{{timerRunning ? '暂停计时' : '开始计时'}}</text>
+          <text class="dock-action-sub">{{timerRunning ? '当前正在专注' : '直接进入专注'}}</text>
+        </view>
+      </view>
+
+      <view class="dock-action act-todo" bindtap="openTodo" hover-class="dock-action-hover">
+        <view class="dock-dot dot-todo"></view>
+        <view class="dock-action-copy">
+          <text class="dock-action-title">今日待办</text>
+          <text class="dock-action-sub">{{todoSub}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="dock-tip">长按 logo 开始 / 暂停计时</view>
+  </view>
+
+  <view class="dock-logo" bindtap="onTap" bindlongpress="longPress" hover-class="dock-logo-hover" aria-label="打开快捷菜单，长按开始或暂停计时">
+    <view class="dock-ring" style="background: conic-gradient(var(--primary, #5AA9E6) {{progress}}%, rgba(30, 52, 72, .12) 0);">
+      <view class="dock-ring-hole"></view>
+    </view>
+    <image class="dock-logo-img" src="/assets/brand/logo-mark.png" mode="aspectFit"></image>
+    <view class="dock-shine" wx:if="{{celebrate}}"></view>
+    <view class="dock-x" wx:if="{{expanded}}">
+      <view class="dock-x-line l1"></view>
+      <view class="dock-x-line l2"></view>
+    </view>
+  </view>
+</view>

@@ -1,72 +1,18 @@
 <view class="stats-page theme-{{theme}}" style="{{themeStyle}}">
   <view class="topbar">
-    <button class="back-icon" bindtap="handleBack">‹</button>
+    <view class="back-icon" bindtap="handleBack" aria-label="返回">‹</view>
     <view class="topbar-title">打卡</view>
     <view class="topbar-spacer"></view>
   </view>
+
+  <brand-dock theme-style="{{themeStyle}}" dim="{{dockDim}}"></brand-dock>
 
   <scroll-view class="stats-body" scroll-y>
 
     <view class="panel poster-panel">
       <image class="poster-image" wx:if="{{posterPath}}" src="{{posterPath}}" mode="widthFix" bindlongpress="handlePosterLongPress" bindtap="previewPoster"></image>
-      <view class="poster-card" wx:else>
-        <view class="pc-head">
-          <view class="pc-brand">{{poster.brand}}</view>
-          <view class="pc-row">
-            <view class="pc-title">{{poster.title}}</view>
-            <view class="pc-date num">{{todayLabel}}</view>
-          </view>
-        </view>
-
-        <view class="pc-body">
-          <view class="pc-hero">
-            <view class="pc-pct-row">
-              <text class="pc-pct num">{{todayPercent}}</text>
-              <text class="pc-unit">%</text>
-              <text class="pc-pct-sub">{{poster.ringLabel}}</text>
-            </view>
-            <view class="pc-bar"><view class="pc-bar-fill" style="width: {{todayPercent}}%;"></view></view>
-            <view class="pc-hero-sub">{{poster.metricToday}} {{todayText}} · 目标 {{todayTarget}}</view>
-          </view>
-
-          <view class="pc-stats">
-            <view class="pc-stat">
-              <view class="pc-label">{{poster.metricToday}}</view>
-              <view class="pc-value num">{{todayText}}</view>
-            </view>
-            <view class="pc-stat">
-              <view class="pc-label">{{poster.metricWeek}}</view>
-              <view class="pc-value num">{{weekText}}</view>
-            </view>
-            <view class="pc-stat">
-              <view class="pc-label">{{poster.metricStreak}}</view>
-              <view class="pc-value num">{{streak}} 天</view>
-            </view>
-          </view>
-
-          <view class="pc-cal">
-            <view class="pc-cal-head">
-              <text class="pc-cal-title">{{poster.calendarTitle}} {{calendar.monthDays}} 天</text>
-              <text class="pc-cal-sub">{{calendar.monthLabel}}</text>
-            </view>
-            <view class="pc-cal-weekdays">
-              <text class="pc-cal-weekday" wx:for="{{calendar.weekdayLabels}}" wx:key="*this">{{item}}</text>
-            </view>
-            <view class="pc-cal-row" wx:for="{{calendar.rows}}" wx:key="key">
-              <view class="pc-cal-cell {{cell.empty ? 'empty' : 'level-' + cell.level}} {{cell.isToday ? 'today' : ''}}" wx:for="{{item.cells}}" wx:for-item="cell" wx:key="key">{{cell.day}}</view>
-            </view>
-          </view>
-        </view>
-
-        <view class="pc-quote">
-          <view class="pc-quote-line"><text class="pc-star">★</text><text>{{poster.quote}}</text></view>
-          <view class="pc-quote-sub">{{poster.totalPrefix}} {{totalDays}} 天</view>
-        </view>
-
-        <view class="pc-foot">
-          <text>{{poster.footLeft}}</text>
-          <text>{{poster.footRight}}</text>
-        </view>
+      <view class="poster-loading" wx:else>
+        <view class="poster-loading-ring"><view class="poster-loading-core"></view></view>
       </view>
     </view>
 
@@ -80,9 +26,12 @@
           <view class="weak-main">
             <view class="weak-top">
               <text class="weak-name">{{item.name}}</text>
-              <text class="weak-pct num">{{item.avg}}%</text>
+              <text class="weak-pct num {{item.avg > 100 ? 'over' : ''}}">{{item.avg}}%</text>
             </view>
-            <view class="weak-track"><view class="weak-fill" style="width: {{item.bar}}%;"></view></view>
+            <view class="weak-track">
+              <view class="weak-fill" style="width: {{item.bar}}%;"></view>
+              <view class="weak-knob" style="left: {{item.bar}}%;"></view>
+            </view>
             <view class="weak-sub">已练 {{item.count}} 次</view>
           </view>
         </view>
@@ -104,5 +53,4 @@
     </view>
   </scroll-view>
 
-  <canvas class="poster-canvas" canvas-id="posterCanvas"></canvas>
 </view>

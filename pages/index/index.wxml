@@ -1,50 +1,69 @@
 <view class="app theme-{{theme}}" style="{{themeStyle}}">
   <view class="topbar">
-    <button class="back-icon" wx:if="{{homeTimerOverride && view !== 'report'}}" bindtap="exitTimerOverride">‹</button>
-    <button class="back-icon" wx:elif="{{view === 'report'}}" bindtap="handleBack">‹</button>
+    <view class="back-icon" wx:if="{{view === 'report' || homeTimerOverride}}" bindtap="goHomeView" aria-label="返回">‹</view>
     <view class="topbar-spacer" wx:else></view>
     <view class="topbar-title" wx:if="{{view === 'report'}}">训练分析报告</view>
     <view class="topbar-title" wx:else>小鱼时钟</view>
     <view class="topbar-spacer"></view>
   </view>
 
+  <brand-dock id="brandDock" theme-style="{{themeStyle}}" above-tabbar="{{true}}" dim="{{view === 'report' || dockDim}}"></brand-dock>
+
   <block wx:if="{{view === 'config'}}">
     <scroll-view class="config-scroll" scroll-y="{{!dragging}}" enhanced show-scrollbar="{{false}}" bindscroll="onConfigScroll" bindscrolltolower="onConfigBottom">
-      <view class="page-content">
+      <view class="page-content {{homeReveal && !dragging ? 'reveal' : ''}}">
         <block wx:if="{{homePrimary === 'timer' || homeTimerOverride}}">
           <view class="target-row">
-            <view class="hero-card">
+            <view class="hero-card {{tomatoPop ? 'pop' : ''}} {{incentiveReveal ? 'reveal' : ''}}">
               <view class="hero-main">
                 <view class="eyebrow">目标时间</view>
-                <view class="total-target"><text class="num">{{totalMinutes}}</text><text class="unit">分钟</text></view>
-              </view>
-              <view class="tomato-board {{tomatoPop ? 'pop' : ''}}">
-                <view class="tomato-grid">
-                  <view class="tomato {{incentiveType}} {{item.filled ? '' : 'ghost'}}" wx:for="{{tomatoIcons}}" wx:key="id"></view>
-                </view>
-                <view class="tomato-progress" wx:if="{{!tomatoCaption}}">
-                  <view class="tomato-progress-track">
-                    <view class="tomato-progress-fill" style="width: {{tomatoProgress}}%;"></view>
+                <view class="hero-target-line">
+                  <view class="total-target"><text class="num">{{totalMinutes}}</text><text class="unit">分钟</text></view>
+                  <view class="goal-medal hero-medal" wx:if="{{tomatoCount}}">
+                    <view class="medal-ribbon left"></view>
+                    <view class="medal-ribbon right"></view>
+                    <view class="medal-disc"><text class="medal-count num {{tomatoCount > 9 ? 'compact' : ''}}">{{tomatoCount}}</text></view>
                   </view>
-                  <text class="tomato-progress-text">{{tomatoCount}}/{{tomatoTarget || 5}}</text>
                 </view>
-                <text class="tomato-caption" wx:if="{{tomatoCaption}}">{{tomatoCaption}}</text>
+              </view>
+              <view class="tomato-board {{tomatoPop ? 'pop' : ''}} {{incentiveReveal ? 'reveal' : ''}}">
+                <text class="tomato-plus" wx:if="{{tomatoPop}}">+1</text>
+                <view class="tomato-grid {{tomatoIcons.length <= 1 ? 'single' : ''}}">
+                  <view class="tomato-row {{rowIndex === incentiveRows.length - 1 ? 'last' : ''}} {{row.items.length === 1 ? 'single' : ''}}" wx:for="{{incentiveRows}}" wx:key="key" wx:for-item="row" wx:for-index="rowIndex">
+                    <block wx:for="{{row.items}}" wx:key="id" wx:for-item="item">
+                      <view wx:if="{{item.countBadge}}" class="tomato-count-badge">×{{tomatoCount}}</view>
+                      <view wx:elif="{{incentiveType === 'star'}}" class="incentive-art star {{item.filled ? 'filled' : 'ghost'}} {{item.latest ? 'latest' : ''}}" style="animation-delay:{{item.delay}}ms;">
+                        <image class="incentive-art-img" src="{{item.filled ? '/assets/incentive/star-filled.png' : '/assets/incentive/star-ghost.png'}}" mode="aspectFit"></image>
+                      </view>
+                      <view wx:elif="{{incentiveType === 'fish'}}" class="incentive-art fish {{item.filled ? 'filled' : 'ghost'}}" style="animation-delay:{{item.delay}}ms;">
+                        <view class="fish-tail"></view>
+                        <view class="fish-body">
+                          <view class="fish-eye"></view>
+                        </view>
+                      </view>
+                      <view wx:else class="tomato {{incentiveType}} {{item.filled ? '' : 'ghost'}}" style="animation-delay:{{item.delay}}ms;"></view>
+                    </block>
+                  </view>
+                </view>
+                <text class="tomato-caption {{tomatoCount > 28 ? 'count' : ''}}" wx:if="{{tomatoCaption}}">{{tomatoCaption}}</text>
               </view>
             </view>
           </view>
 
           <view class="control-bar">
             <view class="mode-capsule">
+              <view class="mode-thumb {{mode === 'countdown' ? 'right' : ''}}"></view>
               <view class="mode-seg {{mode === item.key ? 'on' : ''}}" wx:for="{{modes}}" wx:key="key" data-key="{{item.key}}" bindtap="chooseMode">{{item.name}}</view>
             </view>
             <button class="primary-button" bindtap="startTraining" disabled="{{!modules.length}}">开始计时 <text>▶</text></button>
           </view>
 
           <view class="home-feature home-feature-in-timer" wx:if="{{homeImportantPreview.length}}">
-            <view class="home-feature-important-grid count-{{homeImportantPreview.length}}">
-              <view class="home-feature-important-card {{item.soon ? 'soon' : ''}} {{item.isPast ? 'past' : ''}}" wx:for="{{homeImportantPreview}}" wx:key="id" bindtap="goTools">
-                <view class="home-feature-important-name-row"><text class="home-feature-important-name">{{item.name}}</text></view>
-                <view class="home-feature-important-count"><text class="home-feature-important-num num">{{item.countdownNumber}}</text><text class="home-feature-important-unit" wx:if="{{item.countdownUnit}}">{{item.countdownUnit}}</text></view>
+            <view class="home-feature-list {{homeImportantPreview.length === 1 ? 'single' : ''}}">
+              <view class="home-todo-card {{item.isPast ? 'overdue' : ''}}" wx:for="{{homeImportantPreview}}" wx:key="id" bindtap="openImportantPage">
+                <view class="home-todo-dot"></view>
+                <text class="home-todo-text">{{item.name}}</text>
+                <text class="home-todo-time">{{item.countdownNumber}}{{item.countdownUnit}}</text>
               </view>
             </view>
           </view>
@@ -55,16 +74,24 @@
               <view class="section-title">训练模块</view>
               <view class="template-plus" bindtap="openTemplateModal">＋</view>
             </view>
-            <text class="template-save" bindtap="saveCurrentTemplate">保存</text>
+            <view class="section-title-actions">
+              <text class="template-save" bindtap="saveCurrentTemplate">保存</text>
+              <text class="section-clear" wx:if="{{modules.length}}" bindtap="clearModules" aria-label="清空训练模块">×</text>
+            </view>
           </view>
 
           <view class="template-list quick-templates" wx:if="{{templates.length}}">
             <view class="template-list-pills">
-              <view class="template-pick {{item.name === templateName ? 'active' : ''}}" wx:for="{{templates}}" wx:key="name" data-index="{{index}}" data-name="{{item.name}}" bindtap="loadTemplate" bindlongpress="removeTemplate">{{item.name}}</view>
+              <view class="template-pick {{item.name === templateName ? 'active' : ''}} {{burstingTemplate === item.name ? 'bubble-bursting' : ''}}" wx:for="{{templates}}" wx:key="name" data-index="{{index}}" data-name="{{item.name}}" bindtap="loadTemplate" bindlongpress="removeTemplate">{{item.name}}          <view class="burst-layer" aria-hidden="true">
+            <view class="burst-ring"></view>
+            <view class="burst-drop d1"></view><view class="burst-drop d2"></view><view class="burst-drop d3"></view><view class="burst-drop d4"></view>
+            <view class="burst-drop d5"></view><view class="burst-drop d6"></view><view class="burst-drop d7"></view><view class="burst-drop d8"></view>
+          </view>
+</view>
             </view>
           </view>
 
-          <view class="module-card {{dragIndex === index ? 'dragging' : ''}} {{dragging && dragIndex !== index ? 'drag-mode' : ''}} {{templateSwitching ? 'module-switching' : ''}}" style="{{dragIndex === index ? dragStyle : settleIndex === index ? settleStyle : dragStyles[index]}}" wx:for="{{modules}}" wx:key="id" data-index="{{index}}" bindtouchstart="touchStart" bindlongpress="activateDrag" bindtouchmove="touchMove" bindtouchend="touchEnd" bindtouchcancel="touchEnd">
+          <view class="module-card {{burstingIndex === index ? 'bubble-bursting' : ''}} {{dragIndex === index ? 'dragging' : ''}} {{dragging && dragIndex !== index ? 'drag-mode' : ''}} {{templateSwitching ? 'module-switching' : ''}}" style="{{dragIndex === index ? dragStyle : settleIndex === index ? settleStyle : dragStyles[index]}};{{homeReveal && !dragging ? 'animation-delay:' + (220 + index * 45) + 'ms;' : ''}}" wx:for="{{modules}}" wx:key="id" data-index="{{index}}" bindtouchstart="touchStart" bindlongpress="activateDrag" bindtouchmove="touchMove" bindtouchend="touchEnd" bindtouchcancel="touchEnd">
             <view class="module-head">
               <input class="module-name" value="{{item.name}}" data-index="{{index}}" bindinput="changeModuleName" bindblur="normalizeModuleName" maxlength="20" />
               <button class="delete-button" data-index="{{index}}" catchtap="removeModule">×</button>
@@ -76,13 +103,45 @@
                 <button class="round-small" data-index="{{index}}" data-step="1" bindtap="adjustMinutes">＋</button>
               </view>
               <view class="slider-wrap">
-                <slider class="duration-slider" min="0" max="60" step="1" value="{{item.targetMinutes}}" data-index="{{index}}" bindchanging="changeSlider" bindchange="changeSlider" activeColor="{{sliderActive}}" backgroundColor="{{sliderTrack}}" blockColor="{{sliderBlock}}" block-size="20" />
+                <view id="sketch-slider-{{index}}" class="sketch-slider" data-index="{{index}}" catchtouchstart="startSketchSlider" catchtouchmove="moveSketchSlider" catchtouchend="endSketchSlider" catchtouchcancel="endSketchSlider">
+                  <view class="sketch-track">
+                    <view class="sketch-fill" style="width: {{item.targetMinutes / 60 * 100}}%;"></view>
+                  </view>
+                  <view class="sketch-knob" style="left: {{item.targetMinutes / 60 * 100}}%;"></view>
+                </view>
               </view>
             </view>
             <view class="module-foot" data-index="{{index}}" catchtouchstart="handleTouchStart" catchtouchmove="touchMove" catchtouchend="touchEnd" catchtouchcancel="touchEnd"><text class="drag-handle">☰</text></view>
+        <view class="burst-layer" aria-hidden="true">
+          <view class="burst-ring"></view>
+          <view class="burst-drop d1"></view><view class="burst-drop d2"></view><view class="burst-drop d3"></view><view class="burst-drop d4"></view>
+          <view class="burst-drop d5"></view><view class="burst-drop d6"></view><view class="burst-drop d7"></view><view class="burst-drop d8"></view>
+        </view>
           </view>
 
-          <view class="add-module-row" wx:if="{{addVisible && modules.length < 8}}"><view class="add-module-plus" bindtap="openPresetSheet">＋</view></view>
+          <view class="home-module-empty" wx:if="{{!modules.length}}">
+            <image class="home-module-empty-logo" src="/assets/brand/logo.png" mode="aspectFit" bindtap="addModuleDirect"></image>
+            <view class="home-module-add" bindtap="addModuleDirect">
+              <text class="home-module-add-plus">＋</text>
+              <text class="home-module-add-text">添加训练模块</text>
+            </view>
+          </view>
+
+          <view class="add-module-row" wx:if="{{addVisible && modules.length < 8 && modules.length}}" style="animation-delay:{{250 + modules.length * 45}}ms;"><view class="add-module-plus" bindtap="addModuleDirect">＋</view></view>
+        </block>
+
+        <block wx:elif="{{homeQuickTab}}">
+          <view class="home-feature quick-home">
+            <view class="quick-home-head" data-tab="{{homeQuickTab}}" bindtap="openQuickPage">
+              <view class="quick-home-mark"><view class="quick-home-play"></view></view>
+              <text class="quick-home-title">{{homeQuickName}}</text>
+              <text class="quick-home-arrow">›</text>
+            </view>
+            <view class="quick-home-stage" data-tab="{{homeQuickTab}}" bindtap="startQuickHome">
+              <text class="quick-home-time num">{{homeQuickDisplay}}</text>
+              <view class="quick-home-go"><view class="quick-home-play"></view></view>
+            </view>
+          </view>
         </block>
 
         <block wx:elif="{{homePrimary === 'todo'}}">
@@ -100,13 +159,14 @@
 
         <block wx:elif="{{homePrimary === 'important'}}">
           <view class="home-feature">
-            <view class="home-feature-important-grid {{homeImportantPreview.length === 1 ? 'single' : ''}}" wx:if="{{homeImportantPreview.length}}">
-              <view class="home-feature-important-card {{item.soon ? 'soon' : ''}} {{item.isPast ? 'past' : ''}}" wx:for="{{homeImportantPreview}}" wx:key="id" bindtap="goTools">
-                <view class="home-feature-important-name-row"><text class="home-feature-important-name">{{item.name}}</text></view>
-                <view class="home-feature-important-count"><text class="home-feature-important-num num">{{item.countdownNumber}}</text><text class="home-feature-important-unit" wx:if="{{item.countdownUnit}}">{{item.countdownUnit}}</text></view>
+            <view class="home-feature-list {{homeImportantPreview.length === 1 ? 'single' : ''}}" wx:if="{{homeImportantPreview.length}}">
+              <view class="home-todo-card {{item.isPast ? 'overdue' : ''}}" wx:for="{{homeImportantPreview}}" wx:key="id" bindtap="openImportantPage">
+                <view class="home-todo-dot"></view>
+                <text class="home-todo-text">{{item.name}}</text>
+                <text class="home-todo-time">{{item.countdownNumber}}{{item.countdownUnit}}</text>
               </view>
             </view>
-            <view class="home-feature-add" wx:else bindtap="goTools">＋</view>
+            <view class="home-feature-add" wx:else bindtap="openImportantPage">＋</view>
           </view>
         </block>
 
@@ -131,49 +191,84 @@
   <block wx:if="{{view === 'report'}}">
     <scroll-view class="report-scroll" scroll-y enhanced show-scrollbar="{{false}}">
     <view class="page-content report-page">
-      <view class="rp-hero">
-        <view class="rp-hero-meta"><text class="num">{{report.startedAtText}}</text><text class="rp-dot">·</text><text>已完成</text></view>
-        <view class="rp-hero-main">
-          <text class="rp-percent num">{{report.passRate}}</text><text class="rp-percent-unit">%</text>
-          <text class="rp-percent-cap">模块达标率</text>
+      <view class="rp3-summary">
+        <view class="rp3-sum-head">
+          <view class="rp3-sum-title-wrap">
+            <text class="rp3-kicker">训练成绩</text>
+            <text class="rp3-date num">{{report.startedAtText}}</text>
+          </view>
+          <text class="rp3-mode">{{report.modeName}}</text>
         </view>
-        <view class="rp-metrics">
-          <view class="rp-metric">
-            <view class="rp-metric-v num">{{report.totalActualText}}</view>
-            <view class="rp-metric-k">实际用时</view>
+        <view class="rp3-sum-body">
+          <view class="rp3-sum-main">
+            <text class="rp3-sum-label">实际专注</text>
+            <view class="rp3-big num">{{report.totalActualText}}</view>
+            <view class="rp3-sum-sub">计划 {{report.totalTarget}} 分钟</view>
           </view>
-          <view class="rp-metric">
-            <view class="rp-metric-v num">{{report.totalTarget}}<text class="rp-metric-u">分</text></view>
-            <view class="rp-metric-k">计划用时</view>
+          <view class="rp3-ring" style="background: conic-gradient(var(--primary) {{report.timeRate}}%, var(--track) 0);">
+            <view class="rp3-ring-hole">
+              <view class="rp3-ring-value num">{{report.timeRate}}<text class="rp3-ring-unit">%</text></view>
+              <text class="rp3-ring-label">计划达成</text>
+            </view>
           </view>
-          <view class="rp-metric">
-            <view class="rp-metric-v num {{report.overtimeCount ? 'warn' : ''}}">{{report.overtimeCount}}</view>
-            <view class="rp-metric-k">超时模块</view>
+        </view>
+        <view class="rp3-stat-row">
+          <view class="rp3-stat-pill">
+            <text class="rp3-stat-v num">{{report.onTrackCount}}</text>
+            <text class="rp3-stat-k">达标</text>
+          </view>
+          <view class="rp3-stat-pill {{report.overtimeCount ? 'is-warn' : ''}}">
+            <text class="rp3-stat-v num">{{report.overtimeCount}}</text>
+            <text class="rp3-stat-k">超时</text>
+          </view>
+          <view class="rp3-stat-pill">
+            <text class="rp3-stat-v num">{{reportView.length}}</text>
+            <text class="rp3-stat-k">模块</text>
           </view>
         </view>
       </view>
 
-      <view class="rp-tips {{(!report.shortestName || report.shortestName === report.slowestName) ? 'single' : ''}}" wx:if="{{report.slowestName}}">
-        <view class="rp-tip">
-          <view class="rp-tip-k">最耗时</view>
-          <view class="rp-tip-v">{{report.slowestName}} <text class="num">{{report.slowestText}}</text></view>
+      <view class="rp4-frame rp4-compare">
+        <view class="rp4-head">
+          <text class="rp4-title">时长对比</text>
         </view>
-        <view class="rp-tip" wx:if="{{report.shortestName && report.shortestName !== report.slowestName}}">
-          <view class="rp-tip-k">最短时</view>
-          <view class="rp-tip-v">{{report.shortestName}} <text class="num">{{report.shortestText}}</text></view>
+        <view class="rp4-diff-big {{report.diffOver ? 'is-over' : (report.diffText === '刚刚好' ? 'is-even' : 'is-under')}}">{{report.diffText}}</view>
+      </view>
+
+      <view class="rp4-frame rp4-modules" wx:if="{{reportModuleRows.length}}">
+        <view class="rp4-head">
+          <text class="rp4-title">模块明细</text>
+          <text class="rp4-meta">{{report.onTrackCount}}/{{reportModuleRows.length}} 达标</text>
+        </view>
+        <view class="rp4-mod" wx:for="{{reportModuleRows}}" wx:key="id">
+          <view class="rp4-mod-head">
+            <text class="rp4-mod-name">{{item.name}}</text>
+            <text class="rp4-tag tag-{{item.statusCode}}">{{item.statusLabel}}</text>
+          </view>
+          <view class="rp4-mod-meta">
+            <text class="rp4-mk">计划</text>
+            <text class="rp4-mv num">{{item.targetMinutes}}:00</text>
+            <text class="rp4-mk">实际</text>
+            <text class="rp4-mv num">{{item.actualText}}</text>
+            <text class="rp4-md delta-{{item.statusCode}}" wx:if="{{item.deltaText && item.deltaText !== item.statusLabel}}">{{item.deltaText}}</text>
+          </view>
+          <view class="rp4-gauge">
+            <view class="rp4-gauge-track">
+              <view class="rp4-gauge-theme" style="width:{{item.themePercent}}%"><view class="rp4-gauge-hatch"></view></view>
+              <view class="rp4-gauge-diff {{item.diffKind}}" wx:if="{{item.diffPercent > 0}}" style="left:{{item.themePercent}}%;width:{{item.diffPercent}}%"><view class="rp4-gauge-hatch"></view></view>
+            </view>
+            <view class="rp4-gauge-knob" style="left:{{item.themePercent}}%"></view>
+          </view>
         </view>
       </view>
 
-      <view class="rp-list">
-        <view class="rp-list-head">
-          <text class="rp-list-title">模块用时</text>
+      <view class="rp3-brand-card rp4-frame rp4-fish">
+        <view class="rp3-brand-badge">
+          <image class="rp3-brand-logo" src="/assets/brand/logo-mark.png" mode="aspectFit" aria-label="小鱼时钟 logo" />
         </view>
-        <view class="rp-item" wx:for="{{reportView}}" wx:key="id">
-          <view class="rp-item-head">
-            <view class="rp-item-name"><text class="rp-item-index num">{{item.indexLabel}}</text>{{item.name}}</view>
-            <view class="rp-item-time"><text class="num">{{item.actualText}}</text><text class="rp-item-target">/ {{item.targetMinutes}}:00</text></view>
-          </view>
-          <view class="rp-item-track"><view class="rp-item-fill fill-{{item.statusCode}}" style="width:{{item.actualPercent}}%"></view></view>
+        <view class="rp3-brand-copy">
+          <text class="rp3-brand-title">小鱼复盘</text>
+          <text class="rp3-brand-text">{{report.fishTip}}</text>
         </view>
       </view>
 
@@ -184,23 +279,9 @@
           <button class="rp-btn rp-btn-rerun" bindtap="restartTraining">↻ 再练一次</button>
         </view>
       </view>
-      <canvas canvas-id="reportCanvas" class="report-canvas" />
     </view>
     </scroll-view>
   </block>
-
-  <view class="modal-mask" wx:if="{{presetSheetOpen}}" catchtouchmove="blockTouch" bindtap="closePresetSheet">
-    <view class="modal-card" catchtap="blockTouch">
-      <view class="modal-title">添加训练模块</view>
-      <view class="preset-grid">
-        <view class="preset-chip" wx:for="{{presets}}" wx:key="name" data-index="{{index}}" bindtap="pickPreset">{{item.name}}<text class="preset-min num">{{item.minutes}}M</text></view>
-      </view>
-      <view class="modal-actions">
-        <button class="modal-cancel" bindtap="closePresetSheet">取消</button>
-        <button class="modal-confirm" bindtap="pickCustom">自定义</button>
-      </view>
-    </view>
-  </view>
 
   <view class="modal-mask" wx:if="{{templateModalOpen}}" catchtouchmove="blockTouch" bindtap="closeTemplateModal">
     <view class="modal-card" catchtap="blockTouch">
@@ -243,4 +324,5 @@
       </view>
     </view>
   </view>
+  <view class="timer-launch-cover" wx:if="{{timerLaunching}}"><image class="launch-cover-logo" src="/assets/brand/logo.png" mode="aspectFit"></image></view>
 </view>

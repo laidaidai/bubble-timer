@@ -7,10 +7,12 @@
     "pages/quick/quick",
     "pages/stats/stats",
     "pages/history/history",
-    "pages/todo/todo"
+    "pages/todo/todo",
+    "pages/blank/blank",
+    "pages/important/important"
   ],
   "window": {
-    "navigationBarTitleText": "泡泡计时器",
+    "navigationBarTitleText": "小鱼计时器",
     "navigationBarBackgroundColor": "#FFD874",
     "navigationBarTextStyle": "black",
     "backgroundColor": "#FBF3DF"

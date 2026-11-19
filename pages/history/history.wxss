@@ -1,30 +1,16 @@
 .history-page { min-height: 100vh; background: var(--bg); color: var(--ink); }
 .history-body { height: calc(100vh - 286rpx - env(safe-area-inset-bottom)); box-sizing: border-box; padding: 20rpx 24rpx 30rpx; }
-
-.record-summary { margin-bottom: 18rpx; padding: 18rpx 20rpx; background: var(--card); border: 2rpx solid var(--edge); border-radius: 24rpx; box-shadow: 5rpx 6rpx 0 var(--shadow-soft); }
-.record-summary-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12rpx; }
-.record-summary-title { color: var(--ink); font-size: 24rpx; font-weight: 900; }
-.record-more { color: var(--text-warm); font-size: 19rpx; font-weight: 800; }
-.record-metrics { margin-top: 12rpx; display: flex; gap: 10rpx; }
-.record-metric { flex: 1; min-width: 0; padding: 9rpx 10rpx; display: flex; flex-direction: column; gap: 3rpx; background: var(--cream-4); border-radius: 12rpx; }
-.record-metric-label { color: var(--text-3); font-size: 18rpx; font-weight: 700; }
-.record-metric-value { overflow: hidden; color: var(--ink); font-size: 21rpx; font-weight: 900; white-space: nowrap; text-overflow: ellipsis; }
-.record-bar { margin-top: 12rpx; height: 12rpx; overflow: hidden; background: var(--cream-3); border: 2rpx solid var(--line-strong); border-radius: 999rpx; }
-.record-bar-fill { height: 100%; background: var(--primary); border-radius: 999rpx; }
-.record-target { margin-top: 7rpx; color: var(--text-2); font-size: 18rpx; font-weight: 600; }
 .history-tip { margin-bottom: 22rpx; color: var(--text-warm); font-size: 22rpx; line-height: 1.7; }
 .history-tip .tip-line { display: block; }
 
 .empty-state { margin-top: 60rpx; display: flex; flex-direction: column; align-items: center; gap: 20rpx; color: var(--text-2); font-size: 24rpx; }
 .empty-title { font-size: 26rpx; font-weight: 800; }
-.primary-button { margin: 0; padding: 18rpx 40rpx; color: var(--on-primary); background: var(--primary); border: 2rpx solid var(--edge); border-radius: 999rpx; box-shadow: 4rpx 5rpx 0 var(--shadow); font-size: 24rpx; font-weight: 900; line-height: 1.3; }
 
 .history-card { margin-bottom: 22rpx; padding: 24rpx; background: var(--card); border: 2rpx solid var(--edge); border-radius: 28rpx; box-shadow: 6rpx 7rpx 0 var(--shadow); }
 .history-head { display: flex; align-items: flex-start; justify-content: space-between; }
 .history-title-wrap { flex: 1; min-width: 0; overflow: hidden; }
 .history-title { margin-bottom: 8rpx; overflow: hidden; color: var(--ink); font-size: 28rpx; font-weight: 900; white-space: nowrap; text-overflow: ellipsis; }
 .history-time { color: var(--text-3); font-size: 20rpx; }
-.status-tag { flex: 0 0 auto; padding: 6rpx 16rpx; color: var(--on-panel); background: var(--panel); border-radius: 999rpx; font-size: 19rpx; font-weight: 800; }
 
 .history-meta { margin: 20rpx 0 18rpx; display: flex; align-items: baseline; justify-content: space-between; color: var(--text-dim); font-size: 22rpx; }
 .history-duration { color: var(--ink); font-size: 48rpx; font-weight: 900; }
@@ -36,10 +22,38 @@
 .history-report-button { margin: 0 0 0 auto; padding: 16rpx 28rpx; color: var(--on-panel); background: var(--panel); border-radius: 999rpx; box-shadow: 4rpx 5rpx 0 var(--shadow-soft); font-size: 24rpx; font-weight: 900; line-height: 1.3; }
 
 .history-empty { display: flex; flex-direction: column; align-items: center; gap: 14rpx; padding: 80rpx 24rpx; }
-.empty-fish { position: relative; width: 140rpx; height: 80rpx; margin-bottom: 10rpx; }
-.fish-body { position: absolute; left: 30rpx; top: 10rpx; width: 70rpx; height: 48rpx; background: var(--primary); border: 2.5rpx solid var(--edge); border-radius: 50% 50% 50% 50% / 60% 60% 60% 60%; box-shadow: 3rpx 4rpx 0 var(--shadow-soft); }
-.fish-eye { position: absolute; left: 48rpx; top: 22rpx; width: 8rpx; height: 8rpx; background: var(--ink); border-radius: 50%; z-index: 2; }
-.fish-tail { position: absolute; left: 90rpx; top: 0; width: 0; height: 0; border: 12rpx solid transparent; border-left-color: var(--primary); filter: drop-shadow(2rpx 2rpx 0 var(--shadow-soft)); }
 .empty-title { color: var(--ink); font-size: 30rpx; font-weight: 900; }
 .empty-sub { color: var(--text-2); font-size: 22rpx; font-weight: 600; }
 .empty-tip { margin-top: 8rpx; padding: 10rpx 18rpx; color: var(--text-warm); background: var(--cream-2); border: 2rpx solid var(--line-strong); border-radius: 999rpx; font-size: 19rpx; font-weight: 800; }
+
+/* 动效：记录卡逐张出现 */
+.history-card { animation: app-rise-in .38s cubic-bezier(.2, .8, .3, 1) backwards; }
+.history-card:nth-child(2) { animation-delay: .05s; }
+.history-card:nth-child(3) { animation-delay: .10s; }
+.history-card:nth-child(4) { animation-delay: .15s; }
+.history-card:nth-child(n+5) { animation-delay: .20s; }
+
+/* ===== 记录页空态与数字动效 ===== */
+.history-duration { animation: app-pop-in .45s cubic-bezier(.2, .8, .3, 1) both; }
+.history-card:active { transform: translate(1rpx, 1rpx); box-shadow: 3rpx 4rpx 0 var(--shadow); }
+.empty-title { animation: app-rise-in .4s .05s cubic-bezier(.2, .8, .3, 1) backwards; }
+.empty-tip { animation: app-pop-in .46s .12s cubic-bezier(.2, .8, .3, 1) backwards; }
+
+/* 品牌 logo 空态 */
+.empty-logo { width: 210rpx; height: 210rpx; margin-bottom: 4rpx; animation: history-logo-float 4.2s ease-in-out infinite; }
+@keyframes history-logo-float { 0%, 100% { transform: translate(0, 0) rotate(0deg); } 50% { transform: translate(8rpx, -8rpx) rotate(-1.5deg); } }
+
+/* 记录页：入场动效每次回到页面都重新播放 */
+.history-page.reveal { animation: app-page-fade .24s ease-out both; }
+.history-card { animation: none; }
+.history-duration { animation: none; }
+.history-page.reveal .history-card { animation: app-rise-in .38s cubic-bezier(.2, .8, .3, 1) backwards; }
+.history-page.reveal .history-duration { animation: app-pop-in .45s cubic-bezier(.2, .8, .3, 1) both; }
+.history-page.reveal .empty-short { animation: app-rise-in .4s .1s cubic-bezier(.2, .8, .3, 1) backwards; }
+
+/* 空记录只保留一句简短说明 */
+.empty-short { color: var(--text-2); font-size: 22rpx; font-weight: 600; line-height: 1.5; text-align: center; }
+.history-page.reveal .history-card:nth-child(2) { animation-delay: .05s; }
+.history-page.reveal .history-card:nth-child(3) { animation-delay: .10s; }
+.history-page.reveal .history-card:nth-child(4) { animation-delay: .15s; }
+.history-page.reveal .history-card:nth-child(n+5) { animation-delay: .20s; }

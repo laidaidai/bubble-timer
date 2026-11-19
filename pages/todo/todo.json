@@ -1,6 +1,8 @@
 {
   "navigationBarTitleText": "待办清单",
   "navigationStyle": "custom",
-  "usingComponents": {},
+  "usingComponents": {
+    "brand-dock": "/components/brand-dock/index"
+  },
   "pageOrientation": "portrait"
 }

@@ -1,0 +1,9 @@
+<view class="blank-page theme-{{theme}} {{leaving ? 'leaving' : ''}}" style="{{themeStyle}}">
+  <view class="blank-loader">
+    <image class="blank-logo" src="/assets/brand/logo.png" mode="aspectFit"></image>
+    <view class="blank-ring"></view>
+    <view class="blank-bubble b1"></view>
+    <view class="blank-bubble b2"></view>
+    <view class="blank-bubble b3"></view>
+  </view>
+</view>

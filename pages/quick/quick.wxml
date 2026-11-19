@@ -1,42 +1,16 @@
 <template name="quickClock">
   <view class="q-clock-shell q-shell-{{clockStyle}} {{long ? 'q-clock-long' : ''}}">
     <block wx:if="{{clockStyle === 'flip'}}">
-      <view class="q-flip-row">
-        <block wx:for="{{flipCells}}" wx:key="key">
-          <view class="q-flip-colon" wx:if="{{item.sep}}">:</view>
-          <view class="q-flip-card {{item.changed ? (flipPhase ? 'flip-a' : 'flip-b') : ''}}" wx:else>
-            <view class="q-flip-face q-flip-face-top"><text class="q-flip-num">{{item.text}}</text></view>
-            <view class="q-flip-face q-flip-face-bottom"><text class="q-flip-num">{{item.text}}</text></view>
-            <view class="q-flip-face q-flip-face-bottom q-flip-face-old" wx:if="{{item.changed}}"><text class="q-flip-num">{{item.oldText}}</text></view>
-            <view class="q-flip-flap q-flip-flap-top" wx:if="{{item.changed}}">
-              <view class="q-flip-flap-face"><text class="q-flip-num">{{item.oldText}}</text></view>
-            </view>
-            <view class="q-flip-flap q-flip-flap-bottom" wx:if="{{item.changed}}">
-              <view class="q-flip-flap-face q-flip-flap-face-bottom"><text class="q-flip-num">{{item.text}}</text></view>
-            </view>
-            <view class="q-flip-split"></view>
-          </view>
-        </block>
-      </view>
+      <flip-clock cells="{{flipCells}}" ms-cells="{{msCells}}" ms-show="{{msShow}}" flip-phase="{{flipPhase}}"/>
     </block>
 
     <view class="q-plain-clock" wx:else>
       <text class="q-plain-num">{{mainText}}</text>
     </view>
 
-    <view class="q-clock-ms {{clockStyle}}" wx:if="{{msShow}}">
-      <block wx:if="{{clockStyle === 'flip'}}">
-        <text class="q-ms-dot">.</text>
-        <view class="q-flip-card q-flip-card-ms" wx:for="{{msCells}}" wx:key="key">
-          <view class="q-flip-face q-flip-face-top"><text class="q-flip-num">{{item.text}}</text></view>
-          <view class="q-flip-face q-flip-face-bottom"><text class="q-flip-num">{{item.text}}</text></view>
-          <view class="q-flip-split"></view>
-        </view>
-      </block>
-      <block wx:else>
-        <text class="q-ms-dot">.</text>
-        <text class="q-ms-inline">{{msText}}</text>
-      </block>
+    <view class="q-clock-ms {{clockStyle}}" wx:if="{{msShow && clockStyle !== 'flip'}}">
+      <text class="q-ms-dot">.</text>
+      <text class="q-ms-inline">{{msText}}</text>
     </view>
   </view>
 </template>

@@ -30,19 +30,15 @@ Component({
   methods: {
     sync() {
       const theme = app.getTheme ? app.getTheme() : null
-      const swatch = (theme && theme.swatch) || ['#F5F5F7', '#FFD54F', '#1F1F1F']
-      const css = (theme && theme.css) || {}
-      const pearl = theme && theme.key === 'pearl'
+      const swatch = (theme && theme.swatch) || ['#FBF3DF', '#FFC94D', '#4B3A2A']
       const pages = getCurrentPages()
       const current = pages.length ? pages[pages.length - 1].route : ''
       const selected = Math.max(0, TABS.findIndex(item => item.route === current))
       this.setData({
         selected,
-        activeColor: pearl ? (css.ink || '#1F1F1F') : (swatch[1] || '#1F1F1F'),
-        inactiveColor: pearl ? (css['text-3'] || '#A6A6AC') : (swatch[2] || '#A6A6AC'),
-        tabStyle: pearl
-          ? 'background:#FFFFFF;border-top-color:transparent;'
-          : `background:${swatch[0]};border-top-color:${swatch[1]};`
+        activeColor: swatch[1] || '#4B3A2A',
+        inactiveColor: swatch[2] || '#A6906F',
+        tabStyle: `background:${swatch[0]};border-top-color:${swatch[1]};`
       })
     },
 
@@ -50,8 +46,22 @@ Component({
       const index = Number(event.currentTarget.dataset.index)
       const item = TABS[index]
       if (!item) return
-      this.setData({ selected: index })
-      wx.switchTab({ url: item.path })
+      const pages = getCurrentPages()
+      const current = pages.length ? pages[pages.length - 1].route : ''
+      // 已经在目标页时同步高亮；首页还要退出报告/临时计时视图
+      if (current === item.route) {
+        if (index === 0) {
+          const page = pages[pages.length - 1]
+          if (page && typeof page.resetToHome === 'function') page.resetToHome()
+        }
+        this.setData({ selected: index })
+        return
+      }
+      wx.switchTab({
+        url: item.path,
+        success: () => this.sync(),
+        fail: () => this.sync()
+      })
     }
   }
 })

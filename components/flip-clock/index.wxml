@@ -1,0 +1,27 @@
+<view class="fc-row {{compact ? 'fc-compact' : ''}}">
+  <block wx:for="{{cells}}" wx:key="key">
+    <view class="fc-colon" wx:if="{{item.sep}}">:</view>
+    <view class="fc-card {{item.changed ? (flipPhase ? 'flip-a' : 'flip-b') : ''}}" wx:else>
+      <view class="fc-face fc-face-top"><text class="fc-num">{{item.text}}</text></view>
+      <view class="fc-face fc-face-bottom"><text class="fc-num">{{item.text}}</text></view>
+      <view class="fc-face fc-face-bottom fc-face-old" wx:if="{{item.changed}}"><text class="fc-num">{{item.oldText}}</text></view>
+      <block wx:if="{{item.changed}}">
+        <view class="fc-flap fc-flap-top">
+          <view class="fc-flap-face"><text class="fc-num">{{item.oldText}}</text></view>
+        </view>
+        <view class="fc-flap fc-flap-bottom">
+          <view class="fc-flap-face fc-flap-face-bottom"><text class="fc-num">{{item.text}}</text></view>
+        </view>
+      </block>
+      <view class="fc-split"></view>
+    </view>
+  </block>
+  <block wx:if="{{msShow}}">
+    <text class="fc-ms-dot">.</text>
+    <view class="fc-card fc-card-ms" wx:for="{{msCells}}" wx:key="key">
+      <view class="fc-face fc-face-top"><text class="fc-num">{{item.text}}</text></view>
+      <view class="fc-face fc-face-bottom"><text class="fc-num">{{item.text}}</text></view>
+      <view class="fc-split"></view>
+    </view>
+  </block>
+</view>

@@ -1,5 +1,8 @@
 {
   "navigationBarTitleText": "专注计时",
   "navigationStyle": "custom",
-  "pageOrientation": "landscape"
+  "pageOrientation": "landscape",
+  "usingComponents": {
+    "flip-clock": "/components/flip-clock/index"
+  }
 }

@@ -70,7 +70,7 @@ function formatTimerParts(ms) {
 
 Page({
   data: {
-    theme: 'pearl',
+    theme: 'sky',
     themeStyle: '',
     tab: 'stopwatch',
     running: false,
@@ -91,12 +91,20 @@ Page({
     pomodoroPhaseTotal: POMODORO_FOCUS,
     clockStyle: 'flip',
     clockStyleName: '翻页时钟',
+    clockStyles: CLOCK_STYLES,
     clockData: {},
-    laps: []
+    laps: [],
+    finishBurst: false,
+    finishBubbles: [],
+    landscape: false
   },
 
-  onLoad() {
+  onLoad(options = {}) {
+    this.autoStartRequested = !!(options && options.autostart === '1')
+    this.dockToggleRequested = !!(options && options.docktoggle === '1')
+    this.dockPauseRequested = !!(options && options.dockpause === '1')
     this.syncTheme()
+    if (wx.setDeviceOrientation) wx.setDeviceOrientation({ value: 'portrait', fail: () => {} })
     const savedStyle = wx.getStorageSync(app.globalData.clockStyleKey)
     const style = resolveClockStyle(savedStyle)
     this.setData({ clockStyle: style.key, clockStyleName: style.name })
@@ -112,12 +120,33 @@ Page({
       this.resetPomodoro()
       this.setStopwatch(0, false)
     }
+    const requested = options && options.tab
+    if (requested && ['stopwatch', 'countdown', 'pomodoro'].indexOf(requested) >= 0 && requested !== this.data.tab) {
+      this.setData({ tab: requested, running: false, sessionStarted: false })
+      this.applyModeState(requested)
+    }
   },
 
   onShow() {
     this.syncTheme()
     this.loadPresetRecommendation()
     if (this.data.running) this.startTicker()
+    if (this.dockPauseRequested) {
+      this.dockPauseRequested = false
+      this.autoStartRequested = false
+      this.pause()
+      return
+    }
+    if (this.dockToggleRequested) {
+      this.dockToggleRequested = false
+      this.autoStartRequested = false
+      this.toggleRun()
+      return
+    }
+    if (this.autoStartRequested) {
+      this.autoStartRequested = false
+      if (!this.data.running) this.start()
+    }
   },
 
   onHide() {
@@ -128,6 +157,8 @@ Page({
   onUnload() {
     this.saveQuickState()
     this.stopTicker()
+    if (this.finishBurstTimer) clearTimeout(this.finishBurstTimer)
+    if (this.data.landscape && wx.setDeviceOrientation) wx.setDeviceOrientation({ value: 'portrait', fail: () => {} })
   },
 
   readQuickState() {
@@ -477,15 +508,16 @@ Page({
   setStopwatch(ms, running) {
     const text = formatStopwatch(ms)
     this.stopwatchMs = Math.max(0, ms)
+    const showMs = text.main.length <= 5 && ms > 0
     const payload = text.main !== this.lastClockText ? this.buildClockPayload(text.main, undefined, text.ms) : {}
-    const msCells = text.ms.split('').map((char, index) => ({ key: `q-ms-${index}`, text: char }))
+    const msCells = showMs ? text.ms.split('').map((char, index) => ({ key: `q-ms-${index}`, text: char })) : []
     this.setData({
-      msText: text.ms,
+      msText: showMs ? text.ms : '',
       running: !!running,
       sessionStarted: ms > 0,
       mainSeconds: Math.floor(ms / 1000),
-      'clockData.msShow': ms > 0,
-      'clockData.msText': text.ms,
+      'clockData.msShow': showMs,
+      'clockData.msText': showMs ? text.ms : '',
       'clockData.msCells': msCells,
       ...payload
     })
@@ -557,6 +589,23 @@ Page({
     this.setData({ selectedPreset: minutes })
     this.vibrateAdjust()
     this.setCountdown(minutes * 60000)
+  },
+
+  toggleLandscape() {
+    const next = !this.data.landscape
+    if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
+    if (!wx.setDeviceOrientation) {
+      wx.showToast({ title: '当前设备不支持横屏', icon: 'none' })
+      return
+    }
+    this.setData({ landscape: next })
+    wx.setDeviceOrientation({
+      value: next ? 'landscape' : 'portrait',
+      fail: () => {
+        this.setData({ landscape: !next })
+        wx.showToast({ title: '横屏切换失败', icon: 'none' })
+      }
+    })
   },
 
   toggleRun() {
@@ -634,6 +683,24 @@ Page({
     this.ticker = null
   },
 
+  // 快捷计时到点：时钟周围的小泡泡上浮
+  playFinishBurst() {
+    const bubbles = Array.from({ length: 14 }).map((_, index) => ({
+      id: index,
+      x: 14 + Math.round(Math.random() * 72),
+      size: 10 + Math.round(Math.random() * 16),
+      delay: index * 26,
+      duration: 820 + Math.round(Math.random() * 320),
+      tone: index % 3
+    }))
+    clearTimeout(this.finishBurstTimer)
+    this.setData({ finishBurst: true, finishBubbles: bubbles })
+    this.finishBurstTimer = setTimeout(() => {
+      this.finishBurstTimer = null
+      this.setData({ finishBurst: false })
+    }, 1050)
+  },
+
   tick() {
     if (!this.data.running) return
     if (this.data.tab === 'stopwatch') {
@@ -652,6 +719,7 @@ Page({
       if (wx.vibrateLong) wx.vibrateLong({ fail: () => {} })
       if (app.playRing) app.playRing()
       wx.showToast({ title: '时间到', icon: 'none', duration: 2000 })
+      this.playFinishBurst()
       return
     }
     this.countdownRemaining = remaining
@@ -702,6 +770,7 @@ Page({
       this.pomodoroPhase = 'rest'
       this.pomodoroPhaseTotal = isLong ? POMODORO_LONG_REST : POMODORO_REST
       wx.showToast({ title: isLong ? '长休息 15 分钟' : '休息 5 分钟', icon: 'none', duration: 1600 })
+      this.playFinishBurst()
     } else {
       this.pomodoroPhase = 'focus'
       this.pomodoroPhaseTotal = POMODORO_FOCUS
@@ -725,11 +794,12 @@ Page({
   },
 
   clockMsPatch(ms) {
-    const msCells = ms.split('').map((char, index) => ({ key: `q-ms-${index}`, text: char }))
+    const showMs = String(this.data.mainText || '').length <= 5
+    const msCells = showMs ? ms.split('').map((char, index) => ({ key: `q-ms-${index}`, text: char })) : []
     return {
-      msText: ms,
-      'clockData.msShow': true,
-      'clockData.msText': ms,
+      msText: showMs ? ms : '',
+      'clockData.msShow': showMs && !!ms,
+      'clockData.msText': showMs ? ms : '',
       'clockData.msCells': msCells
     }
   },
@@ -743,22 +813,31 @@ Page({
       changed: char !== (previous[index] || char),
       sep: char === ':'
     }))
+    const blockCells = text.split('').map((char, index) => ({
+      key: `q-block-${index}`,
+      text: char,
+      sep: char === ':'
+    }))
     if (flipCells.some(item => item.changed)) this.flipPhase = !this.flipPhase
     this.lastClockText = text
     const styleKey = style || this.data.clockStyle
     const ms = msText || ''
-    const msCells = ms.split('').map((char, index) => ({ key: `q-ms-${index}`, text: char }))
+    // 秒表 / 计时器 / 番茄钟都显示毫秒；进入小时后主时间变成 HH:MM:SS，空间让给小时，毫秒自动收起
+    const hasHours = text.length > 5
+    const showMs = !!ms && !hasHours
+    const msCells = showMs ? ms.split('').map((char, index) => ({ key: `q-ms-${index}`, text: char })) : []
     return {
       mainText: text,
-      msText: ms,
+      msText: showMs ? ms : '',
       clockData: {
         clockStyle: styleKey,
         mainText: text,
         flipCells,
+        blockCells,
         flipPhase: !!this.flipPhase,
-        msShow: !!ms,
-        long: !!ms && text.length > 5,
-        msText: ms,
+        msShow: showMs,
+        long: text.length > 5,
+        msText: showMs ? ms : '',
         msCells
       }
     }
@@ -771,7 +850,6 @@ Page({
     this.setData({ clockStyle: next.key, clockStyleName: next.name, ...payload })
     wx.setStorageSync(app.globalData.clockStyleKey, next.key)
     if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
-    if (wx.showToast) wx.showToast({ title: next.name, icon: 'none', duration: 900 })
   },
 
   cycleClockStyle() {

@@ -2,5 +2,7 @@
   "navigationBarTitleText": "小鱼时钟",
   "pageOrientation": "portrait",
   "navigationStyle": "custom",
-  "usingComponents": {}
+  "usingComponents": {
+    "brand-dock": "/components/brand-dock/index"
+  }
 }

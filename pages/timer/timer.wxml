@@ -1,42 +1,34 @@
-<view class="timer-page theme-{{theme}} clock-{{clockStyle}} {{compact ? 'compact' : ''}} {{immersive ? 'immersive' : ''}}" style="{{themeStyle}}">
+<view class="timer-page theme-{{theme}} clock-{{clockStyle}} {{compact ? 'compact' : ''}} {{immersive ? 'immersive' : 'normal'}} {{immersiveAnim ? 'immersive-anim' : ''}} {{immersiveLeaving ? 'immersive-leaving' : ''}} {{clockMorph ? 'clock-morphing' : ''}} {{moduleCollapsed ? 'module-collapsed' : ''}} {{timerReveal ? 'reveal' : ''}} {{isPaused ? 'paused' : 'running'}}" style="{{themeStyle}}">
   <view class="timer-main">
-    <view class="immersive-toggle {{immersive ? 'on' : ''}}" catchtap="toggleImmersive">
-      <view class="fs-icon" wx:if="{{!immersive}}">
+    <view class="immersive-toggle {{(immersive || immersiveLeaving) ? 'on' : ''}}" catchtap="toggleImmersive">
+      <view class="fs-icon {{(immersive || immersiveLeaving) ? 'hidden' : ''}}">
         <view class="fs-corner fs-tl"></view>
         <view class="fs-corner fs-tr"></view>
         <view class="fs-corner fs-bl"></view>
         <view class="fs-corner fs-br"></view>
       </view>
-      <view class="fs-exit" wx:else><text class="fs-exit-char">‹</text></view>
+      <view class="fs-exit {{(immersive || immersiveLeaving) ? 'show' : ''}}"><text class="fs-exit-char">‹</text></view>
     </view>
     <view class="mode-chip {{phaseLabel ? (phaseLabel === '专注' ? 'focus' : 'rest') : ''}}">
       <text>{{modeName}}</text>
       <text class="mode-phase" wx:if="{{phaseLabel}}">{{phaseLabel}}</text>
     </view>
     <view class="clock-stage" bindtap="cycleClockStyle">
-      <text class="ms-line">{{mainLabel}} <text class="ms-val">+{{msText}}</text> ms</text>
-
-      <!-- 翻页时钟 -->
-      <view class="flip-row" wx:if="{{clockStyle === 'flip'}}">
-        <block wx:for="{{flipCells}}" wx:key="key">
-          <view class="flip-colon" wx:if="{{item.sep}}">:</view>
-          <view class="flip-card {{item.changed ? (flipPhase ? 'flip-a' : 'flip-b') : ''}}" wx:else>
-            <view class="flip-face flip-face-top"><text class="flip-num">{{item.text}}</text></view>
-            <view class="flip-face flip-face-bottom"><text class="flip-num">{{item.text}}</text></view>
-            <view class="flip-face flip-face-bottom flip-face-old" wx:if="{{item.changed}}"><text class="flip-num">{{item.oldText}}</text></view>
-            <view class="flip-flap flip-flap-top" wx:if="{{item.changed}}">
-              <view class="flip-flap-face"><text class="flip-num">{{item.oldText}}</text></view>
-            </view>
-            <view class="flip-flap flip-flap-bottom" wx:if="{{item.changed}}">
-              <view class="flip-flap-face flip-flap-face-bottom"><text class="flip-num">{{item.text}}</text></view>
-            </view>
-            <view class="flip-split"></view>
-          </view>
-        </block>
+      <view class="stage-meta">
+        <text class="meta-module">{{currentModule.name || '训练完成'}}</text>
+        <text class="meta-total"><text class="num">{{moduleTimeText}}</text></text>
+        <text class="meta-ms">{{msText}}ms</text>
       </view>
 
+      <!-- 翻页时钟：抽到 components/flip-clock，timer 仅透传状态 -->
+      <flip-clock wx:if="{{clockStyle === 'flip'}}"
+        cells="{{flipCells}}"
+        flip-phase="{{flipPhase}}"
+        compact="{{compact}}"
+        style="{{clockMorphStyle}}"/>
+
       <!-- 积木方块 -->
-      <view class="block-row" wx:elif="{{clockStyle === 'blocks'}}">
+      <view class="block-row clock-body" wx:elif="{{clockStyle === 'blocks'}}" style="{{clockMorphStyle}}">
         <block wx:for="{{flipDigits}}" wx:key="key">
           <view class="block-colon" wx:if="{{item.sep}}">:</view>
           <view class="block-tile" wx:else><text class="block-num">{{item.text}}</text></view>
@@ -44,7 +36,7 @@
       </view>
 
       <!-- LED 数码管 -->
-      <view class="led-clock" wx:elif="{{clockStyle === 'led'}}">
+      <view class="led-clock clock-body" wx:elif="{{clockStyle === 'led'}}" style="{{clockMorphStyle}}">
         <block wx:for="{{ledDigits}}" wx:key="key">
           <view class="led-colon" wx:if="{{item.sep}}">
             <view class="led-dot"></view>
@@ -63,17 +55,17 @@
       </view>
 
       <!-- 数字时钟 / 极简 -->
-      <view class="plain-clock" wx:else>
-        <text class="plain-num {{clockStyle === 'digital' ? 'glow' : 'thin'}}">{{mainTimeText}}</text>
+      <view class="plain-clock clock-body" wx:else style="{{clockMorphStyle}}">
+        <text class="plain-num {{clockStyle === 'digital' ? 'glow' : ''}} {{clockStyle === 'minimal' ? 'thin' : ''}} {{clockStyle === 'neon' ? 'neon' : ''}} {{clockStyle === 'outline' ? 'outline' : ''}} {{clockStyle === 'jelly' ? 'jelly' : ''}}">{{mainTimeText}}</text>
       </view>
 
-      <view class="stage-meta">
-        <text class="meta-module">{{currentModule.name || '训练完成'}}</text>
-        <text class="meta-total"><text class="num">{{moduleTimeText}}</text></text>
-      </view>
-
-      <view class="stage-progress">
-        <view class="stage-progress-fill {{isOvertime ? 'overtime-fill' : ''}}" style="width: {{progressPercent}}%;"></view>
+      <view class="progress-rail">
+        <view class="stage-progress">
+          <view class="stage-progress-fill {{isOvertime ? 'overtime-fill' : ''}}" style="width: {{progressPercent}}%;"></view>
+        </view>
+        <view class="progress-logo" style="left: {{progressPercent}}%;">
+          <image class="progress-logo-img" src="/assets/brand/logo-mark.png" mode="aspectFit"></image>
+        </view>
       </view>
       <view class="stage-target">
         <text>TARGET: <text class="num">{{currentModule.targetMinutes}}</text> 分</text>
@@ -93,10 +85,29 @@
     </view>
   </view>
 
-  <scroll-view class="module-side" scroll-y="true" enhanced="true" show-scrollbar="false" scroll-into-view="{{moduleScrollTarget}}" scroll-with-animation="true">
-    <view id="module-{{index}}" class="module-list {{item.status === 'current' ? 'selected' : ''}}" wx:for="{{runtimeModules}}" wx:key="id" data-index="{{index}}" bindtap="selectModule">
+  <view class="module-toggle {{moduleCollapsed ? 'collapsed' : ''}}" catchtap="toggleModuleSide" aria-label="{{moduleCollapsed ? '展开模块栏' : '收起模块栏'}}">
+    <view class="module-toggle-chevron {{moduleCollapsed ? 'left' : ''}}"></view>
+  </view>
+
+  <scroll-view class="module-side" scroll-y="{{true}}" enhanced="{{true}}" show-scrollbar="{{false}}" scroll-into-view="{{moduleScrollTarget}}" scroll-with-animation="{{true}}">
+    <view id="module-{{index}}" class="module-list {{item.status === 'current' ? 'selected' : ''}} {{item.status === 'done' ? 'done' : ''}}" wx:for="{{runtimeModules}}" wx:key="id" data-index="{{index}}" bindtap="selectModule">
       <view class="module-index num">{{item.status === 'done' ? '✓' : index + 1}}</view>
       <view class="module-info"><text>{{item.name}}</text><text class="num">{{item.targetMinutes}} 分</text></view>
     </view>
   </scroll-view>
+
+  <view class="celebrate-mask" wx:if="{{celebrating}}">
+    <view class="celebrate-bubble bubble-{{item.tone}}" wx:for="{{celebrationBubbles}}" wx:key="id"
+      style="left:{{item.x}}%; width:{{item.size}}rpx; height:{{item.size}}rpx; animation-delay:{{item.delay}}ms; animation-duration:{{item.duration}}ms;"></view>
+    <view class="celebrate-card">
+      <view class="celebrate-reward" aria-label="计时完成">
+        <view class="celebrate-halo"></view>
+        <image class="celebrate-logo" src="/assets/brand/logo-mark.png" mode="aspectFit"></image>
+      </view>
+      <view class="celebrate-copy">
+        <text class="celebrate-title">finish</text>
+        <text class="celebrate-message" wx:if="{{celebrationMessage}}">{{celebrationMessage}}</text>
+      </view>
+    </view>
+  </view>
 </view>

@@ -11,8 +11,11 @@ const LEGACY_DEFAULT_MODULE_NAMES = ['资料分析', '判断推理', '言语理�
 
 const QUOTES = ['稳定节奏，持续精进。', '今天的坚持，是明天的底气。', '把时间用在真正重要的事情上。']
 const WEEK_LABELS = ['一', '二', '三', '四', '五', '六', '日']
-const TOMATO_SHOW_LIMIT = 27
+const TOMATO_GRID_LIMIT = 28
+const TOMATO_COLUMNS = 8
 const app = getApp()
+const draw = require('../../utils/poster-draw')
+const { createPainter, exportPainter, loadImage, isSupported } = require('../../utils/painter')
 
 function importantDateText(key) {
   const parts = String(key || '').split('-').map(Number)
@@ -25,31 +28,21 @@ const { pad, clock: formatTime, dateTimeText: formatDateTime, clone, fold, dateK
 Page({
   data: {
     view: 'config',
+    timerLaunching: false,
     modules: [],
     totalMinutes: 0,
     templateName: '常规',
     reportAnimTimer: null,
     dragIndex: -1,
-    progressPercent: 0,
-    completedCount: 0,
-    isOvertime: false,
     addVisible: false,
-    presetSheetOpen: false,
-    presets: [
-      { name: '资料分析', minutes: 25 },
-      { name: '判断推理', minutes: 35 },
-      { name: '言语理解', minutes: 34 },
-      { name: '政治理论', minutes: 12 },
-      { name: '常识判断', minutes: 9 },
-      { name: '数量关系', minutes: 5 },
-      { name: '英语阅读', minutes: 30 },
-      { name: '单词记忆', minutes: 15 },
-      { name: '专业课复习', minutes: 40 }
-    ],
     report: null,
     templates: [],
     templateSwitching: false,
+    burstingIndex: -1,
+    burstingTemplate: '',
     reportView: [],
+    reportModuleRows: [],
+    reportOrigin: '',
     reportExpanded: false,
     dragStyle: '',
     dragStyles: [],
@@ -58,7 +51,7 @@ Page({
     settleStyle: '',
     templateModalOpen: false,
     newTemplateName: '',
-    theme: 'pearl', themeStyle: '',
+    theme: 'sky', themeStyle: '',
     themeName: '蜜桃雪酪',
     sliderActive: '#EE7E99',
     sliderTrack: '#F7E2E8',
@@ -81,12 +74,19 @@ Page({
     // 番茄激励
     tomatoCount: 0,
     tomatoIcons: [],
+    incentiveRows: [],
     tomatoProgress: 0,
     tomatoTarget: 5,
     tomatoCaption: '',
     incentiveType: 'tomato',
     tomatoPop: false,
+    incentiveReveal: false,
+    homeReveal: false,
     homePrimary: 'timer',
+    homeQuickTab: '',
+    homeQuickName: '',
+    dockDim: false,
+    homeQuickDisplay: '',
     homeTimerOverride: false,
     homeTodo: null,
     homeTodoPreview: [],
@@ -100,7 +100,6 @@ Page({
   },
 
   onLoad() {
-    this.setOrientation('portrait')
     const theme = app.getTheme ? app.getTheme() : { key: 'rose' }
     // 首页只保留模块化计时；番茄钟独立在快捷计时里，不再和模块混用
     const modes = (app.modes || []).filter(item => item.key !== 'pomodoro').map(item => ({ ...item }))
@@ -118,6 +117,7 @@ Page({
       modeName: modeInfo ? modeInfo.name : '正计时'
     })
     if (app.applyNavBar) app.applyNavBar()
+    this.loadReportLogo()
     const savedSession = wx.getStorageSync(app.globalData.storageKey)
     const savedTemplates = this.readTemplates()
     const savedCurrentName = (wx.getStorageSync(app.globalData.templateKey) || {}).currentName
@@ -146,7 +146,7 @@ Page({
         content: '是否恢复上次的计时进度？',
         confirmText: '恢复',
         cancelText: '放弃',
-        success: ({ confirm }) => confirm ? wx.navigateTo({ url: '/pages/timer/timer' }) : wx.removeStorageSync(app.globalData.storageKey)
+        success: ({ confirm }) => confirm ? this.launchTimer() : wx.removeStorageSync(app.globalData.storageKey)
       })
     }
     this.loadImportantDates()
@@ -158,10 +158,55 @@ Page({
 
   onHide() {
     if (this.dragActive) this.touchEnd()
+    if (this.data.view === 'report') this.reportLeftPage = true
+    if (this.reportAutoExitTimer) {
+      clearTimeout(this.reportAutoExitTimer)
+      this.reportAutoExitTimer = null
+    }
+  },
+
+  // 安卓实体返回键：报告页优先回首页，不让用户困在报告里
+  onBackPress() {
+    if (this.data.view === 'report') {
+      this.goHomeView()
+      return true
+    }
+    if (this.data.view !== 'config') {
+      this.backToConfig()
+      return true
+    }
+    return false
   },
 
   onShow() {
+    if (this.data.timerLaunching) {
+      clearTimeout(this.timerCoverTimer)
+      this.timerCoverTimer = setTimeout(() => this.setData({ timerLaunching: false }), 280)
+    }
     if (this.getTabBar && this.getTabBar()) this.getTabBar().sync()
+    // 结束计时回来时先直接切到报告，避免首页/配置页闪一下
+    const report = wx.getStorageSync('exam-timer-pending-report')
+    if (report) {
+      wx.removeStorageSync('exam-timer-pending-report')
+      // 没有启动遮罩时（例如从记录页回来）也补一层 logo 遮罩，避免旧页内容闪出
+      if (!this.data.timerLaunching) {
+        this.setData({ timerLaunching: true })
+        clearTimeout(this.timerCoverTimer)
+        this.timerCoverTimer = setTimeout(() => this.setData({ timerLaunching: false }), 280)
+      }
+      this.loadTomatoes()
+      // 记录页点「查看报告」进来时，返回要回记录列表，而不是首页工作台
+      const origin = wx.getStorageSync('exam-timer-report-origin') || ''
+      wx.removeStorageSync('exam-timer-report-origin')
+      this.setData({ reportOrigin: origin })
+      this.showReport(report, { keepOpen: origin === 'history' })
+      return
+    }
+    // 从报告页切到别的页面再回首页时，不再停留在旧报告
+    if (this.reportLeftPage && this.data.view === 'report') {
+      this.reportLeftPage = false
+      this.resetToHome()
+    }
     const homeTimerRequest = wx.getStorageSync('exam-timer-home-timer')
     if (homeTimerRequest) wx.removeStorageSync('exam-timer-home-timer')
     this.setData({ homeTimerOverride: !!homeTimerRequest })
@@ -220,20 +265,39 @@ Page({
     this.loadHomeConfig()
     this.loadHomeTodo()
     this.loadHomeStats()
+    this.playIncentiveReveal()
+    this.playHomeReveal()
     setTimeout(() => this.measureConfigScroll(), 150)
-    const report = wx.getStorageSync('exam-timer-pending-report')
-    if (report) {
-      wx.removeStorageSync('exam-timer-pending-report')
-      this.setOrientation('portrait')
-      this.showReport(report)
-      return
-    }
+    this.measureSketchSliders()
     const pendingModules = wx.getStorageSync('exam-timer-pending-modules')
     if (pendingModules) {
       wx.removeStorageSync('exam-timer-pending-modules')
-      this.setOrientation('portrait')
       this.setData({ modules: this.withIds(pendingModules), templateName: '我的习惯', view: 'config' }, this.refreshConfig)
     }
+  },
+
+  // 首页主体每次出现都重新播放入场动效
+  playHomeReveal() {
+    clearTimeout(this.homeRevealTimer)
+    clearTimeout(this.homeRevealOffTimer)
+    this.setData({ homeReveal: false }, () => {
+      this.homeRevealTimer = setTimeout(() => this.setData({ homeReveal: true }), 40)
+      // 入场播完就把 reveal 摘掉：否则卡片带 animation-delay，拖动换位后
+      // delay 变化会让动画重新排队，被挤走的卡片会先消失再出现
+      this.homeRevealOffTimer = setTimeout(() => this.setData({ homeReveal: false }), 1250)
+    })
+  },
+
+  // 首页激励区每次出现都 Q 弹一下（切回首页、重新进入都生效）
+  playIncentiveReveal() {
+    clearTimeout(this.incentiveRevealOnTimer)
+    clearTimeout(this.incentiveRevealOffTimer)
+    this.setData({ incentiveReveal: false }, () => {
+      this.incentiveRevealOnTimer = setTimeout(() => {
+        this.setData({ incentiveReveal: true })
+        this.incentiveRevealOffTimer = setTimeout(() => this.setData({ incentiveReveal: false }), 900)
+      }, 40)
+    })
   },
 
   onShareAppMessage() {
@@ -246,7 +310,7 @@ Page({
     }
     const total = this.data.modules.reduce((sum, item) => sum + (Number(item.targetMinutes) || 0), 0)
     return {
-      title: `用泡泡计时器练 ${this.data.modules.length} 个模块、${total} 分钟`,
+      title: `用小鱼计时器练 ${this.data.modules.length} 个模块、${total} 分钟`,
       path: '/pages/index/index'
     }
   },
@@ -254,7 +318,7 @@ Page({
   onShareTimeline() {
     const total = this.data.modules.reduce((sum, item) => sum + (Number(item.targetMinutes) || 0), 0)
     return {
-      title: `泡泡计时器 · ${this.data.modules.length} 个模块 ${total} 分钟备考计划`,
+      title: `小鱼计时器 · ${this.data.modules.length} 个模块 ${total} 分钟备考计划`,
       query: ''
     }
   },
@@ -265,15 +329,40 @@ Page({
     clearTimeout(this.templateSwitchTimer)
     clearTimeout(this.tomatoPopTimer)
     if (this.reportAnimTimer) clearTimeout(this.reportAnimTimer)
+    clearTimeout(this.moduleBurstTimer)
+    clearTimeout(this.templateBurstTimer)
   },
 
   // ---- 重要日子倒计时 ----
   loadHomeConfig() {
     const settings = app.getSettings ? app.getSettings() : {}
+    const savedPrimary = settings.homePrimary || 'timer'
+    const primary = savedPrimary === 'quick' ? 'quick-stopwatch' : savedPrimary
+    const quickMeta = {
+      'quick-stopwatch': { tab: 'stopwatch', name: '秒表', display: '00:00' },
+      'quick-countdown': { tab: 'countdown', name: '计时器', display: this.quickHomeCountdownText() },
+      'quick-pomodoro': { tab: 'pomodoro', name: '番茄钟', display: '25:00' }
+    }
+    const quick = quickMeta[primary] || { tab: '', name: '', display: '' }
+    if (savedPrimary === 'quick') app.saveSettings && app.saveSettings({ homePrimary: primary })
     this.setData({
-      homePrimary: settings.homePrimary || 'timer',
+      homePrimary: primary,
+      homeQuickTab: quick.tab,
+      homeQuickName: quick.name,
+      homeQuickDisplay: quick.display,
       incentiveType: settings.incentiveType || 'tomato'
     })
+  },
+
+  quickHomeCountdownText() {
+    let minutes = 30
+    try {
+      const state = wx.getStorageSync('exam-timer-quick-state') || {}
+      minutes = Math.max(1, Number(state.selectedPreset) || 30)
+    } catch (e) {}
+    const hour = Math.floor(minutes / 60)
+    const min = minutes % 60
+    return hour ? `${hour}:${pad(min)}:00` : `${pad(min)}:00`
   },
 
   loadHomeTodo() {
@@ -312,6 +401,24 @@ Page({
     })
   },
 
+  openQuickPage(event) {
+    const tab = event && event.currentTarget && event.currentTarget.dataset
+      ? event.currentTarget.dataset.tab
+      : ''
+    const url = tab && ['stopwatch', 'countdown', 'pomodoro'].indexOf(tab) >= 0
+      ? `/pages/quick/quick?tab=${tab}`
+      : '/pages/quick/quick'
+    wx.navigateTo({ url })
+  },
+
+  startQuickHome(event) {
+    const tab = event && event.currentTarget && event.currentTarget.dataset
+      ? event.currentTarget.dataset.tab
+      : this.data.homeQuickTab
+    if (!tab) return
+    wx.navigateTo({ url: `/pages/quick/quick?tab=${tab}&autostart=1` })
+  },
+
   openTodoPage() {
     wx.navigateTo({ url: '/pages/todo/todo' })
   },
@@ -333,6 +440,25 @@ Page({
 
   exitTimerOverride() {
     this.setData({ homeTimerOverride: false })
+  },
+
+  // 顶栏返回：任何首页子页面都回到首页主视图
+  goHomeView() {
+    if (this.data.view === 'report') {
+      // 清掉待恢复报告，避免返回首页后又被 onShow 拉回报告页
+      wx.removeStorageSync('exam-timer-pending-report')
+      wx.removeStorageSync('exam-timer-report-origin')
+      const fromHistory = this.data.reportOrigin === 'history'
+      this.resetToHome()
+      this.setData({ reportOrigin: '' })
+      if (fromHistory) wx.switchTab({ url: '/pages/history/history' })
+      return
+    }
+    if (this.data.view !== 'config') {
+      this.backToConfig()
+      return
+    }
+    if (this.data.homeTimerOverride) this.setData({ homeTimerOverride: false })
   },
 
   loadImportantDates() {
@@ -534,23 +660,31 @@ Page({
     const settings = app.getSettings ? app.getSettings() : {}
     const incentiveType = settings.incentiveType || this.data.incentiveType || 'tomato'
     const tomatoTarget = 5
-    const icons = count === 0
-      ? [{ id: 0, filled: false }]
-      : Array.from({ length: Math.min(count, TOMATO_SHOW_LIMIT) }, (_, index) => ({
-        id: index,
-        filled: true
-      }))
     const previous = this.lastTomatoCount
     const pop = typeof previous === 'number' && count > previous
+    const visibleCount = count === 0 ? 0 : Math.min(count, TOMATO_GRID_LIMIT)
+    const icons = count === 0
+      ? [{ id: 0, filled: false, delay: 0 }]
+      : Array.from({ length: visibleCount }, (_, index) => ({
+        id: index,
+        filled: true,
+        latest: pop && index === visibleCount - 1,
+        delay: index < 10 ? index * 24 : 240
+      }))
     this.lastTomatoCount = count
+    const rows = []
+    for (let start = 0; start < icons.length; start += TOMATO_COLUMNS) {
+      rows.push({ key: `incentive-row-${start}`, items: icons.slice(start, start + TOMATO_COLUMNS) })
+    }
     const progress = Math.min(100, Math.round((count / tomatoTarget) * 100))
     this.setData({
       tomatoCount: count,
       tomatoIcons: icons,
+      incentiveRows: rows,
       tomatoProgress: progress,
       tomatoTarget: tomatoTarget,
       incentiveType,
-      tomatoCaption: count > TOMATO_SHOW_LIMIT ? `+${count - TOMATO_SHOW_LIMIT}` : (count === 0 ? '完成计时收番茄' : ''),
+      tomatoCaption: count > TOMATO_GRID_LIMIT ? `×${count}` : '',
       tomatoPop: pop
     })
     if (pop) {
@@ -602,33 +736,75 @@ Page({
             : elapsed > targetSeconds
               ? `超时 ${formatTime(elapsed - targetSeconds)}`
               : `提前 ${formatTime(targetSeconds - elapsed)}`
-      // 每行按自己的目标/实际最大值做满格，短模块也不会缩成一条线
-      const rawMax = Math.max(elapsed, targetSeconds, 60)
-      const scale = rawMax * 1.06
+      // 每行按 计划/实际 里的大者做满格：满格之外不再留轨道，超时/提前都只占满格内的差异段
+      const scale = Math.max(elapsed, targetSeconds, 1)
+      const planPercent = Math.round(targetSeconds / scale * 100)
+      const usedPercent = Math.round(elapsed / scale * 100)
+      const diffKind = elapsed > targetSeconds ? 'over' : elapsed < targetSeconds ? 'ahead' : 'equal'
       return {
         ...item,
         statusCode,
         statusLabel,
         deltaText,
         actualText: item.elapsedSeconds !== undefined ? formatTime(elapsed) : item.actualText,
-        actualPercent: Math.round(elapsed / scale * 100),
-        targetPercent: Math.round(targetSeconds / scale * 100),
+        actualPercent: usedPercent,
+        targetPercent: planPercent,
+        themePercent: Math.min(planPercent, usedPercent),
+        diffPercent: Math.max(0, Math.abs(planPercent - usedPercent)),
+        diffKind,
+        overPercent: statusCode === 'overtime' ? Math.max(4, usedPercent - planPercent) : 0,
         sharePercent: Math.round(elapsed / Math.max(1, report.totalActual || totalActualSeconds) * 100)
       }
     })
     const slowest = rows.filter(item => (item.elapsedSeconds || 0) > 0).sort((a, b) => (b.elapsedSeconds || 0) - (a.elapsedSeconds || 0))[0]
     const shortest = rows.filter(item => (item.elapsedSeconds || 0) > 0).sort((a, b) => (a.elapsedSeconds || 0) - (b.elapsedSeconds || 0))[0]
+    const passRate = completedRows.length ? Math.round(completedRows.filter(item => (item.elapsedSeconds || 0) <= (item.targetMinutes || 0) * 60).length / completedRows.length * 100) : 0
+    const verdict = passRate >= 80 ? '节奏很稳' : passRate >= 50 ? '过半达标' : '下次再收一点'
+    const overtimeCount = rows.filter(item => item.statusCode === 'overtime').length
+    const onTrackCount = rows.filter(item => item.statusCode === 'on-track' || item.statusCode === 'near').length
+    const totalScale = Math.max(totalTargetSeconds, totalActualSeconds, 60)
+    const planBarPercent = Math.round(totalTargetSeconds / totalScale * 100)
+    const actualBarPercent = Math.round(totalActualSeconds / totalScale * 100)
+    const timeRate = totalTargetSeconds > 0 ? Math.min(100, Math.round(totalActualSeconds / totalTargetSeconds * 100)) : 0
+    const diffSeconds = totalActualSeconds - totalTargetSeconds
+    const absDiff = Math.abs(diffSeconds)
+    const diffOver = diffSeconds > 0
+    const diffText = absDiff < 10
+      ? '刚刚好'
+      : `${diffOver ? '超时' : '提前'} ${absDiff < 60 ? `${absDiff} 秒` : `${Math.round(absDiff / 60)} 分钟`}`
+    let fishTip = ''
+    if (!completedRows.length) {
+      fishTip = '还没跑完模块，下次先选个短的。'
+    } else if (incompleteCount && passRate >= 80) {
+      fishTip = `已完成的都收住了，还有 ${incompleteCount} 个没跑完。`
+    } else if (incompleteCount && passRate < 50) {
+      fishTip = `这次偏赶，还有 ${incompleteCount} 个没跑完。`
+    } else if (passRate >= 80) {
+      fishTip = `节奏很稳，${onTrackCount} 个模块按计划收住。`
+    } else if (passRate >= 50) {
+      fishTip = `一半模块跟上节奏，${slowest ? slowest.name : '最长模块'}稍慢。`
+    } else {
+      fishTip = `这次偏赶，先放宽${slowest ? slowest.name : '最长模块'}的计划。`
+    }
     return {
       ...report,
       startedAtText: report.startedAt ? formatDateTime(report.startedAt) : report.startedAtText,
       totalActualText: report.totalActual !== undefined ? formatTime(report.totalActual) : report.totalActualText,
-      overtimeCount: rows.filter(item => item.statusCode === 'overtime').length,
+      overtimeCount,
       incompleteCount,
-      onTrackCount: rows.filter(item => item.statusCode === 'on-track' || item.statusCode === 'near').length,
-      passRate: completedRows.length ? Math.round(completedRows.filter(item => (item.elapsedSeconds || 0) <= (item.targetMinutes || 0) * 60).length / completedRows.length * 100) : 0,
+      onTrackCount,
+      passRate,
+      verdict,
       totalTargetSeconds,
       totalTarget: report.totalTarget !== undefined ? report.totalTarget : Math.round(totalTargetSeconds / 60),
       totalActualPercent: Math.min(100, Math.round(totalActualSeconds / Math.max(1, totalTargetSeconds) * 100)),
+      planBarPercent,
+      actualBarPercent,
+      timeRate,
+      over: totalActualSeconds > totalTargetSeconds,
+      diffOver,
+      diffText,
+      fishTip,
       slowestName: slowest ? slowest.name : '',
       slowestText: slowest ? slowest.actualText : '',
       shortestName: shortest ? shortest.name : '',
@@ -637,22 +813,42 @@ Page({
     }
   },
 
-  showReport(record) {
+  showReport(record, options) {
     const report = this.prepareReport(record)
     const rows = this.decorateRows(report.rows)
-    const activeRows = rows.filter(item => (item.elapsedSeconds || 0) > 0)
+    const actualSeconds = report.totalActual !== undefined
+      ? report.totalActual
+      : report.rows.reduce((sum, item) => sum + (item.elapsedSeconds || 0), 0)
+    const workedRows = rows.filter(item => (item.elapsedSeconds || 0) > 0)
     this.setData({
       view: 'report',
-      report: { ...report, passRate: 0, totalActualPercent: 0, totalTarget: 0 },
-      reportView: activeRows.length ? activeRows : rows,
+      report: { ...report, passRate: 0, totalActualPercent: 0, totalTarget: 0, timeRate: 0, totalActualText: '00:00', diffText: report.diffText, diffOver: report.diffOver },
+      reportView: rows,
+      reportModuleRows: workedRows.length ? workedRows : rows,
       reportExpanded: false
     })
-    this.animateReportNumbers(report.passRate, report.totalActualPercent, report.totalTarget || Math.round(report.totalTargetSeconds / 60))
+    this.animateReportNumbers(report.passRate, report.totalActualPercent, report.totalTarget || Math.round(report.totalTargetSeconds / 60), report.timeRate, actualSeconds)
+    // 从记录页翻看历史报告时不要 15 秒自动踢走用户
+    if (options && options.keepOpen) {
+      if (this.reportAutoExitTimer) { clearTimeout(this.reportAutoExitTimer); this.reportAutoExitTimer = null }
+    } else {
+      this.scheduleReportAutoExit()
+    }
+    const dock = this.selectComponent && this.selectComponent('#brandDock')
+    if (dock && typeof dock.celebrate === 'function') dock.celebrate()
   },
 
-  animateReportNumbers(targetRate, targetActual, targetTargetMinutes) {
+  scheduleReportAutoExit() {
+    if (this.reportAutoExitTimer) clearTimeout(this.reportAutoExitTimer)
+    this.reportAutoExitTimer = setTimeout(() => {
+      this.reportAutoExitTimer = null
+      if (this.data.view === 'report') this.backToConfig()
+    }, 15000)
+  },
+
+  animateReportNumbers(targetRate, targetActual, targetTargetMinutes, targetTimeRate, targetActualSeconds) {
     if (this.reportAnimTimer) clearTimeout(this.reportAnimTimer)
-    const duration = 400
+    const duration = 760
     const startAt = Date.now()
     const step = () => {
       const elapsed = Date.now() - startAt
@@ -661,10 +857,14 @@ Page({
       const currentRate = Math.round(targetRate * eased)
       const currentActual = Math.round(targetActual * eased)
       const currentTarget = Math.round(targetTargetMinutes * eased)
+      const currentTimeRate = Math.round(targetTimeRate * eased)
+      const currentSeconds = Math.round(targetActualSeconds * eased)
       this.setData({
         'report.passRate': currentRate,
         'report.totalActualPercent': currentActual,
-        'report.totalTarget': currentTarget
+        'report.totalTarget': currentTarget,
+        'report.timeRate': currentTimeRate,
+        'report.totalActualText': formatTime(currentSeconds)
       })
       if (progress < 1) {
         this.reportAnimTimer = setTimeout(step, 16)
@@ -684,18 +884,73 @@ Page({
   normalizeModuleName(event) {
     const index = Number(event.currentTarget.dataset.index)
     const modules = clone(this.data.modules)
-    const name = modules[index].name.trim()
+    const name = String(modules[index].name || '').trim()
     if (modules[index].name === name && name) return
-    modules[index].name = name || '未命名模块'
+    modules[index].name = name || this.nextModuleName(modules, index)
     this.setData({ modules })
+  },
+
+  nextModuleName(modules, skipIndex) {
+    const used = new Set((modules || []).map((item, index) => (
+      index === skipIndex ? '' : String((item && item.name) || '').trim()
+    )).filter(Boolean))
+    let index = 1
+    while (used.has(`新模块 ${index}`)) index += 1
+    return `新模块 ${index}`
   },
 
   changeMinutes(event) {
     this.updateMinutes(event.currentTarget.dataset.index, event.detail.value)
   },
+  // 预先缓存所有滑块的位置和宽度，避免第一次按下时等待异步测量，拖动延迟跟手
+  measureSketchSliders() {
+    setTimeout(() => {
+      wx.createSelectorQuery().in(this).selectAll('.sketch-slider').boundingClientRect(rects => {
+        if (!Array.isArray(rects) || !rects.length) return
+        this.sketchRects = rects.map(rect => rect ? { left: rect.left, width: rect.width } : null)
+      }).exec()
+    }, 80)
+  },
 
-  changeSlider(event) {
-    this.updateMinutes(event.currentTarget.dataset.index, event.detail.value)
+  // 手绘风滑块：用触摸位置换算分钟，替代原生细线 slider
+  startSketchSlider(event) {
+    const index = Number(event.currentTarget.dataset.index)
+    const touch = event.touches && event.touches[0]
+    if (!touch) return
+    this.sketchDragging = true
+    const cached = this.sketchRects && this.sketchRects[index]
+    if (cached && cached.width) {
+      this.sketchSliderRect = { index, left: cached.left, width: cached.width }
+      this.applySketchSlider(touch.clientX)
+      return
+    }
+    wx.createSelectorQuery().in(this).select(`#sketch-slider-${index}`).boundingClientRect(rect => {
+      if (!rect || !rect.width) return
+      this.sketchSliderRect = { index, left: rect.left, width: rect.width }
+      if (this.sketchRects) this.sketchRects[index] = { left: rect.left, width: rect.width }
+      this.applySketchSlider(touch.clientX)
+    }).exec()
+  },
+
+  moveSketchSlider(event) {
+    const touch = event.touches && event.touches[0]
+    if (!touch || !this.sketchSliderRect) return
+    this.applySketchSlider(touch.clientX)
+  },
+
+  endSketchSlider() {
+    this.sketchSliderRect = null
+    this.sketchDragging = false
+    this.refreshConfig()
+  },
+
+  applySketchSlider(clientX) {
+    const rect = this.sketchSliderRect
+    if (!rect) return
+    const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width))
+    const minutes = Math.round(ratio * 60)
+    if (minutes === this.data.modules[rect.index].targetMinutes) return
+    this.updateMinutes(rect.index, minutes)
   },
 
   adjustMinutes(event) {
@@ -707,41 +962,28 @@ Page({
   updateMinutes(index, value) {
     const modules = clone(this.data.modules)
     modules[index].targetMinutes = Math.min(60, Math.max(0, Number(value) || 0))
-    this.setData({ modules }, this.refreshConfig)
+    const totalMinutes = modules.reduce((sum, item) => sum + item.targetMinutes, 0)
+    this.setData({ modules, totalMinutes })
+    if (!this.sketchDragging) this.refreshConfig()
   },
 
-  openPresetSheet() {
-    if ((this.data.modules || []).length >= MODULE_LIMIT) {
+  // 点「＋」直接加一个默认模块，名字和时长都在卡片上自己改
+  addModuleDirect() {
+    const modules = this.data.modules || []
+    if (modules.length >= MODULE_LIMIT) {
       wx.showToast({ title: `最多 ${MODULE_LIMIT} 个模块`, icon: 'none' })
       return
     }
-    this.setData({ presetSheetOpen: true })
-  },
-
-  closePresetSheet() {
-    this.setData({ presetSheetOpen: false })
-  },
-
-  pickPreset(event) {
-    if ((this.data.modules || []).length >= MODULE_LIMIT) {
-      wx.showToast({ title: `最多 ${MODULE_LIMIT} 个模块`, icon: 'none' })
-      this.setData({ presetSheetOpen: false })
-      return
-    }
-    const preset = (this.data.presets || [])[Number(event.currentTarget.dataset.index)]
-    if (!preset) return
-    const modules = this.data.modules.concat({ id: `module-${Date.now()}`, name: preset.name, targetMinutes: preset.minutes })
-    this.setData({ modules, presetSheetOpen: false, addVisible: true }, this.refreshConfig)
-  },
-
-  pickCustom() {
-    if ((this.data.modules || []).length >= MODULE_LIMIT) {
-      wx.showToast({ title: `最多 ${MODULE_LIMIT} 个模块`, icon: 'none' })
-      this.setData({ presetSheetOpen: false })
-      return
-    }
-    const modules = this.data.modules.concat({ id: `module-${Date.now()}`, name: `新模块 ${this.data.modules.length + 1}`, targetMinutes: 10 })
-    this.setData({ modules, presetSheetOpen: false, addVisible: true }, this.refreshConfig)
+    const next = modules.concat({
+      id: `module-${Date.now()}`,
+      name: this.nextModuleName(modules),
+      targetMinutes: 10
+    })
+    if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
+    this.setData({ modules: next, addVisible: true }, () => {
+      this.refreshConfig()
+      this.measureSketchSliders()
+    })
   },
 
   removeModule(event) {
@@ -756,7 +998,41 @@ Page({
       success: ({ confirm }) => {
         if (!confirm) return
         const modules = this.data.modules.filter((_, itemIndex) => itemIndex !== index)
-        this.setData({ modules }, this.refreshConfig)
+        if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
+        this.setData({ burstingIndex: index })
+        clearTimeout(this.moduleBurstTimer)
+        this.moduleBurstTimer = setTimeout(() => {
+          this.setData({ modules, burstingIndex: -1 }, this.refreshConfig)
+        }, 580)
+      }
+    })
+  },
+
+  // 标题栏的「×」：一次清空当前所有训练模块
+  clearModules() {
+    const modules = this.data.modules || []
+    if (!modules.length) return
+    wx.showModal({
+      title: '清空训练模块',
+      content: `确定删除全部 ${modules.length} 个训练模块吗？`,
+      confirmText: '清空',
+      confirmColor: '#E8442F',
+      success: ({ confirm }) => {
+        if (!confirm) return
+        if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
+        clearTimeout(this.moduleBurstTimer)
+        this.setData({
+          modules: [],
+          burstingIndex: -1,
+          dragging: false,
+          dragIndex: -1,
+          dragStyle: '',
+          dragStyles: [],
+          settleIndex: -1,
+          settleStyle: '',
+          templateName: '',
+          totalMinutes: 0
+        }, this.refreshConfig)
       }
     })
   },
@@ -820,7 +1096,7 @@ Page({
       dragIndex: index,
       settleIndex: -1,
       settleStyle: '',
-      dragStyle: 'transform: translateY(0px) scale(1.02); z-index: 4;',
+      dragStyle: 'transition: transform 0ms, box-shadow 140ms ease, background-color 140ms ease; transform: translateY(0px); z-index: 4;',
       dragStyles: Array(this.data.modules.length).fill('')
     })
   },
@@ -855,7 +1131,7 @@ Page({
     } else if (targetIndex < originalIndex) {
       for (let index = targetIndex; index < originalIndex; index += 1) dragStyles[index] = `transform: translateY(${stride}px)`
     }
-    this.setData({ dragStyles, dragStyle: `transform: translateY(${Math.round(delta)}px) scale(1.02); z-index: 4;` })
+    this.setData({ dragStyles, dragStyle: `transition: transform 0ms; transform: translateY(${Math.round(delta)}px) scale(1.015); z-index: 4;` })
   },
 
   touchEnd() {
@@ -864,29 +1140,43 @@ Page({
     const fromIndex = this.dragOriginalIndex
     const length = this.data.modules.length
     const toIndex = Math.min(length - 1, Math.max(0, this.dragTargetIndex))
+    clearTimeout(this.dragWatchdog)
+    this.dragHaptic = false
+    // 只是点了一下把手、没有真正换位：不重建列表，避免整排卡片重排闪一下
+    if (toIndex === fromIndex && Math.abs(this.dragDelta || 0) < 8) {
+      this.setData({
+        dragging: false,
+        dragIndex: -1,
+        dragStyle: '',
+        dragStyles: Array(length).fill(''),
+        settleIndex: -1,
+        settleStyle: ''
+      })
+      return
+    }
     const stride = this.getStride()
     const residual = Math.round(this.dragDelta - (toIndex - fromIndex) * stride)
     const modules = clone(this.data.modules)
     const [moved] = modules.splice(fromIndex, 1)
     modules.splice(toIndex, 0, moved)
-    this.dragHaptic = false
-    clearTimeout(this.dragWatchdog)
     const payload = {
       modules,
       dragging: false,
       dragIndex: -1,
       dragStyle: '',
-      dragStyles: Array(modules.length).fill(''),
+      dragStyles: Array(modules.length).fill('transition: transform 0ms; transform: translateY(0px)'),
       settleIndex: -1,
       settleStyle: ''
     }
     // 松手后把卡片从手指位置平滑吸附到最终格位，避免视觉跳变
     if (Math.abs(residual) > 2) {
       payload.settleIndex = toIndex
-      payload.settleStyle = `transform: translateY(${residual}px) scale(1.02); z-index: 4;`
+      payload.settleStyle = `transition: transform 0ms; transform: translateY(${residual}px) scale(1.015); z-index: 4;`
     }
     this.setData(payload, () => {
       this.refreshConfig()
+      const neutral = Array(modules.length).fill('')
+      setTimeout(() => this.setData({ dragStyles: neutral }), 16)
       if (payload.settleIndex < 0) return
       clearTimeout(this.settleTimer)
       this.settleTimer = setTimeout(() => {
@@ -949,6 +1239,8 @@ Page({
 
   onConfigScroll(event) {
     const detail = event.detail || {}
+    const nextDockDim = (detail.scrollTop || 0) > 48
+    if (nextDockDim !== this.data.dockDim) this.setData({ dockDim: nextDockDim })
     const scrollHeight = detail.scrollHeight || 0
     if (!scrollHeight) return
     const viewHeight = this.configScrollHeight || detail.scrollHeight
@@ -1032,14 +1324,19 @@ Page({
           wx.showToast({ title: '删除失败，请稍后重试', icon: 'none' })
           return
         }
-        const payload = { templates, templateName: currentName }
-        if (this.data.templateName === name && fallback && fallback.modules) {
-          payload.modules = this.withIds(clone(fallback.modules))
-        }
-        this.setData(payload, () => {
-          if (payload.modules) this.refreshConfig()
-        })
-        wx.showToast({ title: '模板已删除', icon: 'none' })
+        if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
+        this.setData({ burstingTemplate: name })
+        clearTimeout(this.templateBurstTimer)
+        this.templateBurstTimer = setTimeout(() => {
+          const payload = { templates, templateName: currentName, burstingTemplate: '' }
+          if (this.data.templateName === name && fallback && fallback.modules) {
+            payload.modules = this.withIds(clone(fallback.modules))
+          }
+          this.setData(payload, () => {
+            if (payload.modules) this.refreshConfig()
+          })
+          wx.showToast({ title: '模板已删除', icon: 'none' })
+        }, 580)
       }
     })
   },
@@ -1060,11 +1357,6 @@ Page({
       }
     })
   },
-
-  openSettings() {
-    this.goPage('/pages/settings/settings')
-  },
-
   chooseMode(event) {
     const key = event.currentTarget.dataset.key
     const modeInfo = (this.data.modes || []).find(item => item.key === key)
@@ -1077,20 +1369,6 @@ Page({
   setModeData(modeInfo) {
     this.setData({ mode: modeInfo.key, modeName: modeInfo.name })
   },
-
-  openStats(event) {
-    const tab = (event.currentTarget.dataset.tab || 'overview')
-    if (tab === 'focus') {
-      this.goPage('/pages/settings/settings')
-      return
-    }
-    if (tab === 'todo') {
-      this.goPage('/pages/todo/todo')
-      return
-    }
-    this.goPage(`/pages/stats/stats?tab=${tab}`)
-  },
-
   loadTemplate(event) {
     const template = this.data.templates[Number(event.currentTarget.dataset.index)]
     if (!template || !template.modules) return
@@ -1133,7 +1411,21 @@ Page({
       totalTargetSeconds,
       tickSound: app.getSettings().tickSound === true
     })
-    wx.navigateTo({ url: '/pages/timer/timer' })
+    this.launchTimer()
+  },
+
+  // 进入横屏计时页前先铺满主题底色，遮住转屏瞬间上一页被放大的画面
+  launchTimer() {
+    if (this.data.timerLaunching) return
+    this.setData({ timerLaunching: true }, () => {
+      clearTimeout(this.timerCoverTimer)
+      this.timerCoverTimer = setTimeout(() => {
+        wx.navigateTo({
+          url: '/pages/blank/blank?mode=enter',
+          fail: () => this.setData({ timerLaunching: false })
+        })
+      }, 60)
+    })
   },
 
   startTraining() {
@@ -1154,115 +1446,355 @@ Page({
   },
 
   restartTraining() {
-    const rows = this.data.report && this.data.report.rows ? this.data.report.rows : []
+    if (this.reportAutoExitTimer) {
+      clearTimeout(this.reportAutoExitTimer)
+      this.reportAutoExitTimer = null
+    }
+    const report = this.data.report || {}
+    let rows = report.rows || []
+    // 当前报告没带模块时，退回最近一次训练记录，避免点了没反应
+    if (!rows.length) {
+      const records = wx.getStorageSync(app.globalData.recordsKey) || []
+      const latest = records[0]
+      if (latest && Array.isArray(latest.rows) && latest.rows.length) rows = latest.rows
+    }
     if (!rows.length) {
       wx.showToast({ title: '没有可重练的模块', icon: 'none' })
       return
     }
+    // 上一次进计时页的遮罩状态若没清干净，launchTimer 会静默 return
+    if (this.data.timerLaunching) {
+      clearTimeout(this.timerCoverTimer)
+      this.setData({ timerLaunching: false })
+    }
     this.beginTraining(
       rows.map(item => ({ id: item.id, name: item.name, targetMinutes: item.targetMinutes })),
-      this.data.report.mode || this.data.mode || 'countup'
+      report.mode || this.data.mode || 'countup'
     )
   },
 
+  // 首页只保留模块化计时；番茄钟独立在快捷计时里，不再和模块混用
   backToConfig() {
-    this.setOrientation('portrait')
-    this.setData({ view: 'config' }, this.refreshConfig)
-  },
-
-  setOrientation(value) {
-    if (wx.setDeviceOrientation) {
-      wx.setDeviceOrientation({ value })
+    if (this.reportAnimTimer) {
+      clearTimeout(this.reportAnimTimer)
+      this.reportAnimTimer = null
     }
-  },
-
-  goTools() {
-    wx.switchTab({ url: '/pages/tools/tools' })
-  },
-
-  handleBack() {
-    if (this.data.view !== 'config') {
-      this.backToConfig()
-      return
+    if (this.reportAutoExitTimer) {
+      clearTimeout(this.reportAutoExitTimer)
+      this.reportAutoExitTimer = null
     }
-    const pages = getCurrentPages()
-    if (pages.length > 1) {
-      wx.navigateBack()
-      return
-    }
-    wx.showToast({ title: '当前已是首页', icon: 'none' })
+    wx.removeStorageSync('exam-timer-pending-report')
+    wx.removeStorageSync('exam-timer-report-origin')
+    this.reportLeftPage = false
+    this.setData({ view: 'config', reportOrigin: '' }, this.refreshConfig)
   },
 
-
-
-  backToConfig() {
-    this.setOrientation('portrait')
-    this.setData({ view: 'config' }, this.refreshConfig)
+  // 底部 Dock 点“首页”时使用：无论在报告页还是临时计时首页，都回到主工作台
+  resetToHome() {
+    if (this.reportAnimTimer) {
+      clearTimeout(this.reportAnimTimer)
+      this.reportAnimTimer = null
+    }
+    if (this.reportAutoExitTimer) {
+      clearTimeout(this.reportAutoExitTimer)
+      this.reportAutoExitTimer = null
+    }
+    this.reportLeftPage = false
+    this.setData({ view: 'config', homeTimerOverride: false }, this.refreshConfig)
   },
 
-  setOrientation(value) {
-    if (wx.setDeviceOrientation) {
-      wx.setDeviceOrientation({ value })
-    }
+  onTabItemTap() {
+    if (this.data.view === 'report') this.resetToHome()
+  },
+  openImportantPage() {
+    wx.navigateTo({ url: '/pages/important/important' })
+  },
+  loadReportLogo() {
+    if (this.reportLogoImage || this.reportLogoLoading) return
+    this.reportLogoLoading = true
+    loadImage('/assets/brand/logo-mark.png').then(image => {
+      this.reportLogoLoading = false
+      if (image) this.reportLogoImage = image
+    })
   },
 
   createReportImage(callback) {
-    const report = this.data.report
-    const palette = ((app.getTheme && app.getTheme().canvas) || {
+    const report = this.data.report || {}
+    const theme = (app.getTheme && app.getTheme()) || {}
+    const palette = theme.canvas || {
       bg: '#FBF3DF', card: '#FFFCF2', panel: '#4B3A2A', onPanel: '#FFFCF2', ink: '#4B3A2A',
       sub: '#8A7048', accent: '#FFE7A5', soft: '#FFF3D6', highlight: '#FFD166', success: '#4F9B74', danger: '#E8442F'
-    })
-    const context = wx.createCanvasContext('reportCanvas', this)
+    }
+    const tone = theme.css || {}
+    const edge = tone.edge || palette.panel
+    const shadow = tone.shadow || palette.panel
+    const card = palette.card
+    const accentBg = tone['accent-bg'] || palette.accent
+    const cream1 = tone['cream-1'] || palette.soft
+    const line = tone.line || palette.soft
+    const primary = tone.primary || palette.highlight
+    const successBg = tone['success-bg'] || palette.soft
+    const dangerBg = tone['danger-bg'] || palette.soft
+    const dangerText = tone['danger-text'] || palette.danger
+    const successText = tone['success-text'] || palette.success
+    const successFill = tone.success || palette.success
+    const W = 750
+    const H = 1200
+    if (!isSupported()) {
+      wx.showModal({ title: '导出失败', content: '当前版本不支持生成图片', showCancel: false })
+      callback('')
+      return
+    }
+    let painter = null
+    try {
+      painter = createPainter(W, H, 2)
+    } catch (error) {
+      console.warn('[report] createPainter failed', error)
+    }
+    if (!painter) {
+      callback('')
+      wx.showModal({ title: '导出失败', content: '图片生成失败，请手动截图保存报告', showCancel: false })
+      return
+    }
+    const context = painter.context
+    const M = 48
+    const CW = W - M * 2
+    const allRows = report.rows || []
+    const workedRows = allRows.filter(row => (row.elapsedSeconds || 0) > 0)
+    const trackedRows = workedRows.length ? workedRows : allRows
+    // 海报最多排 4 个模块，多出来的在框底补一行说明
+    const listRows = trackedRows.slice(0, 4)
+    const moreCount = Math.max(0, trackedRows.length - listRows.length)
+
+    const totalTargetSeconds = report.totalTargetSeconds || allRows.reduce((sum, item) => sum + (item.targetMinutes || 0) * 60, 0)
+    const totalActualSeconds = trackedRows.reduce((sum, item) => sum + (item.elapsedSeconds || 0), 0)
+    const totalScale = Math.max(totalTargetSeconds, totalActualSeconds, 60)
+    const planBarPercent = report.planBarPercent !== undefined
+      ? report.planBarPercent
+      : Math.round(totalTargetSeconds / totalScale * 100)
+    const actualBarPercent = report.actualBarPercent !== undefined
+      ? report.actualBarPercent
+      : Math.round(totalActualSeconds / totalScale * 100)
+    const diffOver = report.diffOver !== undefined ? report.diffOver : totalActualSeconds > totalTargetSeconds
+    const diffText = report.diffText || (diffOver ? '超时' : '提前')
+    const diffNeutral = !diffOver && String(diffText).indexOf('刚刚好') === 0
+    const diffColor = diffNeutral ? palette.ink : diffOver ? dangerText : successText
+    const diffBg = diffNeutral ? cream1 : diffOver ? dangerBg : successBg
+    const passRate = Math.max(0, Math.min(100, report.passRate || 0))
+    const actualLabel = totalActualSeconds > 0 ? formatTime(totalActualSeconds) : (report.totalActualText || '00:00')
+    const targetLabel = `${report.totalTarget || Math.round(totalTargetSeconds / 60)} 分`
+    const modeLabel = report.modeName || this.data.modeName || '专注'
+
+    const rightText = (text, rightX, baseline, size, color) => {
+      const value = String(text || '')
+      context.setFontSize(size)
+      context.setFillStyle(color)
+      context.fillText(value, rightX - context.measureText(value).width, baseline)
+    }
+    const pillWidth = (text, size) => {
+      context.setFontSize(size)
+      return context.measureText(String(text || '')).width + 26
+    }
+
+    // 底色 + 两侧留白里的浅色泡泡
     context.setFillStyle(palette.bg)
-    context.fillRect(0, 0, 750, 1200)
-    context.setFillStyle(palette.panel)
-    context.fillRect(32, 32, 686, 250)
-    context.setFillStyle(palette.onPanel)
-    context.setFontSize(34)
-    context.fillText('训练打卡 · 完成', 64, 92)
-    context.setFillStyle(palette.accent)
-    context.setFontSize(22)
-    context.fillText(`训练时间  ${report.startedAtText}`, 64, 136)
-    context.setFillStyle(palette.highlight)
-    context.setFontSize(54)
-    context.fillText(`${report.passRate}%`, 64, 230)
-    context.setFillStyle(palette.onPanel)
-    context.setFontSize(20)
-    context.fillText(`达标率 · 超时 ${report.overtimeCount}/${report.rows.length} 个模块`, 220, 226)
-    context.setFillStyle(palette.card)
-    context.fillRect(32, 310, 686, 600)
-    context.setFillStyle(palette.ink)
-    context.setFontSize(28)
-    context.fillText('专注记录', 64, 360)
+    context.fillRect(0, 0, W, H)
+    draw.circle(context, 26, 302, 7, cream1)
+    draw.circle(context, 724, 902, 7, cream1)
+
+    // 页头：品牌 logo + 报告名 + 日期
+    if (this.reportLogoImage) {
+      context.drawImage(this.reportLogoImage, M, 26, 40, 40)
+    }
     context.setFillStyle(palette.sub)
-    context.setFontSize(20)
-    context.fillText(`实际用时 ${report.totalActualText}   计划 ${report.totalTarget}:00`, 64, 398)
-    const activeRows = report.rows.filter(row => (row.elapsedSeconds || 0) > 0)
-    const rows = activeRows.length ? activeRows : report.rows
-    rows.forEach((row, index) => {
-      const y = 460 + index * 70
-      context.setFillStyle(palette.soft)
-      context.fillRect(64, y - 28, 622, 48)
-      context.setFillStyle(palette.ink)
-      context.setFontSize(20)
-      context.fillText(`${String(index + 1).padStart(2, '0')}  ${row.name}`, 82, y)
-      context.setFillStyle(row.deltaSeconds > 0 ? palette.danger : palette.success)
-      context.setFontSize(18)
-      context.fillText(`${row.actualText} · ${row.deltaText}`, 420, y)
+    context.setFontSize(18)
+    context.fillText('小鱼计时器 · 训练报告', this.reportLogoImage ? M + 52 : M, 64)
+    rightText(report.startedAtText || '', W - M, 64, 18, palette.sub)
+
+    context.setFillStyle(palette.ink)
+    context.setFontWeight(900)
+    context.setFontSize(44)
+    context.fillText('训练分析', M, 128)
+    context.setFontWeight(700)
+
+    const modeText = `${modeLabel} · ${allRows.length} 个模块`
+    context.setFontSize(17)
+    const modeW = Math.min(CW - 220, context.measureText(modeText).width + 40)
+    draw.stickerPill(context, W - M - modeW, 96, modeW, 34, accentBg, edge, draw.fitText(context, modeText, modeW - 30), palette.ink, 17)
+
+    // 成绩卡：实际专注大数字 + 计划达成环 + 三枚状态胶囊（和小程序顶部那张一致）
+    draw.stickerCard(context, M, 152, CW, 252, 28, card, edge, shadow, 6)
+    draw.roundRect(context, M + 2, 156, 9, 244, 5, primary)
+    context.setFillStyle(palette.sub)
+    context.setFontSize(17)
+    context.fillText('实际专注', M + 30, 190)
+    context.setFillStyle(palette.ink)
+    context.setFontWeight(900)
+    context.setFontSize(46)
+    context.fillText(actualLabel, M + 30, 246)
+    context.setFontWeight(700)
+    context.setFillStyle(palette.sub)
+    context.setFontSize(17)
+    context.fillText(`计划 ${targetLabel}`, M + 30, 278)
+
+    draw.ring(context, 604, 224, 54, passRate, line, primary, 9)
+    draw.circle(context, 604, 224, 38, card)
+    context.setFillStyle(palette.ink)
+    context.setFontWeight(900)
+    context.setFontSize(34)
+    const scoreText = `${passRate}`
+    const scoreW = context.measureText(scoreText).width
+    context.fillText(scoreText, 604 - scoreW / 2, 236)
+    context.setFontWeight(700)
+    context.setFillStyle(palette.sub)
+    context.setFontSize(15)
+    const rateW = context.measureText('计划达成').width
+    context.fillText('计划达成', 604 - rateW / 2, 258)
+
+    const pillGap = 12
+    const pillW = (CW - 48 - pillGap * 2) / 3
+    const statPills = [
+      { value: `${report.onTrackCount || 0}`, label: '达标', bg: cream1, color: palette.ink },
+      { value: `${report.overtimeCount || 0}`, label: '超时', bg: report.overtimeCount ? dangerBg : cream1, color: report.overtimeCount ? dangerText : palette.ink },
+      { value: `${allRows.length}`, label: '模块', bg: cream1, color: palette.ink }
+    ]
+    statPills.forEach((item, index) => {
+      const x = M + 24 + index * (pillW + pillGap)
+      draw.stickerPill(context, x, 316, pillW, 44, item.bg, edge, `${item.value}  ${item.label}`, item.color, 18)
     })
-    context.draw(false, () => {
-      wx.canvasToTempFilePath({
-        canvasId: 'reportCanvas',
-        destWidth: 1500,
-        destHeight: 2400,
-        success: ({ tempFilePath }) => callback(tempFilePath),
-        fail: (error) => wx.showModal({ title: '导出失败', content: error.errMsg || '请手动截图保存报告', showCancel: false })
-      }, this)
+
+    // 时长对比框：只留一句「超时 / 提前多少」，红绿大字
+    draw.stickerCard(context, M, 428, CW, 128, 28, card, edge, shadow, 6)
+    context.setFillStyle(palette.ink)
+    context.setFontWeight(900)
+    context.setFontSize(22)
+    context.fillText('时长对比', M + 24, 468)
+    context.setFillStyle(diffColor)
+    context.setFontSize(36)
+    context.fillText(draw.fitText(context, diffText, CW - 48), M + 24, 528)
+    context.setFontWeight(700)
+
+    // 模块明细框：一个模块一张小卡，超时用红底进度条 + 主题色计划段 + 红色超时段
+    const modTop = 578
+    const modMaxH = 450
+    const modCardH = listRows.length
+      ? Math.min(92, (modMaxH - 56 - (listRows.length - 1) * 10 - 24) / listRows.length)
+      : 0
+    const modH = listRows.length
+      ? 56 + listRows.length * modCardH + (listRows.length - 1) * 10 + 24
+      : 132
+    draw.stickerCard(context, M, modTop, CW, modH, 28, card, edge, shadow, 6)
+    context.setFillStyle(palette.ink)
+    context.setFontWeight(900)
+    context.setFontSize(22)
+    context.fillText('模块明细', M + 24, modTop + 40)
+    context.setFontWeight(700)
+    const listedOnTrack = trackedRows.filter(item => item.statusCode === 'on-track' || item.statusCode === 'near').length
+    const metaText = moreCount
+      ? `${trackedRows.length} 个模块 · ${listedOnTrack} 达标 · 列出前 ${listRows.length}`
+      : `${listedOnTrack}/${trackedRows.length} 达标`
+    rightText(metaText, W - M - 22, modTop + 40, 16, palette.sub)
+
+    if (listRows.length) {
+      const gap = 10
+      const cardH = modCardH
+      const startY = modTop + 56
+      listRows.forEach((item, index) => {
+        const y = startY + index * (cardH + gap)
+        const x = M + 20
+        const w = CW - 40
+        const over = item.statusCode === 'overtime'
+        draw.stickerCard(context, x, y, w, cardH, 20, cream1, edge, shadow, 3)
+        context.setFillStyle(palette.ink)
+        context.setFontWeight(900)
+        context.setFontSize(19)
+        context.fillText(draw.fitText(context, item.name || '', w - 160), x + 16, y + 26)
+        context.setFontWeight(700)
+        const tagText = item.statusLabel || (over ? '超时' : item.statusCode === 'near' ? '接近阈值' : '达标')
+        const tagW = pillWidth(tagText, 14)
+        const tagColor = over ? dangerText : item.statusCode === 'near' ? palette.ink : successText
+        const tagBg = over ? dangerBg : item.statusCode === 'near' ? accentBg : successBg
+        draw.stickerPill(context, x + w - 14 - tagW, y + 6, tagW, 24, tagBg, edge, tagText, tagColor, 14)
+
+        context.setFillStyle(palette.sub)
+        context.setFontSize(15)
+        const planTime = `${item.targetMinutes}:00`
+        const metaY = y + cardH - 28
+        context.fillText(`计划 ${planTime} · 实际 ${item.actualText}`, x + 16, metaY)
+        if (item.deltaText) {
+          rightText(item.deltaText, x + w - 14, metaY, 15, over ? dangerText : successText)
+        }
+
+        const barY = y + cardH - 18
+        const barX = x + 16
+        const barW = w - 32
+        // 满格 = 计划/实际里的大者；主题色 = 计划内完成的部分；红 = 超时，绿 = 提前
+        const planPct = Math.min(100, item.targetPercent !== undefined ? item.targetPercent : 0)
+        const actualPct = Math.min(100, item.actualPercent !== undefined ? item.actualPercent : 0)
+        const themePct = Math.min(100, item.themePercent !== undefined ? item.themePercent : Math.min(planPct, actualPct))
+        const diffPct = Math.max(0, Math.min(100 - themePct, item.diffPercent !== undefined ? item.diffPercent : Math.abs(planPct - actualPct)))
+        draw.roundRect(context, barX, barY, barW, 10, 5, line)
+        if (themePct > 0) {
+          draw.roundRect(context, barX, barY, Math.max(5, barW * themePct / 100), 10, 5, primary)
+        }
+        if (diffPct > 0) {
+          draw.roundRect(context, barX + barW * themePct / 100, barY, Math.max(4, barW * diffPct / 100), 10, 5, over ? palette.danger : successFill)
+        }
+        // 计划线位置放一枚圆把手，和首页训练模块的滑杆一致
+        const knobX = barX + barW * themePct / 100
+        draw.circle(context, knobX, barY + 5, 9, edge)
+        draw.circle(context, knobX, barY + 5, 6, primary)
+      })
+    } else {
+      context.setFillStyle(palette.sub)
+      context.setFontSize(18)
+      context.fillText('这次没有跑完任何模块', M + 24, modTop + 100)
+    }
+
+    // 小鱼复盘框（跟着模块框走，模块少时整体上收）
+    const fishTop = Math.min(1046, modTop + modH + 18)
+    draw.stickerCard(context, M, fishTop, CW, 78, 24, card, edge, shadow, 5)
+    if (this.reportLogoImage) {
+      draw.roundRect(context, M + 16, fishTop + 17, 44, 44, 14, accentBg)
+      context.drawImage(this.reportLogoImage, M + 22, fishTop + 23, 32, 32)
+    }
+    const fishX = M + (this.reportLogoImage ? 74 : 22)
+    context.setFillStyle(palette.sub)
+    context.setFontWeight(900)
+    context.setFontSize(16)
+    context.fillText('小鱼复盘', fishX, fishTop + 28)
+    context.setFillStyle(palette.ink)
+    context.setFontWeight(700)
+    context.setFontSize(18)
+    context.fillText(draw.fitText(context, report.fishTip || '继续保持专注节奏', CW - (fishX - M) - 24), fishX, fishTop + 60)
+
+    // 页脚
+    const footY = Math.min(1166, fishTop + 78 + 44)
+    context.setFillStyle(palette.sub)
+    context.setFontSize(16)
+    context.fillText('小鱼计时器 · 专注记录', M, footY)
+    rightText('长按保存 / 分享', W - M, footY, 16, palette.sub)
+
+    context.draw(false, () => this.exportReportImage(painter, callback))
+  },
+
+  exportReportImage(painter, callback) {
+    exportPainter(painter, 1500, 2400).then(path => {
+      if (path) {
+        callback(path)
+        return
+      }
+      console.warn('[report] canvasToTempFilePath failed')
+      callback('')
+      wx.showModal({ title: '导出失败', content: '图片生成失败，请手动截图保存报告', showCancel: false })
     })
   },
 
   exportReport() {
+    wx.showLoading({ title: '正在生成…', mask: true })
     this.createReportImage(tempFilePath => {
+      wx.hideLoading()
+      if (!tempFilePath) return
       wx.saveImageToPhotosAlbum({
         filePath: tempFilePath,
         success: () => wx.showToast({ title: '打卡图已保存', icon: 'success' }),
@@ -1272,7 +1804,10 @@ Page({
   },
 
   shareReport() {
+    wx.showLoading({ title: '正在生成…', mask: true })
     this.createReportImage((tempFilePath) => {
+      wx.hideLoading()
+      if (!tempFilePath) return
       if (wx.showShareImageMenu) {
         wx.showShareImageMenu({
           path: tempFilePath,

@@ -1,12 +1,14 @@
-<view class="history-page theme-{{theme}}" style="{{themeStyle}}">
+<view class="history-page theme-{{theme}} {{historyReveal ? 'reveal' : ''}}" style="{{themeStyle}}">
   <view class="topbar">
-    <view class="topbar-spacer"></view>
+    <view class="back-icon" bindtap="handleBack" aria-label="返回">‹</view>
     <view class="topbar-title">记录</view>
     <view class="topbar-spacer"></view>
   </view>
 
+  <brand-dock theme-style="{{themeStyle}}" dim="{{dockDim}}" above-tabbar="{{true}}"></brand-dock>
+
   <scroll-view class="history-body" scroll-y>
-    <view class="history-card" wx:for="{{records}}" wx:key="id">
+    <view class="history-card {{burstingIndex === index ? 'bubble-bursting' : ''}}" wx:for="{{records}}" wx:key="id">
       <view class="history-head">
         <view class="history-title-wrap">
           <view class="history-title">{{item.title}}</view>
@@ -22,17 +24,17 @@
         <button class="delete-link" data-index="{{index}}" bindtap="removeRecord">删除</button>
         <button class="history-report-button" data-index="{{index}}" bindtap="openReport">查看报告</button>
       </view>
+        <view class="burst-layer" aria-hidden="true">
+          <view class="burst-ring"></view>
+          <view class="burst-drop d1"></view><view class="burst-drop d2"></view><view class="burst-drop d3"></view><view class="burst-drop d4"></view>
+          <view class="burst-drop d5"></view><view class="burst-drop d6"></view><view class="burst-drop d7"></view><view class="burst-drop d8"></view>
+        </view>
     </view>
 
     <view class="history-empty" wx:if="{{!records.length}}">
-      <view class="empty-fish">
-        <view class="fish-body"></view>
-        <view class="fish-eye"></view>
-        <view class="fish-tail"></view>
-      </view>
-      <text class="empty-title">还没有训练记录</text>
-      <text class="empty-sub">完成一次计时后，报告会出现在这里</text>
-      <view class="empty-tip">点击首页「开始计时」试试 →</view>
+      <image class="empty-logo" src="/assets/brand/logo.png" mode="aspectFit"></image>
+      <text class="empty-short">完成一次计时后，记录会出现在这里</text>
     </view>
   </scroll-view>
+  <view class="timer-launch-cover" wx:if="{{timerLaunching}}"></view>
 </view>

@@ -9,7 +9,7 @@ const START = '/* THEME-TOKENS:START 由 theme/palette.js 生成，勿手改 */'
 const END = '/* THEME-TOKENS:END */'
 
 function blockFor(theme) {
-  const selector = theme.key === 'cream' ? 'page, .theme-cream' : `.theme-${theme.key}`
+  const selector = theme.key === 'sky' ? 'page, .theme-sky' : `.theme-${theme.key}`
   const vars = Object.keys(theme.css)
     .map(name => `  --${name}: ${theme.css[name]};`)
     .join('\n')

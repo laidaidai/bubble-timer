@@ -58,9 +58,12 @@ const fold = (list, expanded, limit) => {
 const CLOCK_STYLES = [
   { key: 'flip', name: '翻页时钟', desc: '机械翻页，复古有质感' },
   { key: 'digital', name: '数字时钟', desc: '等宽数字，清晰克制' },
-  { key: 'neon', name: '霓虹发光', desc: '夜色霓虹，夜间醒目' },
+  { key: 'blocks', name: '积木方块', desc: '立体方块，块面感强' },
+  { key: 'led', name: 'LED 灯', desc: '七段数码管，夜间醒目' },
+  { key: 'neon', name: '霓虹发光', desc: '霓虹光晕，夜间醒目' },
   { key: 'outline', name: '描边空心', desc: '空心描边，轻盈现代' },
-  { key: 'minimal', name: '极简细体', desc: '细字无衬线，安静专注' }
+  { key: 'minimal', name: '圆体极简', desc: '圆润数字，软萌安静' },
+  { key: 'jelly', name: '果冻叠影', desc: '糖果描边，圆润轻快' }
 ]
 
 const DEFAULT_CLOCK_STYLE = 'flip'

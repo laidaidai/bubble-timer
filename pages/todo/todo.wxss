@@ -53,9 +53,11 @@
 .sched-cell { flex: 1; height: 62rpx; margin: 0 3rpx; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2rpx solid transparent; border-radius: 14rpx; }
 .sched-cell.empty { opacity: 0; }
 .sched-cell.today { border-color: var(--line-strong); }
+.sched-cell.has-todo { background: var(--cream-2); border-color: var(--primary-2); }
+.sched-cell.has-todo .sched-day { color: var(--text-warm); }
 .sched-cell.selected { background: var(--primary); border-color: var(--edge); }
 .sched-day { color: var(--ink); font-size: 21rpx; font-weight: 800; line-height: 1.1; }
-.sched-dot { width: 8rpx; height: 8rpx; margin-top: 4rpx; background: var(--primary); border-radius: 50%; }
+.sched-dot { width: 9rpx; height: 9rpx; margin-top: 4rpx; background: var(--primary-2); border-radius: 50%; }
 .sched-cell.selected .sched-dot { background: var(--on-primary); }
 .sched-filter { margin-top: 12rpx; display: flex; align-items: center; justify-content: space-between; gap: 12rpx; padding-top: 12rpx; border-top: 2rpx dashed var(--line); }
 .sched-filter-text { color: var(--ink); font-size: 21rpx; font-weight: 800; }
@@ -95,6 +97,7 @@
 .cal-cell { flex: 1; height: 62rpx; display: flex; align-items: center; justify-content: center; color: var(--ink); background: var(--card); border: 2rpx solid var(--line); border-radius: 12rpx; font-size: 22rpx; font-weight: 800; }
 .cal-cell.empty { background: transparent; border-color: transparent; }
 .cal-cell.today { color: var(--text-warm); border-color: var(--line-strong); }
+.cal-cell.has-todo { color: var(--text-warm); background: var(--cream-2); border-color: var(--primary-2); }
 .cal-cell.selected { color: var(--on-primary); background: var(--primary); border-color: var(--edge); box-shadow: 3rpx 3rpx 0 var(--shadow); }
 
 .time-picker { margin-top: 10rpx; height: 216rpx; background: var(--card); border: 2rpx solid var(--edge); border-radius: 18rpx; }
@@ -109,3 +112,40 @@
 .sheet-actions { flex: 0 0 auto; display: flex; gap: 14rpx; padding: 16rpx 28rpx 22rpx; }
 .sheet-btn { flex: 1; min-height: 80rpx; padding: 18rpx 8rpx; color: var(--ink); background: var(--card); border: 2rpx solid var(--edge); border-radius: 999rpx; box-shadow: 4rpx 5rpx 0 var(--shadow); font-size: 24rpx; font-weight: 900; line-height: 1.2; }
 .sheet-btn.primary { color: var(--on-primary); background: var(--primary); }
+
+/* 动效：日程卡与待办逐条进入 */
+.todo-hero, .sched-card { animation: app-rise-in .38s cubic-bezier(.2, .8, .3, 1) backwards; }
+.todo-item { animation: app-rise-in .34s cubic-bezier(.2, .8, .3, 1) backwards; }
+.todo-item:nth-child(2) { animation-delay: .05s; }
+.todo-item:nth-child(3) { animation-delay: .10s; }
+.todo-item:nth-child(n+4) { animation-delay: .15s; }
+
+/* 勾选完成：圆点弹一下，文字轻微回落 */
+.todo-check.checked { animation: todo-check-pop .34s cubic-bezier(.2, .8, .3, 1) backwards; }
+.check-mark { animation: todo-check-mark .28s cubic-bezier(.2, .8, .3, 1) backwards; }
+.todo-item.done .todo-text { animation: todo-text-done .3s ease-out backwards; }
+@keyframes todo-check-pop { 0% { transform: scale(.86); } 55% { transform: scale(1.12); } 100% { transform: scale(1); } }
+@keyframes todo-check-mark { 0% { opacity: 0; transform: scale(.4) rotate(-12deg); } 70% { opacity: 1; transform: scale(1.12) rotate(3deg); } 100% { opacity: 1; transform: scale(1) rotate(0); } }
+@keyframes todo-text-done { 0% { opacity: .5; transform: translateX(4rpx); } 100% { opacity: 1; transform: translateX(0); } }
+
+/* ===== 待办完成反馈与呼吸感 ===== */
+.hero-percent { transform-origin: left center; animation: todo-hero-pop .5s cubic-bezier(.2, .8, .3, 1) both; }
+.hero-fill { transform-origin: left center; animation: todo-fill-grow .8s cubic-bezier(.2, .8, .3, 1) both; }
+.todo-check { position: relative; }
+.todo-check.checked::after { content: ""; position: absolute; left: -6rpx; top: -6rpx; right: -6rpx; bottom: -6rpx; border: 2rpx solid var(--success); border-radius: 50%; opacity: 0; animation: todo-check-ring .58s ease-out both; pointer-events: none; }
+.todo-item.done { position: relative; overflow: hidden; }
+.todo-item.done::after { content: ""; position: absolute; top: 0; bottom: 0; left: -30%; width: 30%; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .34), transparent); animation: todo-done-sweep .8s ease-out both; pointer-events: none; }
+.fab { animation: todo-fab-breathe 3.6s ease-in-out infinite; }
+
+@keyframes todo-hero-pop { 0% { opacity: 0; transform: scale(.82); } 65% { opacity: 1; transform: scale(1.06); } 100% { opacity: 1; transform: scale(1); } }
+@keyframes todo-fill-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes todo-check-ring { 0% { opacity: .75; transform: scale(.72); } 100% { opacity: 0; transform: scale(1.45); } }
+@keyframes todo-done-sweep { from { transform: translateX(0); } to { transform: translateX(430%); } }
+@keyframes todo-fab-breathe { 0%, 100% { transform: translateY(0); box-shadow: 7rpx 8rpx 0 var(--shadow); } 50% { transform: translateY(-3rpx); box-shadow: 9rpx 10rpx 0 var(--shadow); } }
+.sheet-mask { animation: app-page-fade .18s ease-out both; }
+.sheet { animation: todo-sheet-in .32s cubic-bezier(.2, .8, .3, 1) both; }
+@keyframes todo-sheet-in { 0% { opacity: .6; transform: translateY(60rpx); } 100% { opacity: 1; transform: translateY(0); } }
+
+/* 待办为空：只显示 logo */
+.todo-empty { padding: 54rpx 0 120rpx; display: flex; align-items: center; justify-content: center; }
+.todo-empty-logo { width: 170rpx; height: 170rpx; opacity: .9; animation: history-logo-float 4.2s ease-in-out infinite; }

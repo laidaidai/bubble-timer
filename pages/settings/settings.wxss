@@ -1,3 +1,4 @@
+@import "../../styles/clocks.wxss";
 .settings-page { min-height: 100vh; background: var(--bg); color: var(--ink); }
 .settings-body { padding: 24rpx 24rpx 140rpx; }
 
@@ -29,10 +30,10 @@
 .theme-check { position: absolute; top: 14rpx; right: 16rpx; color: var(--on-primary); background: var(--primary); border: 2rpx solid var(--edge); border-radius: 999rpx; width: 34rpx; height: 34rpx; text-align: center; font-size: 22rpx; font-weight: 900; line-height: 34rpx; }
 
 /* 提醒 */
-.opt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14rpx; }
+.opt-grid { margin-top: 16rpx; display: grid; grid-template-columns: 1fr 1fr; gap: 14rpx; }
 .opt { padding: 20rpx; color: var(--ink); text-align: center; background: var(--cream-1); border: 2rpx solid var(--edge); border-radius: 20rpx; box-shadow: 4rpx 4rpx 0 var(--shadow-soft); font-size: 24rpx; font-weight: 800; }
 .opt.active { color: var(--on-primary); background: var(--primary); border-color: var(--edge); box-shadow: 5rpx 5rpx 0 var(--shadow); }
-.ring-grid { display: flex; gap: 12rpx; flex-wrap: wrap; }
+.ring-grid { margin-top: 16rpx; display: flex; gap: 12rpx; flex-wrap: wrap; }
 .ring-pill { padding: 16rpx 24rpx; color: var(--ink); background: var(--card); border: 2rpx solid var(--edge); border-radius: 999rpx; box-shadow: 4rpx 4rpx 0 var(--shadow-soft); font-size: 23rpx; font-weight: 800; }
 .ring-pill.active { color: var(--on-primary); background: var(--primary); box-shadow: 5rpx 5rpx 0 var(--shadow); }
 .ring-note { margin-right: 8rpx; font-size: 23rpx; }
@@ -85,15 +86,15 @@
 .clock-preview-card { padding: 12rpx 30rpx; background: var(--panel); border: 2rpx solid var(--edge-deep); border-radius: 22rpx; box-shadow: 5rpx 6rpx 0 var(--shadow-soft); }
 .clock-preview-card .q-plain-num { font-family: "Courier New", Menlo, monospace; font-size: 88rpx; font-weight: 900; line-height: 1.1; letter-spacing: 2rpx; color: var(--on-panel-warm); text-shadow: 0 0 14rpx rgba(255, 209, 102, .55); }
 .clock-preview-hint { color: var(--text-mid); font-size: 22rpx; font-weight: 800; }
-.clock-style-list { display: flex; flex-direction: column; gap: 14rpx; }
-.clock-style-card { display: flex; align-items: center; gap: 20rpx; padding: 20rpx 22rpx; background: var(--card); border: 2rpx solid var(--edge); border-radius: 22rpx; box-shadow: 4rpx 5rpx 0 var(--shadow-soft); }
+.clock-style-list { margin-top: 18rpx; display: grid; grid-template-columns: 1fr 1fr; gap: 14rpx; }
+.clock-style-card { position: relative; min-width: 0; display: flex; flex-direction: column; align-items: stretch; gap: 10rpx; padding: 14rpx; background: var(--card); border: 2rpx solid var(--edge); border-radius: 22rpx; box-shadow: 4rpx 5rpx 0 var(--shadow-soft); }
 .clock-style-card.on { background: var(--cream-2); border-width: 3rpx; box-shadow: 5rpx 6rpx 0 var(--shadow); }
-.clock-style-sample { flex: 0 0 150rpx; height: 92rpx; display: flex; align-items: center; justify-content: center; background: var(--cream-1); border: 2rpx solid var(--line-strong); border-radius: 16rpx; overflow: hidden; }
+.clock-style-sample { flex: 0 0 auto; width: 100%; height: 104rpx; display: flex; align-items: center; justify-content: center; background: var(--cream-1); border: 2rpx solid var(--line-strong); border-radius: 16rpx; overflow: hidden; }
 .clock-style-sample .q-plain-num { font-family: "Courier New", Menlo, monospace; font-size: 44rpx; font-weight: 900; line-height: 1; color: var(--ink); }
-.clock-style-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4rpx; }
-.clock-style-name { font-size: 26rpx; font-weight: 900; }
+.clock-style-text { flex: 0 0 auto; min-width: 0; display: flex; justify-content: center; }
+.clock-style-name { font-size: 24rpx; font-weight: 900; text-align: center; }
 .clock-style-desc { color: var(--text-2); font-size: 20rpx; font-weight: 700; }
-.clock-style-radio { flex: 0 0 40rpx; width: 40rpx; height: 40rpx; color: var(--on-primary); background: var(--primary); border: 2rpx solid var(--edge); border-radius: 50%; font-size: 24rpx; font-weight: 900; line-height: 40rpx; text-align: center; }
+.clock-style-radio { position: absolute; top: 10rpx; right: 10rpx; width: 32rpx; height: 32rpx; color: var(--on-primary); background: var(--primary); border: 2rpx solid var(--edge); border-radius: 50%; font-size: 18rpx; font-weight: 900; line-height: 32rpx; text-align: center; }
 
 /* 时钟样式预览：霓虹 / 描边 / 极简 */
 .q-shell-neon { background: var(--ink); border-color: transparent; box-shadow: 0 0 22rpx rgba(255, 60, 172, .35), inset 0 0 26rpx rgba(80, 220, 255, .16); }
@@ -106,4 +107,347 @@
 .q-shell-digital .q-plain-num { background: transparent; color: var(--accent-text); text-shadow: none; }
 .q-shell-flip { background: var(--cream-2); }
 .q-shell-flip .q-plain-num { color: var(--ink); text-shadow: none; background: var(--panel); padding: 4rpx 12rpx; border-radius: 8rpx; box-shadow: 3rpx 3rpx 0 var(--shadow-soft); }
+
+/* 翻页时钟预览：独立数字卡片 + 中轴分页线 */
+.clock-flip-row { display: flex; align-items: center; justify-content: center; gap: 6rpx; }
+.clock-flip-colon { flex: 0 0 auto; padding: 0 2rpx; color: var(--on-panel-warm); font-family: "Courier New", Menlo, monospace; font-size: 34rpx; font-weight: 900; line-height: 1; }
+.clock-flip-card { position: relative; flex: 0 0 60rpx; width: 60rpx; height: 104rpx; overflow: hidden; background: var(--panel); border: 2rpx solid var(--edge-deep); border-radius: 10rpx; box-shadow: 3rpx 4rpx 0 var(--shadow-soft); }
+.clock-flip-card::before { content: ""; position: absolute; z-index: 2; left: 0; right: 0; top: 0; height: 50%; background: linear-gradient(180deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, 0)); border-radius: 10rpx 10rpx 0 0; pointer-events: none; }
+.clock-flip-face { position: absolute; left: 0; width: 100%; height: 50%; overflow: hidden; z-index: 1; background: var(--panel); }
+.clock-flip-face-top { top: 0; border-radius: 10rpx 10rpx 0 0; }
+.clock-flip-face-bottom { bottom: 0; border-radius: 0 0 10rpx 10rpx; }
+.clock-flip-num { position: absolute; left: 0; width: 100%; height: 200%; color: var(--on-panel-warm); font-family: "Courier New", Menlo, monospace; font-size: 42rpx; font-weight: 900; line-height: 104rpx; text-align: center; letter-spacing: 0; }
+.clock-flip-face-top .clock-flip-num { top: 0; }
+.clock-flip-face-bottom .clock-flip-num { top: -100%; }
+.clock-flip-split { position: absolute; z-index: 3; left: 0; right: 0; top: 50%; height: 2rpx; margin-top: -1rpx; background: var(--panel-deep); }
+
+/* 设置页预览：真实翻页动画 */
+.clock-flip-face-old { z-index: 2; }
+.clock-flip-flap { position: absolute; z-index: 4; left: 0; right: 0; height: 50%; overflow: hidden; background: var(--panel); backface-visibility: hidden; will-change: transform; }
+.clock-flip-flap-top { top: 0; border-radius: 10rpx 10rpx 0 0; transform-origin: 50% 100%; }
+.clock-flip-flap-bottom { bottom: 0; border-radius: 0 0 10rpx 10rpx; transform-origin: 50% 0; transform: rotateX(90deg); }
+.clock-flip-flap-face { position: absolute; left: 0; top: 0; width: 100%; height: 200%; display: flex; align-items: center; justify-content: center; background: var(--panel); }
+.clock-flip-flap-face-bottom { top: -100%; }
+.clock-flip-flap-face .clock-flip-num { position: relative; left: auto; top: auto; width: auto; height: auto; line-height: 1; }
+.clock-flip-card.flip-a .clock-flip-flap-top, .clock-flip-card.flip-b .clock-flip-flap-top { animation-duration: 190ms; animation-delay: 0ms; animation-timing-function: cubic-bezier(.4, .02, .22, 1); animation-fill-mode: both; }
+.clock-flip-card.flip-a .clock-flip-flap-bottom, .clock-flip-card.flip-b .clock-flip-flap-bottom { animation-duration: 190ms; animation-delay: 190ms; animation-timing-function: cubic-bezier(.4, .02, .22, 1); animation-fill-mode: both; }
+.clock-flip-card.flip-a .clock-flip-flap-top { animation-name: settings-flip-top-a; }
+.clock-flip-card.flip-b .clock-flip-flap-top { animation-name: settings-flip-top-b; }
+.clock-flip-card.flip-a .clock-flip-flap-bottom { animation-name: settings-flip-bottom-a; }
+.clock-flip-card.flip-b .clock-flip-flap-bottom { animation-name: settings-flip-bottom-b; }
+@keyframes settings-flip-top-a { 0% { transform: rotateX(0deg); } 100% { transform: rotateX(-90deg); } }
+@keyframes settings-flip-top-b { 0% { transform: rotateX(0deg); } 100% { transform: rotateX(-90deg); } }
+@keyframes settings-flip-bottom-a { 0% { transform: rotateX(90deg); } 100% { transform: rotateX(0deg); } }
+@keyframes settings-flip-bottom-b { 0% { transform: rotateX(90deg); } 100% { transform: rotateX(0deg); } }
+
+/* 列表中的小尺寸翻页预览 */
+.clock-flip-row-sample { gap: 2rpx; }
+.clock-flip-colon-sample { padding: 0 1rpx; font-size: 17rpx; }
+.clock-flip-card-sample { flex-basis: 22rpx; width: 22rpx; height: 38rpx; border-width: 1rpx; border-radius: 4rpx; box-shadow: 1rpx 1rpx 0 var(--shadow-soft); }
+.clock-flip-card-sample::before { border-radius: 4rpx 4rpx 0 0; }
+.clock-flip-card-sample .clock-flip-face-top { border-radius: 4rpx 4rpx 0 0; }
+.clock-flip-card-sample .clock-flip-face-bottom { border-radius: 0 0 4rpx 4rpx; }
+.clock-flip-card-sample .clock-flip-num { font-size: 18rpx; line-height: 38rpx; }
 .q-clock-long .q-plain-num { font-size: 60rpx; }
+
+/* 动效：分区切换与卡片轻量浮现 */
+.seg.on { animation: app-pop-in .26s ease-out both; }
+.theme-card, .clock-style-card, .home-primary-item, .opt, .ring-pill, .habit-tile { animation: app-rise-in .32s cubic-bezier(.2, .8, .3, 1) backwards; }
+
+/* 积木方块 / LED：与计时页、快捷计时共用同一套样式目录 */
+.q-shell-blocks { background: var(--cream-2); }
+.q-shell-blocks .q-plain-num {
+  color: var(--accent-text);
+  background: var(--panel);
+  padding: 4rpx 10rpx;
+  border: 2rpx solid var(--edge-deep);
+  border-radius: 8rpx;
+  box-shadow: 3rpx 3rpx 0 var(--shadow-soft);
+  letter-spacing: 4rpx;
+  text-shadow: none;
+}
+.q-shell-led { background: var(--panel); border-color: var(--edge-deep); }
+.q-shell-led .q-plain-num {
+  color: var(--primary-2);
+  text-shadow: 0 0 8rpx var(--primary-2), 0 0 20rpx var(--primary-2);
+  letter-spacing: 3rpx;
+}
+
+/* ===== 设置分栏切换 ===== */
+.pane { animation: app-rise-in .26s ease-out both; }
+
+/* 主题卡与时钟卡错峰入场 */
+.theme-card:nth-child(2), .clock-style-card:nth-child(2) { animation-delay: .04s; }
+.theme-card:nth-child(3), .clock-style-card:nth-child(3) { animation-delay: .08s; }
+.theme-card:nth-child(4), .clock-style-card:nth-child(4) { animation-delay: .12s; }
+.theme-card:nth-child(5), .clock-style-card:nth-child(5) { animation-delay: .16s; }
+.theme-card:nth-child(6), .clock-style-card:nth-child(6) { animation-delay: .20s; }
+
+/* 时钟样式预览：翻页 / 积木去掉蓝色底面并适当放大 */
+.clock-preview-card.q-shell-flip,
+.clock-preview-card.q-shell-blocks,
+.clock-style-sample.q-shell-flip,
+.clock-style-sample.q-shell-blocks { background: transparent; box-shadow: none; }
+.clock-style-card.on { background: var(--card); }
+.clock-style-sample { height: 124rpx; }
+.clock-style-sample .q-plain-num { font-size: 52rpx; }
+.clock-flip-card { width: 68rpx; height: 116rpx; flex-basis: 68rpx; }
+.clock-flip-card .clock-flip-num { font-size: 46rpx; line-height: 116rpx; }
+.clock-flip-colon { font-size: 38rpx; }
+.clock-flip-card-sample { width: 46rpx; height: 80rpx; flex-basis: 46rpx; }
+.clock-flip-card-sample .clock-flip-num { font-size: 34rpx; line-height: 80rpx; }
+.clock-flip-colon-sample { font-size: 26rpx; }
+
+/* 五个默认铃声排成一行 */
+.ring-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8rpx; }
+.ring-pill { min-width: 0; padding: 14rpx 6rpx; display: flex; align-items: center; justify-content: center; font-size: 21rpx; white-space: nowrap; }
+.ring-note { margin-right: 4rpx; font-size: 18rpx; }
+
+/* 数字时钟：样式列表卡片内用深色字，主预览在深色底上用白色字 */
+.clock-style-sample.q-shell-digital .q-plain-num { color: var(--ink); text-shadow: none; }
+.clock-preview-card.q-shell-digital .q-plain-num { color: var(--on-panel); text-shadow: 0 0 10rpx rgba(255,255,255,.18); }
+
+/* ===== 时钟样式调整：翻页/积木去背景，数字/极简加框，极简手写，新增果冻 ===== */
+/* 翻页：去掉数字卡片背景、描边、阴影和分页线 */
+.clock-flip-card,
+.clock-flip-card-sample {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+.clock-flip-card::before,
+.clock-flip-split { display: none; }
+.clock-flip-face,
+.clock-flip-flap,
+.clock-flip-flap-face { background: transparent; }
+.clock-flip-num { color: var(--ink); }
+.clock-flip-colon { color: var(--ink); }
+.clock-style-sample.q-shell-flip,
+.clock-preview-card.q-shell-flip {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+.q-shell-flip { background: transparent; }
+
+/* 积木：去掉方块底色、边框和投影 */
+.q-shell-blocks { background: transparent; border: 0; box-shadow: none; }
+.q-shell-blocks .q-plain-num {
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  letter-spacing: 3rpx;
+  text-shadow: none;
+}
+.clock-style-sample.q-shell-blocks,
+.clock-preview-card.q-shell-blocks {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+/* 数字时钟：加框，深色面板 + 清楚轮廓 */
+.q-shell-digital {
+  background: transparent;
+  border: 3rpx solid var(--edge);
+  border-radius: 16rpx;
+  box-shadow: none;
+}
+.clock-preview-card.q-shell-digital {
+  background: var(--panel);
+  border: 3rpx solid var(--edge-deep);
+}
+.clock-style-sample.q-shell-digital {
+  background: var(--card);
+  border: 3rpx solid var(--edge-deep);
+}
+.clock-style-sample.q-shell-digital .q-plain-num { color: var(--ink); }
+.clock-preview-card.q-shell-digital .q-plain-num { color: var(--on-panel); }
+
+/* 极简：手写体 + 细框 */
+.q-shell-minimal {
+  background: transparent;
+  border: 3rpx solid var(--ink);
+  border-radius: 16rpx;
+  box-shadow: none;
+  padding: 8rpx 18rpx;
+}
+.q-shell-minimal .q-plain-num {
+  font-family: "Arial Rounded MT Bold", "Yuanti SC", "YouYuan", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: 2rpx;
+  text-shadow: none;
+}
+.clock-preview-card.q-shell-minimal {
+  background: var(--card);
+  border: 3rpx solid var(--ink);
+}
+.clock-style-sample.q-shell-minimal {
+  background: var(--card);
+  border: 3rpx solid var(--ink);
+}
+
+/* 新增果冻叠影：糖果色填充 + 深色描边 + 错位投影 */
+.q-shell-jelly { background: transparent; border: 0; box-shadow: none; }
+.q-shell-jelly .q-plain-num {
+  color: var(--primary);
+  -webkit-text-stroke: 2rpx var(--edge);
+  text-shadow: 4rpx 5rpx 0 var(--primary-2), 7rpx 8rpx 0 var(--edge);
+  letter-spacing: 2rpx;
+}
+.clock-preview-card.q-shell-jelly {
+  background: var(--card);
+  border: 3rpx solid var(--primary);
+}
+.clock-style-sample.q-shell-jelly {
+  background: var(--card);
+  border: 3rpx solid var(--primary);
+}
+
+/* 数字时钟预览与计时页保持一致：深色面板 + 白字 + 外框 */
+.clock-preview-card.q-shell-digital {
+  background: var(--panel, #1E3A52);
+  border: 3rpx solid var(--edge-deep, #132838);
+}
+.clock-preview-card.q-shell-digital .q-plain-num {
+  color: var(--on-panel, #F2FAFF);
+  text-shadow: 0 0 10rpx rgba(255, 255, 255, .18);
+}
+.clock-style-sample.q-shell-digital {
+  background: var(--panel, #1E3A52);
+  border: 3rpx solid var(--edge-deep, #132838);
+}
+.clock-style-sample.q-shell-digital .q-plain-num {
+  color: var(--on-panel, #F2FAFF);
+  text-shadow: 0 0 10rpx rgba(255, 255, 255, .18);
+}
+
+/* 翻页 / 积木识别度 + 极简框不超过卡片 */
+.clock-flip-split {
+  display: block;
+  left: 18%;
+  right: 18%;
+  height: 1rpx;
+  margin-top: 0;
+  background: rgba(30, 52, 72, .30);
+  opacity: 1;
+}
+.clock-flip-num { text-shadow: 2rpx 2rpx 0 var(--line-strong); }
+.q-shell-blocks .q-plain-num { text-shadow: 3rpx 3rpx 0 var(--line-strong); }
+
+.q-shell-minimal { box-sizing: border-box; width: 100%; }
+.clock-style-sample.q-shell-minimal { box-sizing: border-box; width: 100%; height: 124rpx; }
+.clock-preview-card.q-shell-minimal { box-sizing: border-box; }
+
+/* ===== 翻页时钟 v5：设置页预览与列表同步使用主题翻页牌 ===== */
+.clock-flip-card,
+.clock-flip-card-sample {
+  background: var(--primary, #5AA9E6);
+  border: 3rpx solid var(--edge, #1E3448);
+  box-shadow: 4rpx 5rpx 0 var(--shadow, rgba(30, 52, 72, .20));
+}
+.clock-flip-card-sample { border-width: 2rpx; box-shadow: 2rpx 2rpx 0 var(--shadow-soft); }
+.clock-flip-card::before,
+.clock-flip-card-sample::before { display: block; background: linear-gradient(180deg, rgba(255,255,255,.22), rgba(255,255,255,0) 62%); }
+.clock-flip-face,
+.clock-flip-flap,
+.clock-flip-flap-face { background: var(--primary, #5AA9E6); }
+.clock-flip-face-bottom,
+.clock-flip-flap-bottom,
+.clock-flip-flap-face-bottom { box-shadow: inset 0 4rpx 8rpx rgba(13,39,58,.10); }
+.clock-flip-num { color: var(--on-primary, #FFFCF2); font-family: "Helvetica Neue", Arial, sans-serif; font-weight: 900; text-shadow: 0 2rpx 0 rgba(13,39,58,.10); }
+.clock-flip-split {
+  display: block;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2rpx;
+  margin-top: -1rpx;
+  background: var(--edge, #1E3448);
+  opacity: .92;
+}
+.clock-flip-colon { color: var(--ink); font-family: "Helvetica Neue", Arial, sans-serif; }
+
+/* 设置页积木时钟预览：用真实方块还原计时页效果 */
+.clock-block-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6rpx;
+}
+.clock-block-tile {
+  width: 46rpx;
+  height: 60rpx;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--card);
+  border: 2rpx solid var(--edge);
+  border-radius: 8rpx;
+  box-shadow: 3rpx 3rpx 0 var(--shadow-soft);
+}
+.clock-block-num {
+  color: var(--ink);
+  font-family: "Courier New", "Menlo", monospace;
+  font-size: 32rpx;
+  font-weight: 900;
+  line-height: 1;
+}
+.clock-block-colon {
+  color: var(--ink);
+  font-size: 26rpx;
+  font-weight: 900;
+  line-height: 1;
+}
+.clock-block-row-sample { gap: 3rpx; }
+.clock-block-tile-sample {
+  width: 32rpx;
+  height: 42rpx;
+  border-radius: 6rpx;
+  box-shadow: 2rpx 2rpx 0 var(--shadow-soft);
+}
+.clock-block-tile-sample .clock-block-num { font-size: 24rpx; }
+.clock-block-colon-sample { font-size: 20rpx; }
+
+/* 圆体极简预览居中：主预览、列表小卡都按内容区居中，不再被内边距挤到左边 */
+.clock-preview-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.clock-preview-card .q-plain-num,
+.clock-style-sample .q-plain-num {
+  text-align: center;
+}
+.q-shell-minimal,
+.clock-style-sample.q-shell-minimal,
+.clock-preview-card.q-shell-minimal {
+  box-sizing: border-box;
+}
+.clock-preview-card.q-shell-minimal .q-plain-num,
+.clock-style-sample.q-shell-minimal .q-plain-num {
+  width: 100%;
+  text-align: center;
+}
+
+/* ===== 时钟皮肤收口：颜色一律取自 styles/clocks.wxss ===== */
+.q-shell-flip .q-plain-num,
+.q-shell-flip .q-flip-num,
+.q-shell-flip .q-flip-colon { color: var(--clk-ink); }
+.q-shell-flip .q-flip-face,
+.q-shell-flip .q-flip-flap,
+.q-shell-flip .q-flip-flap-face { background: var(--clk-face); }
+.q-shell-flip .q-flip-split { background: var(--clk-line); }
+.q-shell-digital .q-plain-num { color: var(--clk-ink); }
+.q-shell-neon .q-plain-num { color: var(--clk-ink); }
+.q-shell-outline .q-plain-num { -webkit-text-stroke-color: var(--clk-ink); }
+.q-shell-minimal .q-plain-num { color: var(--clk-ink); }
+.q-shell-blocks .q-plain-num { color: var(--clk-ink); }
+.q-shell-led .q-plain-num { color: var(--clk-ink); }
+.q-shell-jelly .q-plain-num { color: var(--clk-ink); }
+.clock-style-sample.q-shell-digital .q-plain-num,
+.clock-style-sample.q-shell-neon .q-plain-num,
+.clock-style-sample.q-shell-minimal .q-plain-num { color: var(--clk-ink); }

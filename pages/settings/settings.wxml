@@ -1,9 +1,11 @@
 <view class="settings-page theme-{{theme}}" style="{{themeStyle}}">
   <view class="topbar">
-    <button class="back-icon" bindtap="handleBack">‹</button>
+    <view class="back-icon" bindtap="handleBack" aria-label="返回">‹</view>
     <view class="topbar-title">设置</view>
     <view class="topbar-spacer"></view>
   </view>
+
+  <brand-dock theme-style="{{themeStyle}}" dim="{{dockDim}}"></brand-dock>
 
   <view class="settings-body">
     <scroll-view class="seg-scroll" scroll-x show-scrollbar="{{false}}">
@@ -19,7 +21,6 @@
           <text class="home-primary-name">{{item.name}}</text>
         </view>
       </view>
-      <view class="pane-sub">完成激励</view>
       <view class="opt-grid">
         <view class="opt {{incentiveType === item.key ? 'active' : ''}}" wx:for="{{incentiveOptions}}" wx:key="key" data-key="{{item.key}}" bindtap="setIncentive">{{item.name}}</view>
       </view>
@@ -40,7 +41,7 @@
 
       <view class="custom-box" wx:if="{{showEditor}}">
         <view class="custom-head">{{editorKey ? '编辑主题' : '自定义配色'}}</view>
-        <input class="custom-name" value="{{customName}}" placeholder="给主题起个名字，例如 晨雾蓝" placeholder-class="custom-name-ph" maxlength="10" bindinput="onThemeNameInput" />
+        <input class="custom-name" value="{{customName}}" placeholder="主题名称" placeholder-class="custom-name-ph" maxlength="10" bindinput="onThemeNameInput" />
         <view class="color-row" wx:for="{{colorGroups}}" wx:for-item="group" wx:key="role">
           <view class="color-label">{{group.label}}</view>
           <view class="color-list">
@@ -57,19 +58,55 @@
     <view class="pane" wx:if="{{section === 'clock'}}">
       <view class="clock-preview">
         <view class="clock-preview-card q-shell-{{clockStyle}} {{clockPreviewText.length > 5 ? 'q-clock-long' : ''}}">
-          <text class="q-plain-num glow">{{clockPreviewText}}</text>
+          <view class="clock-flip-row" wx:if="{{clockStyle === 'flip'}}">
+            <block wx:for="{{clockPreviewCells}}" wx:key="key">
+              <view class="clock-flip-colon" wx:if="{{item.sep}}">:</view>
+              <view class="clock-flip-card {{item.changed ? (clockPreviewPhase ? 'flip-a' : 'flip-b') : ''}}" wx:else>
+                <view class="clock-flip-face clock-flip-face-top"><text class="clock-flip-num">{{item.text}}</text></view>
+                <view class="clock-flip-face clock-flip-face-bottom"><text class="clock-flip-num">{{item.text}}</text></view>
+                <view class="clock-flip-face clock-flip-face-bottom clock-flip-face-old" wx:if="{{item.changed}}"><text class="clock-flip-num">{{item.oldText}}</text></view>
+                <view class="clock-flip-flap clock-flip-flap-top" wx:if="{{item.changed}}">
+                  <view class="clock-flip-flap-face"><text class="clock-flip-num">{{item.oldText}}</text></view>
+                </view>
+                <view class="clock-flip-flap clock-flip-flap-bottom" wx:if="{{item.changed}}">
+                  <view class="clock-flip-flap-face clock-flip-flap-face-bottom"><text class="clock-flip-num">{{item.text}}</text></view>
+                </view>
+                <view class="clock-flip-split"></view>
+              </view>
+            </block>
+          </view>
+          <view class="clock-block-row" wx:elif="{{clockStyle === 'blocks'}}">
+            <block wx:for="{{clockPreviewCells}}" wx:key="key">
+              <view class="clock-block-colon" wx:if="{{item.sep}}">:</view>
+              <view class="clock-block-tile" wx:else><text class="clock-block-num">{{item.text}}</text></view>
+            </block>
+          </view>
+          <text class="q-plain-num glow" wx:else>{{clockPreviewText}}</text>
         </view>
-        <view class="clock-preview-hint">当前样式 · {{clockStyleName}}</view>
       </view>
-      <view class="pane-sub">点击切换，预览即时生效</view>
       <view class="clock-style-list">
         <view class="clock-style-card {{item.active ? 'on' : ''}}" wx:for="{{clockStyles}}" wx:key="key" data-key="{{item.key}}" bindtap="selectClockStyle">
           <view class="clock-style-sample q-shell-{{item.key}}">
-            <text class="q-plain-num glow">25:00</text>
+            <view class="clock-flip-row clock-flip-row-sample" wx:if="{{item.key === 'flip'}}">
+              <block wx:for="{{clockPreviewCells}}" wx:key="key" wx:for-item="digit">
+                <view class="clock-flip-colon clock-flip-colon-sample" wx:if="{{digit.sep}}">:</view>
+                <view class="clock-flip-card clock-flip-card-sample" wx:else>
+                  <view class="clock-flip-face clock-flip-face-top"><text class="clock-flip-num">{{digit.text}}</text></view>
+                  <view class="clock-flip-face clock-flip-face-bottom"><text class="clock-flip-num">{{digit.text}}</text></view>
+                  <view class="clock-flip-split"></view>
+                </view>
+              </block>
+            </view>
+            <view class="clock-block-row clock-block-row-sample" wx:elif="{{item.key === 'blocks'}}">
+              <block wx:for="{{clockPreviewCells}}" wx:key="key" wx:for-item="digit">
+                <view class="clock-block-colon clock-block-colon-sample" wx:if="{{digit.sep}}">:</view>
+                <view class="clock-block-tile clock-block-tile-sample" wx:else><text class="clock-block-num">{{digit.text}}</text></view>
+              </block>
+            </view>
+            <text class="q-plain-num glow" wx:else>{{clockPreviewText}}</text>
           </view>
           <view class="clock-style-text">
             <text class="clock-style-name">{{item.name}}</text>
-            <text class="clock-style-desc">{{item.desc}}</text>
           </view>
           <view class="clock-style-radio" wx:if="{{item.active}}">✓</view>
         </view>
@@ -83,11 +120,9 @@
         </view>
         <view class="switch {{tickSound ? 'on' : ''}}"><view class="knob"></view></view>
       </view>
-      <view class="pane-sub">到点提醒</view>
       <view class="opt-grid">
         <view class="opt {{soundMode === item.key ? 'active' : ''}}" wx:for="{{soundModes}}" wx:key="key" data-key="{{item.key}}" bindtap="setSoundMode">{{item.name}}</view>
       </view>
-      <view class="pane-sub" wx:if="{{soundMode === 'both' || soundMode === 'ring'}}">提示铃声</view>
       <view class="ring-grid" wx:if="{{soundMode === 'both' || soundMode === 'ring'}}">
         <view class="ring-pill {{ringKey === item.key ? 'active' : ''}}" wx:for="{{rings}}" wx:key="key" data-key="{{item.key}}" bindtap="selectRing" bindlongpress="manageRing">
           <text class="ring-note">♪</text>
@@ -95,26 +130,26 @@
         </view>
       </view>
       <view class="ring-actions" wx:if="{{soundMode === 'both' || soundMode === 'ring'}}">
-        <view class="ring-action" bindtap="chooseRingFile">导入自定义铃声</view>
+        <view class="ring-action" bindtap="chooseRingFile">导入铃声</view>
       </view>
     </view>
 
     <view class="pane" wx:if="{{section === 'guard'}}">
       <view class="row" data-key="keepScreenOn" bindtap="toggleSwitch">
         <view class="row-main">
-          <view class="row-name">计时中保持屏幕常亮</view>
+          <view class="row-name">保持屏幕常亮</view>
         </view>
         <view class="switch {{keepScreenOn ? 'on' : ''}}"><view class="knob"></view></view>
       </view>
       <view class="row" data-key="exitGuard" bindtap="toggleSwitch">
         <view class="row-main">
-          <view class="row-name">退出前二次确认</view>
+          <view class="row-name">退出确认</view>
         </view>
         <view class="switch {{exitGuard ? 'on' : ''}}"><view class="knob"></view></view>
       </view>
       <view class="row" data-key="overtimeAlert" bindtap="toggleSwitch">
         <view class="row-main">
-          <view class="row-name">超时强提醒</view>
+          <view class="row-name">超时提醒</view>
         </view>
         <view class="switch {{overtimeAlert ? 'on' : ''}}"><view class="knob"></view></view>
       </view>
@@ -133,8 +168,8 @@
 
     <view class="data-zone">
       <view class="data-title">本地数据</view>
-      <view class="data-desc">清除训练记录、待办、模板、主题、铃声和设置。清除后不可恢复，手机日历中已写入的提醒不会自动删除。</view>
-      <button class="data-clear-btn" bindtap="clearLocalData">一键清除本地数据</button>
+      <view class="data-desc">清除后不可恢复，日历提醒不受影响。</view>
+      <button class="data-clear-btn" bindtap="clearLocalData">清除本地数据</button>
     </view>
 
   </view>

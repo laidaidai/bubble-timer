@@ -11,7 +11,7 @@ function importantDateText(key) {
 
 Page({
   data: {
-    theme: 'pearl',
+    theme: 'sky',
     themeStyle: '',
     todayPercent: 0,
     todoTodayPending: 0,
@@ -27,7 +27,8 @@ Page({
     importantCalendarOpen: false,
     importantCalTitle: '',
     importantCalRows: [],
-    importantCalWeekLabels: WEEK_LABELS
+    importantCalWeekLabels: WEEK_LABELS,
+    toolsReveal: false
   },
 
   onLoad() {
@@ -45,6 +46,24 @@ Page({
     }
     if (app.applyNavBar) app.applyNavBar()
     this.loadAll()
+    this.replayReveal()
+  },
+
+  replayReveal() {
+    clearTimeout(this.revealTimer)
+    // 先确认 reveal 已经离场，再重新挂上，动画才会真正从头播放
+    this.setData({ toolsReveal: false }, () => {
+      this.revealTimer = setTimeout(() => this.setData({ toolsReveal: true }), 60)
+    })
+  },
+
+  onHide() {
+    clearTimeout(this.revealTimer)
+    this.setData({ toolsReveal: false })
+  },
+
+  onUnload() {
+    clearTimeout(this.revealTimer)
   },
 
   loadAll() {
@@ -55,7 +74,10 @@ Page({
 
   loadStats() {
     const summary = app.dailyStats ? app.dailyStats() : {}
-    this.setData({ todayPercent: summary.todayPercent || 0 })
+    this.setData({
+      todayPercent: summary.todayPercent || 0,
+      streak: summary.streak || 0
+    })
   },
 
   loadTodos() {
@@ -272,6 +294,10 @@ Page({
     wx.navigateTo({ url: '/pages/quick/quick' })
   },
 
+  openImportantPage() {
+    wx.navigateTo({ url: '/pages/important/important' })
+  },
+
   openTodo() {
     wx.navigateTo({ url: '/pages/todo/todo' })
   },
@@ -292,5 +318,19 @@ Page({
     wx.navigateTo({ url: '/pages/settings/settings' })
   },
 
-  blockTouch() {}
+  handleBack() {
+    const pages = getCurrentPages()
+    if (pages.length > 1) {
+      wx.navigateBack({ delta: 1, fail: () => wx.switchTab({ url: '/pages/index/index' }) })
+    } else {
+      wx.switchTab({ url: '/pages/index/index' })
+    }
+  },
+
+  blockTouch() {},
+
+  onPageScroll(event) {
+    const next = (event.scrollTop || 0) > 48
+    if (next !== this.data.dockDim) this.setData({ dockDim: next })
+  }
 })

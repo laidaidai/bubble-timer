@@ -12,6 +12,23 @@ const PRIMARY_COLORS = ['#FFC94D', '#FF9FB6', '#7FC7D9', '#8FD2B0', '#B79CE4', '
 const BG_COLORS = ['#FBF3DF', '#FFF1F3', '#EAF4F7', '#EAF5EF', '#F3F0FA', '#FFFFFF', '#F6F3EA', '#2A2017']
 const INK_COLORS = ['#4B3A2A', '#3A3550', '#243B36', '#5A3A22', '#1F1B16', '#555555']
 
+// 翻页预览：把时间拆成独立数字卡片，并记录上一帧，真正走翻页动效
+const buildPreviewCells = (text, previous = '') => {
+  const value = String(text || '25:00')
+  const prev = String(previous || value)
+  return value.split('').map((ch, index) => (
+    ch === ':'
+      ? { key: `sep-${index}`, sep: true }
+      : { key: `digit-${index}`, text: ch, oldText: prev[index] || ch, changed: ch !== (prev[index] || ch) }
+  ))
+}
+
+// 设置页预览显示真实本地时间，不再做假倒计时
+const nowClockText = () => {
+  const now = new Date()
+  return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+}
+
 const buildGroups = (conf) => {
   const theme = conf || {}
   return [
@@ -23,8 +40,8 @@ const buildGroups = (conf) => {
 
 Page({
   data: {
-    theme: 'pearl',
-    themeName: '蜜桃雪酪',
+    theme: 'sky',
+    themeName: '晴空苏打',
     themeStyle: '',
     themes: [],
     rings: [],
@@ -37,7 +54,10 @@ Page({
     tickSound: false,
     homePrimary: 'timer',
     homePrimaryOptions: [
-      { key: 'timer', name: '计时' },
+      { key: 'timer', name: '训练计时' },
+      { key: 'quick-stopwatch', name: '秒表' },
+      { key: 'quick-countdown', name: '计时器' },
+      { key: 'quick-pomodoro', name: '番茄钟' },
       { key: 'todo', name: '待办' },
       { key: 'important', name: '重要日子' },
       { key: 'stats', name: '打卡' }
@@ -57,8 +77,8 @@ Page({
     selectedCount: 0,
     section: 'theme',
     sections: [
-      { key: 'home', name: '首页' },
       { key: 'theme', name: '主题' },
+      { key: 'home', name: '首页' },
       { key: 'clock', name: '时钟' },
       { key: 'remind', name: '提醒' },
       { key: 'guard', name: '专注' },
@@ -66,7 +86,9 @@ Page({
     ],
     clockStyles: [],
     clockStyle: 'flip',
-    clockPreviewText: '25:00',
+    clockPreviewText: nowClockText(),
+    clockPreviewCells: buildPreviewCells(nowClockText()),
+    clockPreviewPhase: false,
     // 自定义主题编辑器
     showEditor: false,
     editorKey: '',
@@ -79,16 +101,14 @@ Page({
   },
 
   onLoad() {
-    this.clockPreviewTicks = 0
     this.refresh()
     this.loadHabit()
     if (app.applyNavBar) app.applyNavBar()
-    // 时钟预览：每 1.5s 在 25:00 / 24:59 间切换，展示数字样式动效
+    // 时钟预览：真实本地时钟，每分钟更新一次，避免每秒闪动
     this.clockPreviewTimer = setInterval(() => {
       if (this.data.section !== 'clock') return
-      this.clockPreviewTicks = (this.clockPreviewTicks || 0) + 1
-      this.setData({ clockPreviewText: this.clockPreviewTicks % 2 === 0 ? '25:00' : '24:59' })
-    }, 1500)
+      this.updateClockPreview()
+    }, 1000)
   },
 
   onUnload() {
@@ -142,7 +162,7 @@ Page({
       exitGuard: !!settings.exitGuard,
       overtimeAlert: !!settings.overtimeAlert,
       tickSound: settings.tickSound === true,
-      homePrimary: settings.homePrimary || 'timer',
+      homePrimary: settings.homePrimary === 'quick' ? 'quick-stopwatch' : (settings.homePrimary || 'timer'),
       incentiveType: settings.incentiveType || 'tomato',
       hasCustomRing: (app.getRings ? app.getRings() : []).some(item => String(item.key).indexOf('cr-') === 0 || item.key === 'custom')
     }
@@ -153,7 +173,10 @@ Page({
     payload.clockStyle = currentClock.key
     payload.clockStyleName = currentClock.name
     payload.clockStyles = CLOCK_STYLES.map(item => ({ ...item, active: item.key === currentClock.key }))
-    payload.clockPreviewText = (this.clockPreviewTicks || 0) % 2 === 0 ? '25:00' : '24:59'
+    const previewText = nowClockText()
+    payload.clockPreviewText = previewText
+    payload.clockPreviewCells = buildPreviewCells(previewText, this.data.clockPreviewText || previewText)
+    payload.clockPreviewPhase = !!this.data.clockPreviewPhase
 
     // 当前主题是已保存的自定义主题时，编辑器同步显示它的名字和颜色
     if (String(current.key).indexOf('ct-') === 0) {
@@ -168,9 +191,18 @@ Page({
         payload.colorGroups = buildGroups(entry)
       }
     }
+    this.setData(payload)
+  },
+
+  updateClockPreview(force) {
+    const previewText = nowClockText()
+    if (!force && previewText === this.data.clockPreviewText) return
+    const cells = buildPreviewCells(previewText, this.data.clockPreviewText)
+    if (cells.some(item => item.changed)) this.clockPreviewPhase = !this.clockPreviewPhase
     this.setData({
-      ...payload,
-      clockPreviewText: this.clockPreviewTicks % 2 === 0 ? '25:00' : '24:59'
+      clockPreviewText: previewText,
+      clockPreviewCells: cells,
+      clockPreviewPhase: !!this.clockPreviewPhase
     })
   },
 
@@ -185,7 +217,6 @@ Page({
       clockStyles: this.data.clockStyles.map(item => ({ ...item, active: item.key === next.key }))
     })
     if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
-    wx.showToast({ title: `已切换为${next.name}`, icon: 'none', duration: 1200 })
   },
 
   selectTheme(event) {
@@ -298,7 +329,7 @@ Page({
         if (!confirm) return
         const list = (settings.customThemes || []).filter(item => item.key !== key)
         const patch = { customThemes: list, customTheme: null }
-        if (settings.theme === key) patch.theme = 'pearl'
+        if (settings.theme === key) patch.theme = 'sky'
         app.saveSettings(patch)
         this.setData({ showEditor: false, editorKey: '', customName: '' })
         this.refresh()
@@ -466,6 +497,7 @@ Page({
     const key = event.currentTarget.dataset.key
     if (!key) return
     this.setData({ section: key })
+    if (key === 'clock') this.updateClockPreview(true)
     if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
   },
 
@@ -601,5 +633,10 @@ Page({
 
   onUnload() {
     if (this.audio) this.audio.stop()
+  },
+
+  onPageScroll(event) {
+    const next = (event.scrollTop || 0) > 48
+    if (next !== this.data.dockDim) this.setData({ dockDim: next })
   }
 })

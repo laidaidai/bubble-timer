@@ -46,7 +46,7 @@ function dueLabel(dueAt) {
 
 Page({
   data: {
-    theme: 'pearl', themeStyle: '',
+    theme: 'sky', themeStyle: '',
     todos: [],
     viewTodos: [],
     schedTitle: '',
@@ -63,6 +63,8 @@ Page({
     minutes: MINUTES,
     // 编辑面板
     sheetOpen: false,
+    burstingId: '',
+    burstingDone: false,
     keyboardHeight: 0,
     editingId: '',
     draftText: '',
@@ -115,6 +117,7 @@ Page({
   },
 
   onUnload() {
+    clearTimeout(this.burstTimer)
     clearInterval(this.timer)
     this.timer = null
     if (wx.offKeyboardHeightChange && this.onKeyboard) wx.offKeyboardHeightChange(this.onKeyboard)
@@ -224,11 +227,18 @@ Page({
     const lead = (first.getDay() + 6) % 7
     const days = new Date(year, month + 1, 0).getDate()
     const todayKey = dateKey(new Date())
+    const counts = {}
+    const todos = this.data.todos || []
+    todos.forEach(item => {
+      if (!item.dueAt) return
+      const key = dateKey(new Date(item.dueAt))
+      counts[key] = (counts[key] || 0) + 1
+    })
     const cells = []
     for (let i = 0; i < lead; i += 1) cells.push({ key: `pad-${i}`, empty: true })
     for (let d = 1; d <= days; d += 1) {
       const key = dateKey(new Date(year, month, d))
-      cells.push({ key, day: d, empty: false, selected: key === selectedKey, today: key === todayKey })
+      cells.push({ key, day: d, empty: false, count: counts[key] || 0, selected: key === selectedKey, today: key === todayKey })
     }
     while (cells.length % 7 !== 0) cells.push({ key: `tail-${cells.length}`, empty: true })
     while (cells.length < 42) cells.push({ key: `fill-${cells.length}`, empty: true })
@@ -383,50 +393,89 @@ Page({
     this.setData({ sheetOpen: false })
     this.setTodos(todos)
     if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
-    if (remindBefore > 0) {
-      const saved = todos.find(item => item.id === targetId)
-      if (saved) this.syncPhoneCalendar(saved)
-    }
+    // 只要设置了未来时间就尝试写入系统日历；不强制要求选择提前提醒
+    const saved = todos.find(item => item.id === targetId)
+    if (saved && Number(saved.dueAt) > Date.now()) this.syncPhoneCalendar(saved)
   },
 
   // 把待办写入手机系统日历，关闭小程序后由系统提醒
   syncPhoneCalendar(item) {
     const dueAt = Number(item.dueAt) || 0
     const remind = Number(item.remindBefore) || 0
-    if (!dueAt || !remind || dueAt <= Date.now()) return
+    if (!dueAt || dueAt <= Date.now()) return
     const key = `${dueAt}-${remind}`
     if (item.calendarKey === key) return
     if (!wx.addPhoneCalendar) {
       wx.showToast({ title: '当前微信版本不支持日历提醒', icon: 'none' })
       return
     }
+
+    const addEvent = () => this.writePhoneCalendar(item, key)
+
+    // scope.addPhoneCalendar 必须由用户明确授权；先检查，未决定时主动弹授权
+    if (wx.getSetting && wx.authorize) {
+      wx.getSetting({
+        success: (setting) => {
+          const auth = (setting && setting.authSetting) || {}
+          const status = auth['scope.addPhoneCalendar']
+          if (status === true) {
+            addEvent()
+            return
+          }
+          if (status === false) {
+            this.showCalendarAuthModal()
+            return
+          }
+          wx.authorize({
+            scope: 'scope.addPhoneCalendar',
+            success: addEvent,
+            fail: () => this.showCalendarAuthModal()
+          })
+        },
+        fail: addEvent
+      })
+      return
+    }
+
+    addEvent()
+  },
+
+  writePhoneCalendar(item, key) {
+    const dueAt = Number(item.dueAt) || 0
+    const remind = Number(item.remindBefore) || 0
     const startTime = Math.floor(dueAt / 1000)
     const remindText = remind >= 60 ? `${remind / 60} 小时` : `${remind} 分钟`
     wx.addPhoneCalendar({
-      title: `泡泡计时器 · ${item.text}`,
+      title: `小鱼计时器 · ${item.text}`,
       startTime,
       endTime: startTime + 30 * 60,
-      alarm: true,
+      alarm: remind > 0,
       alarmOffset: remind * 60,
-      description: `提前 ${remindText} 提醒 · 来自泡泡计时器待办`,
+      description: remind
+        ? `提前 ${remindText} 提醒 · 来自小鱼计时器待办`
+        : '来自小鱼计时器待办',
       success: () => {
         this.markCalendarSynced(item.id, key)
         wx.showToast({ title: '已加入手机日历', icon: 'none' })
       },
       fail: (error) => {
         const message = String((error && error.errMsg) || '')
-        if (message.indexOf('auth') >= 0 || message.indexOf('deny') >= 0) {
-          wx.showModal({
-            title: '需要日历权限',
-            content: '允许添加到日历后，才能把待办写进手机系统日历。',
-            confirmText: '去设置',
-            success: ({ confirm }) => {
-              if (confirm && wx.openSetting) wx.openSetting()
-            }
-          })
+        if (message.indexOf('auth') >= 0 || message.indexOf('deny') >= 0 || message.indexOf('privacy') >= 0) {
+          this.showCalendarAuthModal()
           return
         }
         wx.showToast({ title: '日历没加上，仍会在小程序内提醒', icon: 'none' })
+      }
+    })
+  },
+
+  showCalendarAuthModal() {
+    wx.showModal({
+      title: '需要日历权限',
+      content: '允许添加到日历后，才能把待办写进手机系统日历。',
+      confirmText: '去设置',
+      success: ({ confirm }) => {
+        if (confirm && wx.openSetting) wx.openSetting()
       }
     })
   },
@@ -450,7 +499,7 @@ Page({
       success: ({ confirm }) => {
         if (!confirm) return
         this.setData({ sheetOpen: false })
-        this.setTodos(this.data.todos.filter(item => item.id !== id).map(strip))
+        this.burstRemoveTodo(id)
       }
     })
   },
@@ -469,6 +518,19 @@ Page({
     }
   },
 
+  burstRemoveTodo(id) {
+    if (!id) return
+    const next = this.data.todos.filter(item => item.id !== id).map(strip)
+    wx.setStorageSync(app.globalData.todoKey, next)
+    if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
+    this.setData({ burstingId: id })
+    clearTimeout(this.burstTimer)
+    this.burstTimer = setTimeout(() => {
+      this.setTodos(next)
+      this.setData({ burstingId: '' })
+    }, 580)
+  },
+
   removeTodo(event) {
     const id = event.currentTarget.dataset.id
     const target = this.data.todos.find(item => item.id === id)
@@ -480,7 +542,7 @@ Page({
       confirmColor: '#E8442F',
       success: ({ confirm }) => {
         if (!confirm) return
-        this.setTodos(this.data.todos.filter(item => item.id !== id).map(strip))
+        this.burstRemoveTodo(id)
       }
     })
   },
@@ -497,8 +559,16 @@ Page({
       confirmColor: '#E8442F',
       success: ({ confirm }) => {
         if (!confirm) return
-        this.setTodos(this.data.todos.filter(item => !item.done).map(strip))
-        wx.showToast({ title: '已清空', icon: 'none' })
+        const next = this.data.todos.filter(item => !item.done).map(strip)
+        wx.setStorageSync(app.globalData.todoKey, next)
+        if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
+        this.setData({ burstingDone: true })
+        clearTimeout(this.burstTimer)
+        this.burstTimer = setTimeout(() => {
+          this.setTodos(next)
+          this.setData({ burstingDone: false })
+          wx.showToast({ title: '已清空', icon: 'none' })
+        }, 580)
       }
     })
   },
@@ -528,5 +598,10 @@ Page({
     const pages = getCurrentPages()
     if (pages.length > 1) wx.navigateBack()
     else wx.reLaunch({ url: '/pages/index/index' })
+  },
+
+  onPageScroll(event) {
+    const next = (event.scrollTop || 0) > 48
+    if (next !== this.data.dockDim) this.setData({ dockDim: next })
   }
 })

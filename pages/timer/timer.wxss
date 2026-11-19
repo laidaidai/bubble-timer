@@ -1,10 +1,11 @@
+@import "../../styles/clocks.wxss";
 page { height: 100%; overflow: hidden; background:var(--bg); }
 .timer-page { height: 100%; min-height: 0; background: var(--bg); display: flex; overflow: hidden; padding: 8rpx 18rpx; box-sizing: border-box; color:var(--ink); }
 .timer-main { flex: 1; min-width: 0; height: 100%; padding: 0 14rpx 0 0; align-items: center; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; border-right:2rpx solid var(--line); }
 .clock-stage { position: relative; width: 100%; padding: 22rpx 0 6rpx; display: flex; flex-direction: column; align-items: center; gap: 6rpx; border-radius: 28rpx; }
 
 /* 翻页时钟：每个数字独立，上半页绕中轴向下翻，盖住下半页 */
-.flip-row { display: flex; align-items: center; justify-content: center; gap: 4rpx; perspective: 760rpx; }
+.flip-row { display: flex; align-items: center; justify-content: center; gap: 4rpx; perspective: 620rpx; }
 .flip-colon { color:var(--ink); font-size: 26rpx; font-weight: 900; padding: 0 1rpx; line-height: 1; }
 .flip-card { position: relative; width: 56rpx; height: 100rpx; overflow: hidden; flex: 0 0 auto; background:var(--panel); border:2rpx solid var(--edge-deep); border-radius: 10rpx; box-shadow:3rpx 4rpx 0 var(--shadow-soft); transform-style: preserve-3d; }
 .flip-card::before { content: ""; position: absolute; z-index: 2; left: 0; right: 0; top: 0; height: 50%; background: linear-gradient(180deg, rgba(255, 255, 255, .10), rgba(255, 255, 255, 0)); border-radius: 10rpx 10rpx 0 0; pointer-events: none; }
@@ -21,14 +22,13 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
 .flip-flap-face { position: absolute; left: 0; top: 0; width: 100%; height: 200%; display: flex; align-items: center; justify-content: center; background:var(--panel); border-radius: 10rpx 10rpx 0 0; }
 .flip-flap-face-bottom { top: -100%; border-radius: 0 0 10rpx 10rpx; }
 .flip-flap-face .flip-num { position: relative; height: auto; line-height: 1; top: auto; left: auto; width: auto; }
-.flip-card.flip-a .flip-flap-top,
-.flip-card.flip-b .flip-flap-top { animation-duration: 190ms; animation-delay: 0ms; animation-timing-function: cubic-bezier(.4, .02, .22, 1); animation-fill-mode: both; }
-.flip-card.flip-a .flip-flap-bottom,
-.flip-card.flip-b .flip-flap-bottom { animation-duration: 190ms; animation-delay: 190ms; animation-timing-function: cubic-bezier(.4, .02, .22, 1); animation-fill-mode: both; }
-.flip-card.flip-a .flip-flap-top { animation-name: flip-top-a; }
-.flip-card.flip-b .flip-flap-top { animation-name: flip-top-b; }
-.flip-card.flip-a .flip-flap-bottom { animation-name: flip-bottom-a; }
-.flip-card.flip-b .flip-flap-bottom { animation-name: flip-bottom-b; }
+/* 上半张翻下去 → 下半张翻上来。
+   a / b 必须用不同的动画名：连续两秒同一个数字位都在变时，节点不会重建，
+   只有 animation-name 变了才会重新触发动画；写成同一个名字就只有第一下会翻。 */
+.flip-card.flip-a .flip-flap-top { animation: flip-top-a 280ms cubic-bezier(.32, .02, .2, 1) 0ms both; }
+.flip-card.flip-b .flip-flap-top { animation: flip-top-b 280ms cubic-bezier(.32, .02, .2, 1) 0ms both; }
+.flip-card.flip-a .flip-flap-bottom { animation: flip-bottom-a 280ms cubic-bezier(.32, .02, .2, 1) 280ms both; }
+.flip-card.flip-b .flip-flap-bottom { animation: flip-bottom-b 280ms cubic-bezier(.32, .02, .2, 1) 280ms both; }
 @keyframes flip-top-a {
   0% { transform: rotateX(0deg); }
   100% { transform: rotateX(-90deg); }
@@ -77,7 +77,7 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
 /* 数字时钟 */
 .plain-clock { display: flex; align-items: center; justify-content: center; }
 .plain-num { font-family: "Courier New", "Menlo", monospace; font-weight: 900; line-height: 1; }
-.clock-digital .plain-num { padding: 10rpx 28rpx; color:var(--on-panel-warm); background:var(--panel); border-radius: 18rpx; box-shadow:5rpx 6rpx 0 var(--shadow-soft), inset 0 0 30rpx rgba(255, 209, 102, .16); font-size: 66rpx; letter-spacing: 2rpx; text-shadow: 0 0 14rpx rgba(255, 209, 102, .55); }
+.clock-digital .plain-num { padding: 10rpx 28rpx; color:var(--on-panel); background:var(--panel); border-radius: 18rpx; box-shadow:5rpx 6rpx 0 var(--shadow-soft), inset 0 0 30rpx rgba(255, 209, 102, .16); font-size: 66rpx; letter-spacing: 2rpx; text-shadow: 0 0 10rpx rgba(255,255,255,.20); }
 
 /* 极简线条 */
 .clock-minimal .plain-num { color:var(--ink); font-size: 62rpx; font-weight: 300; letter-spacing: 5rpx; }
@@ -104,16 +104,13 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
 }
 .complete-button text { position: absolute; right: 7rpx; bottom: 9rpx; font-size: 18rpx; font-weight: 900; }
 
-.module-side { width: 30%; height: 100%; min-height: 0; padding-left: 14rpx; box-sizing: border-box; }
+.module-side { width: 24%; height: 100%; min-height: 0; padding-left: 12rpx; box-sizing: border-box; }
 .module-list { min-height: 0; margin: 4rpx 0 6rpx; padding: 10rpx 8rpx; display: flex; align-items: center; color:var(--text-4); }
 .module-list.selected { color:var(--ink); background:var(--card); border:3rpx solid var(--edge); border-radius: 20rpx; box-shadow:5rpx 6rpx 0 var(--shadow); }
 .module-index { flex: 0 0 26rpx; width: 26rpx; font-size: 20rpx; font-weight: 900; }
 .module-info { min-width: 0; display: flex; flex-direction: column; gap: 2rpx; font-size: 20rpx; font-weight: 800; }
 .module-info text:first-child { max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .module-info text:last-child { color:var(--text-2); font-size: 18rpx; font-weight: 900; }
-
-.ms-line { display: block; margin-bottom: 6rpx; color: var(--text-3); font-size: 18rpx; font-weight: 700; letter-spacing: 1rpx; line-height: 1.1; }
-.ms-val { color: var(--text-2); font-family: "Courier New", Menlo, monospace; font-weight: 800; font-variant-numeric: tabular-nums; }
 
 .next-button { flex: 0 0 auto; width: auto !important; min-width: 0; max-width: none; justify-content: center; height: 58rpx; min-height: 58rpx; margin: 0; padding: 0 16rpx 0 18rpx; display: flex; align-items: center; gap: 6rpx; color: var(--ink); background: var(--cream-1); border: 3rpx solid var(--edge); border-radius: 999rpx; box-shadow: 3rpx 4rpx 0 var(--shadow); font-size: 19rpx; font-weight: 900; line-height: 1; white-space: nowrap; }
 .next-arrow { color: var(--primary-2); font-size: 18rpx; }
@@ -196,21 +193,993 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
 .timer-page.immersive .timer-main { flex: 1; width: 100%; height: 100%; padding: 0; border-right: 0; }
 .timer-page.immersive .clock-stage { width: 100%; height: 100%; padding: 0; justify-content: center; gap: 0; }
 .timer-page.immersive .immersive-toggle { position: fixed; top: calc(env(safe-area-inset-top) + 12px); left: calc(env(safe-area-inset-left) + 14px); right: auto; }
-.timer-page.immersive .flip-row { gap: 8px; perspective: 1200px; }
-.timer-page.immersive .flip-colon { font-size: 36px; padding: 0 4px; line-height: 1; }
-.timer-page.immersive .flip-card { width: 88px; height: 168px; border-width: 3px; border-radius: 14px; box-shadow: 6px 8px 0 var(--shadow-soft); }
-.timer-page.immersive .flip-card::before { border-radius: 14px 14px 0 0; }
-.timer-page.immersive .flip-face-top, .timer-page.immersive .flip-flap-top { border-radius: 14px 14px 0 0; }
-.timer-page.immersive .flip-face-bottom, .timer-page.immersive .flip-flap-bottom, .timer-page.immersive .flip-flap-face-bottom { border-radius: 0 0 14px 14px; }
-.timer-page.immersive .flip-num { font-size: 64px; line-height: 168px; }
-.timer-page.immersive .plain-num { font-size: 108px; }
-.timer-page.immersive .clock-digital .plain-num { padding: 14px 34px; font-size: 100px; }
-.timer-page.immersive .clock-minimal .plain-num { font-size: 96px; }
-.timer-page.immersive .block-row { gap: 10px; }
-.timer-page.immersive .block-colon { font-size: 44px; }
-.timer-page.immersive .block-tile { width: 100px; height: 128px; border-width: 3px; border-radius: 14px; }
-.timer-page.immersive .block-num { font-size: 64px; }
-.timer-page.immersive .led-clock { padding: 16px 28px; gap: 8px; }
-.timer-page.immersive .led-digit { flex-basis: 76px; width: 76px; height: 124px; }
-.timer-page.immersive .led-colon { flex-basis: 10px; width: 10px; height: 76px; gap: 20px; }
-.timer-page.immersive .led-dot { width: 9px; height: 9px; }
+
+/* 完成计时：泡泡上浮 + 完成卡片 */
+.celebrate-mask {
+  position: fixed;
+  top: 0; right: 0; bottom: 0; left: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(20, 24, 30, .12);
+  animation: celebrate-fade .24s ease-out both;
+}
+.celebrate-bubble {
+  position: absolute;
+  bottom: 24%;
+  border-radius: 50%;
+  opacity: 0;
+  animation-name: bubble-rise;
+  animation-timing-function: cubic-bezier(.18, .7, .3, 1);
+  animation-fill-mode: both;
+  box-shadow: 0 0 0 2rpx rgba(255, 255, 255, .35), 0 0 18rpx rgba(255, 255, 255, .22);
+}
+.bubble-0 { background: var(--primary); }
+.bubble-1 { background: var(--primary-2); }
+.bubble-2 { background: var(--card); }
+.celebrate-card {
+  position: relative;
+  z-index: 2;
+  min-width: 300rpx;
+  padding: 30rpx 38rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4rpx;
+  background: var(--primary);
+  border: 3rpx solid var(--edge);
+  border-radius: 30rpx;
+  box-shadow: 8rpx 9rpx 0 var(--shadow);
+  transform-origin: center;
+  animation: celebrate-card-in .52s cubic-bezier(.2, .9, .3, 1.15) both;
+}
+.celebrate-title { color: var(--on-primary); font-size: 52rpx; font-weight: 900; line-height: 1.1; letter-spacing: 4rpx; }
+.celebrate-message { max-width: 500rpx; margin-top: 6rpx; color: var(--on-primary); font-size: 28rpx; font-weight: 900; letter-spacing: 3rpx; line-height: 1.4; text-align: center; opacity: .92; }
+.celebrate-reward { position: relative; margin-top: 10rpx; width: 86rpx; height: 76rpx; display: flex; align-items: center; justify-content: center; }
+.celebrate-reward::before { content: ""; position: absolute; top: 0; right: 0; bottom: 0; left: 0; border: 2rpx dashed rgba(255, 255, 255, .42); border-radius: 50%; animation: celebrate-reward-ring 1.1s ease-out both; }
+.celebrate-tomato { position: relative; width: 62rpx; height: 56rpx; box-sizing: border-box; background: #F2603C; border: 3rpx solid var(--edge); border-radius: 48% 48% 52% 52%; box-shadow: 4rpx 5rpx 0 var(--edge); animation: celebrate-tomato-pop .56s cubic-bezier(.2, .9, .3, 1.2) both .08s; }
+.celebrate-tomato::before { content: ""; position: absolute; top: -11rpx; left: 16rpx; width: 24rpx; height: 12rpx; box-sizing: border-box; background: #5F9B58; border: 3rpx solid var(--edge); border-radius: 50% 50% 40% 40%; transform: rotate(-8deg); }
+.celebrate-tomato::after { content: ""; position: absolute; left: 11rpx; top: 12rpx; width: 12rpx; height: 16rpx; background: rgba(255, 255, 255, .42); border-radius: 50%; transform: rotate(24deg); }
+
+@keyframes celebrate-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes celebrate-card-in {
+  0% { opacity: 0; transform: scale(.72) rotate(-4deg); }
+  60% { opacity: 1; transform: scale(1.06) rotate(2deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0); }
+}
+@keyframes bubble-rise {
+  0% { opacity: 0; transform: translateY(0) scale(.55); }
+  14% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-62vh) scale(1.08); }
+}
+
+/* 单个模块完成：勾号弹入 */
+.module-list.done .module-index { color: var(--success-text); animation: module-check-pop .38s cubic-bezier(.2, .8, .3, 1) backwards; }
+@keyframes module-check-pop { 0% { opacity: 0; transform: scale(.4) rotate(-10deg); } 65% { opacity: 1; transform: scale(1.16) rotate(3deg); } 100% { opacity: 1; transform: scale(1) rotate(0); } }
+
+@keyframes celebrate-tomato-pop {
+  0% { opacity: 0; transform: scale(.45) rotate(-8deg); }
+  58% { opacity: 1; transform: scale(1.16) rotate(3deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0); }
+}
+@keyframes celebrate-reward-ring {
+  0% { opacity: 0; transform: scale(.6); }
+  55% { opacity: .9; transform: scale(1.04); }
+  100% { opacity: 0; transform: scale(1.22); }
+}
+
+/* 霓虹 / 描边：与快捷计时、设置共用同一套样式目录 */
+.clock-neon .plain-clock {
+  padding: 16rpx 34rpx;
+  background: var(--ink);
+  border-radius: 22rpx;
+  box-shadow: 0 0 22rpx rgba(255, 60, 172, .35), inset 0 0 26rpx rgba(80, 220, 255, .16);
+}
+.clock-neon .plain-num {
+  color: #FFE9F4;
+  font-size: 66rpx;
+  letter-spacing: 3rpx;
+  text-shadow: 0 0 6rpx #FF3CAC, 0 0 18rpx #FF3CAC, 0 0 36rpx rgba(80, 220, 255, .75);
+}
+.clock-outline .plain-clock {
+  padding: 12rpx 30rpx;
+  background: transparent;
+  border: 4rpx solid var(--ink);
+  border-radius: 20rpx;
+}
+.clock-outline .plain-num {
+  color: transparent;
+  font-size: 66rpx;
+  letter-spacing: 3rpx;
+  -webkit-text-stroke: 4rpx var(--ink);
+}
+.timer-page.compact .clock-neon .plain-clock, .timer-page.compact .clock-outline .plain-clock { padding: 10px 28px; }
+.timer-page.compact .clock-neon .plain-num, .timer-page.compact .clock-outline .plain-num { font-size: 62px; }
+
+/* 右侧模块栏：手动收起 / 展开（贴边小把手，不压住模块文字） */
+.timer-page { position: relative; }
+.module-toggle {
+  position: absolute;
+  z-index: 40;
+  top: 50%;
+  right: 30%;
+  width: 44rpx;
+  height: 72rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  transform: translateY(-50%);
+  opacity: .62;
+  transition: opacity .18s ease;
+}
+.module-toggle:active { opacity: 1; }
+.module-toggle-chevron {
+  width: 10rpx;
+  height: 10rpx;
+  box-sizing: border-box;
+  border-top: 2rpx solid var(--text-3);
+  border-right: 2rpx solid var(--text-3);
+  transform: rotate(45deg);
+}
+.module-toggle-chevron.left { transform: rotate(225deg); }
+.timer-page.module-collapsed .module-side { display: none; }
+.timer-page.module-collapsed .timer-main { border-right: 0; padding-right: 0; }
+.timer-page.module-collapsed .module-toggle { right: 0; }
+.timer-page.immersive .module-toggle { display: none; }
+
+/* 模块信息行里的毫秒，不再单独悬浮一行 */
+.meta-ms { color: var(--text-3); font-size: 17rpx; font-weight: 700; letter-spacing: .5rpx; }
+.timer-page.compact .meta-ms { font-size: 13px; }
+
+/* 计时页入场：模式标签、时钟、控制栏、模块栏依次出现 */
+.timer-page.reveal .mode-chip { animation: timer-chip-in .42s cubic-bezier(.2, .9, .3, 1) backwards; }
+.timer-page.reveal .immersive-toggle { animation: timer-chip-in .4s .04s cubic-bezier(.2, .9, .3, 1) backwards; }
+.timer-page.reveal .clock-stage { animation: timer-clock-in .54s .06s cubic-bezier(.2, .9, .3, 1) backwards; }
+.timer-page.reveal .controls { animation: timer-controls-spring .58s .16s cubic-bezier(.22, .9, .3, 1) backwards; }
+.timer-page.reveal .tick-pill { animation: timer-tick-bump .34s .4s cubic-bezier(.3, .7, .3, 1) backwards; }
+.timer-page.reveal .module-side { animation: timer-side-in .5s .08s cubic-bezier(.2, .9, .3, 1) backwards; }
+.timer-page.reveal .module-toggle { animation: timer-chip-in .38s .12s cubic-bezier(.2, .9, .3, 1) backwards; }
+.timer-page.reveal .module-list { animation: timer-module-in .38s cubic-bezier(.2, .9, .3, 1) backwards; }
+.timer-page.reveal .module-list:nth-child(2) { animation-delay: .05s; }
+.timer-page.reveal .module-list:nth-child(3) { animation-delay: .10s; }
+.timer-page.reveal .module-list:nth-child(4) { animation-delay: .15s; }
+.timer-page.reveal .module-list:nth-child(5) { animation-delay: .20s; }
+.timer-page.reveal .module-list:nth-child(n+6) { animation-delay: .25s; }
+
+@keyframes timer-chip-in {
+  0% { opacity: 0; transform: translateY(-14rpx) scale(.92); }
+  65% { opacity: 1; transform: translateY(0) scale(1.04); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes timer-clock-in {
+  0% { opacity: 0; transform: scale(.9) translateY(14rpx); }
+  60% { opacity: 1; transform: scale(1.025) translateY(0); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes timer-side-in {
+  0% { opacity: 0; transform: translateX(30rpx); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+@keyframes timer-module-in {
+  0% { opacity: 0; transform: translateX(18rpx); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+/* 运行中的细节动效：暂停按钮呼吸、进度条流光 */
+.timer-page.running .pause-button { animation: timer-run-pulse 2.4s ease-in-out infinite; }
+@keyframes timer-run-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 3rpx 4rpx 0 var(--shadow); }
+  50% { transform: scale(1.05); box-shadow: 4rpx 6rpx 0 var(--shadow); }
+}
+.stage-progress-fill { position: relative; overflow: hidden; transition: width .35s ease; }
+.stage-progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -45%;
+  width: 40%;
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.5) 50%, rgba(255,255,255,0) 100%);
+  animation: timer-progress-shine 2.3s linear infinite;
+  pointer-events: none;
+}
+@keyframes timer-progress-shine {
+  0% { left: -45%; }
+  100% { left: 110%; }
+}
+.module-list { transition: background-color .22s ease, color .22s ease, box-shadow .22s ease, transform .22s ease; }
+.module-list.selected { transform: translateX(-2rpx); }
+
+/* 进度条略微加粗，下方品牌 logo 跟随进度移动 */
+.progress-rail { position: relative; width: 100%; max-width: 460rpx; padding-bottom: 42rpx; }
+.progress-rail .stage-progress { width: 100%; max-width: none; height: 12rpx; margin: 0; }
+.progress-logo { position: absolute; top: 18rpx; width: 32rpx; height: 32rpx; margin-left: -16rpx; transition: left .35s ease; animation: progress-logo-bob 1.8s ease-in-out infinite; }
+.progress-logo-img { width: 32rpx; height: 32rpx; display: block; }
+@keyframes progress-logo-bob {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-4rpx) scale(1.05); }
+}
+.timer-page.compact .progress-rail { max-width: 100%; padding-bottom: 27px; }
+.timer-page.compact .progress-rail .stage-progress { height: 9px; }
+.timer-page.compact .progress-logo { top: 13px; width: 22px; height: 22px; margin-left: -11px; }
+.timer-page.compact .progress-logo-img { width: 22px; height: 22px; }
+.timer-page.immersive .progress-rail { display: none; }
+
+/* 模块时间更醒目：加粗字重 + 轻量胶囊底，不改变主时钟尺寸 */
+.stage-meta { gap: 22rpx; font-size: 22rpx; }
+.meta-module { font-size: 22rpx; }
+.meta-total {
+  margin-left: 10rpx;
+  padding: 2rpx 12rpx;
+  border: 2rpx solid var(--edge);
+  border-radius: 999rpx;
+  background: var(--card);
+  color: var(--accent-text);
+  font-size: 28rpx;
+  line-height: 1.2;
+  letter-spacing: 1rpx;
+}
+.meta-ms { margin-left: 10rpx; font-size: 16rpx; opacity: .8; }
+.timer-page.compact .stage-meta { gap: 16px; font-size: 15px; }
+.timer-page.compact .meta-module { font-size: 15px; }
+.timer-page.compact .meta-total { margin-left: 7px; padding: 1px 8px; border-width: 2px; font-size: 19px; line-height: 1.2; }
+.timer-page.compact .meta-ms { margin-left: 7px; font-size: 12px; }
+
+/* 控制按钮进场：从下方冲上来 → 轻微撞到上方元素 → 回弹 → 稳定 */
+@keyframes timer-controls-spring {
+  0% { opacity: 0; transform: translateY(44rpx) scale(.9); }
+  42% { opacity: 1; transform: translateY(-10rpx) scale(1.06); }
+  60% { transform: translateY(7rpx) scale(.98); }
+  78% { transform: translateY(-3rpx) scale(1.015); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes timer-tick-bump {
+  0%, 100% { transform: translateY(0); }
+  42% { transform: translateY(-6rpx); }
+  70% { transform: translateY(2rpx); }
+}
+
+/* 右侧模块栏最右边缘不再显示滚动条轨道 */
+.module-side::-webkit-scrollbar { width: 0 !important; height: 0 !important; display: none !important; }
+.module-side { scrollbar-width: none; -ms-overflow-style: none; }
+
+/* 模块信息行在总时间上方，和主时钟拉开一点距离 */
+.stage-meta { margin-bottom: 4rpx; }
+.timer-page.compact .stage-meta { margin-bottom: 6px; }
+
+/* 完成结算：改成轻量横向小卡片，不再铺一块大蓝色背景 */
+.celebrate-mask { background: transparent; pointer-events: none; }
+.celebrate-card {
+  min-width: 0;
+  max-width: 72%;
+  padding: 16rpx 26rpx 16rpx 16rpx;
+  flex-direction: row;
+  align-items: center;
+  gap: 16rpx;
+  background: var(--card);
+  border: 3rpx solid var(--edge);
+  border-radius: 24rpx;
+  box-shadow: 8rpx 9rpx 0 var(--shadow);
+}
+.celebrate-copy { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 3rpx; }
+.celebrate-title { color: var(--ink); font-size: 40rpx; line-height: 1.08; letter-spacing: 2rpx; }
+.celebrate-message { max-width: none; margin-top: 0; color: var(--accent-text); font-size: 24rpx; line-height: 1.3; letter-spacing: 1rpx; text-align: left; opacity: 1; }
+.celebrate-reward { flex: 0 0 68rpx; width: 68rpx; height: 62rpx; margin-top: 0; }
+.celebrate-reward::before { border-color: var(--line-strong); }
+.celebrate-tomato { width: 52rpx; height: 46rpx; border-width: 2rpx; box-shadow: 3rpx 4rpx 0 var(--edge); }
+.celebrate-tomato::before { top: -9rpx; left: 13rpx; width: 20rpx; height: 10rpx; border-width: 2rpx; }
+.celebrate-tomato::after { left: 9rpx; top: 10rpx; width: 10rpx; height: 13rpx; }
+.timer-page.compact .celebrate-card { padding: 9px 14px 9px 9px; gap: 8px; border-width: 2px; border-radius: 14px; box-shadow: 4px 5px 0 var(--shadow); }
+.timer-page.compact .celebrate-title { font-size: 24px; letter-spacing: 1px; }
+.timer-page.compact .celebrate-message { font-size: 14px; }
+.timer-page.compact .celebrate-reward { flex-basis: 36px; width: 36px; height: 33px; }
+.timer-page.compact .celebrate-tomato { width: 28px; height: 25px; }
+
+/* 全屏按钮：按压、图标变形与进出全屏的柔和过渡 */
+.immersive-toggle { overflow: hidden; transition: transform .16s cubic-bezier(.2, .9, .3, 1), background-color .18s ease, box-shadow .18s ease; }
+.immersive-toggle.on { background: var(--primary); }
+.immersive-toggle:active { transform: scale(.92) translate(1px, 1px); box-shadow: 1px 2px 0 var(--shadow-soft); }
+.fs-icon { position: absolute; top: 50%; left: 50%; width: 22px; height: 22px; margin: -11px 0 0 -11px; transition: opacity .18s ease, transform .26s cubic-bezier(.2, .9, .3, 1); }
+.fs-icon.hidden { opacity: 0; transform: scale(.56) rotate(-28deg); }
+.fs-exit { position: absolute; top: 50%; left: 50%; width: 20px; height: 20px; margin: -10px 0 0 -10px; opacity: 0; transform: scale(.68) rotate(16deg); transition: opacity .2s ease .04s, transform .26s cubic-bezier(.2, .9, .3, 1) .04s; }
+.fs-exit.show { opacity: 1; transform: scale(1) rotate(0); }
+.immersive-toggle.on .fs-exit-char { color: var(--on-primary); }
+
+.timer-main { transition: padding .3s ease, border-color .26s ease; }
+.module-side { transition: width .32s cubic-bezier(.2, .9, .3, 1), padding-left .32s ease, opacity .2s ease; }
+.timer-page.immersive .module-side { display: block; width: 0; padding-left: 0; opacity: 0; overflow: hidden; pointer-events: none; }
+
+/* 结算卡片再放大一档：主体和文字都更容易看清，但仍不铺满全屏 */
+.celebrate-card { max-width: 78%; padding: 20rpx 34rpx 20rpx 22rpx; gap: 20rpx; }
+.celebrate-title { font-size: 48rpx; }
+.celebrate-message { font-size: 28rpx; }
+.celebrate-reward { flex-basis: 84rpx; width: 84rpx; height: 76rpx; }
+.celebrate-tomato { width: 62rpx; height: 54rpx; }
+.timer-page.compact .celebrate-card { min-width: 300px; max-width: 78%; padding: 18px 26px 18px 18px; gap: 15px; border-radius: 18px; justify-content: center; }
+.timer-page.compact .celebrate-title { font-size: 36px; letter-spacing: 1px; }
+.timer-page.compact .celebrate-message { font-size: 20px; line-height: 1.25; }
+.timer-page.compact .celebrate-reward { flex-basis: 54px; width: 54px; height: 49px; }
+.timer-page.compact .celebrate-tomato { width: 42px; height: 37px; border-width: 3px; }
+.timer-page.compact .celebrate-tomato::before { top: -7px; left: 11px; width: 16px; height: 8px; border-width: 2px; }
+.timer-page.compact .celebrate-tomato::after { left: 7px; top: 8px; width: 8px; height: 10px; }
+
+/* 模块时间提高对比度：深色字重 + 更实的胶囊底 */
+.meta-total {
+  color: var(--ink);
+  background: var(--cream-1);
+  border-color: var(--line-strong);
+  font-weight: 900;
+}
+.meta-total .num { color: var(--ink); font-weight: 900; }
+.meta-ms { color: var(--text-2); opacity: 1; font-weight: 900; }
+
+/* 进全屏：外围组件先快速向外淡出，紧接着时钟做一次连续形变 */
+.timer-page.normal.immersive-leaving .mode-chip,
+.timer-page.normal.immersive-leaving .stage-meta { animation: immersive-out-up .16s cubic-bezier(.4, 0, .8, .4) both; }
+.timer-page.normal.immersive-leaving .progress-rail,
+.timer-page.normal.immersive-leaving .stage-target,
+.timer-page.normal.immersive-leaving .tick-pill,
+.timer-page.normal.immersive-leaving .controls { animation: immersive-out-down .16s cubic-bezier(.4, 0, .8, .4) both; }
+.timer-page.normal.immersive-leaving .module-side,
+.timer-page.normal.immersive-leaving .module-toggle { animation: immersive-out-right .16s cubic-bezier(.4, 0, .8, .4) both; }
+
+/* 出全屏：时钟落回原位，外围组件随后从屏幕外平滑返回 */
+.timer-page.normal.immersive-anim .mode-chip,
+.timer-page.normal.immersive-anim .stage-meta { animation: immersive-in-up .38s cubic-bezier(.2, .8, .3, 1) .1s backwards; }
+.timer-page.normal.immersive-anim .progress-rail,
+.timer-page.normal.immersive-anim .stage-target,
+.timer-page.normal.immersive-anim .tick-pill,
+.timer-page.normal.immersive-anim .controls { animation: immersive-in-down .38s cubic-bezier(.2, .8, .3, 1) .14s backwards; }
+.timer-page.normal.immersive-anim .module-side,
+.timer-page.normal.immersive-anim .module-toggle { animation: immersive-in-right .38s cubic-bezier(.2, .8, .3, 1) .12s backwards; }
+
+@keyframes immersive-out-up {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-120rpx) scale(.96); }
+}
+@keyframes immersive-out-down {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(120rpx) scale(.96); }
+}
+@keyframes immersive-out-right {
+  0% { opacity: 1; transform: translateX(0); }
+  100% { opacity: 0; transform: translateX(120rpx); }
+}
+@keyframes immersive-in-up {
+  0% { opacity: 0; transform: translateY(-80rpx) scale(.98); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes immersive-in-down {
+  0% { opacity: 0; transform: translateY(80rpx) scale(.98); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes immersive-in-right {
+  0% { opacity: 0; transform: translateX(90rpx); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+/* 收纳把手贴到右侧模块栏的顶部边界，做成一体化小页签 */
+.module-toggle {
+  top: calc(env(safe-area-inset-top) + 8rpx);
+  right: 24%;
+  width: 36rpx;
+  height: 56rpx;
+  transform: none;
+  opacity: .92;
+  background: var(--bg);
+  border: 2rpx solid var(--line-strong);
+  border-right: 0;
+  border-radius: 12rpx 0 0 12rpx;
+  box-shadow: -2rpx 2rpx 0 var(--shadow-soft);
+  transition: opacity .16s ease, transform .16s ease;
+}
+.module-toggle:active { transform: scale(.96); opacity: 1; }
+.timer-page.module-collapsed .module-toggle { right: 0; }
+
+/* 翻页时钟：更明显的 3D 翻页和落页阴影 */
+.flip-card.flip-a .flip-flap-top,
+.flip-card.flip-b .flip-flap-top,
+.flip-card.flip-a .flip-flap-bottom,
+.flip-card.flip-b .flip-flap-bottom {
+  box-shadow: 0 8rpx 18rpx rgba(13, 39, 58, .18);
+}
+.flip-flap-top::after,
+.flip-flap-bottom::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .22), rgba(13, 39, 58, .08));
+}
+/* 收纳把手：只留极淡的箭头，不做出独立卡片 */
+.module-toggle {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  opacity: .34;
+  width: 40rpx;
+  height: 56rpx;
+}
+.module-toggle:active { background: transparent; opacity: .85; transform: scale(.96); }
+.module-toggle-chevron { border-color: var(--text-3); opacity: .7; }
+
+/* 全屏切换由 .clock-body 的 transform 过渡负责，clock-stage 不再参与动画 */
+.timer-page.immersive.immersive-anim .clock-stage,
+.timer-page.normal.immersive-anim .clock-stage {
+  animation: none !important;
+}
+
+/* 结算：用背景模糊代替底色，卡片本身不再铺背景 */
+.celebrate-mask {
+  background: rgba(255, 255, 255, .04);
+  -webkit-backdrop-filter: blur(12px) saturate(1.04);
+  backdrop-filter: blur(12px) saturate(1.04);
+}
+.celebrate-card {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+.celebrate-title {
+  color: var(--ink);
+  font-weight: 900;
+  text-shadow: 0 2rpx 10rpx rgba(0, 0, 0, .16);
+}
+.celebrate-message {
+  color: var(--ink);
+  font-weight: 900;
+  opacity: 1;
+  text-shadow: 0 2rpx 10rpx rgba(0, 0, 0, .16);
+}
+.timer-page.compact .celebrate-title,
+.timer-page.compact .celebrate-message {
+  text-shadow: 0 2px 8px rgba(0, 0, 0, .16);
+}
+.celebrate-reward::before { border: 2rpx dashed var(--ink); opacity: .55; }
+
+/* 结算画面 v3：无卡片边框/底色，背景模糊，内容放大并提高文字对比 */
+.celebrate-mask {
+  background: rgba(255, 255, 255, .10);
+  -webkit-backdrop-filter: blur(16px) saturate(1.06);
+  backdrop-filter: blur(16px) saturate(1.06);
+}
+.celebrate-card {
+  min-width: 0;
+  max-width: 88%;
+  padding: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 10rpx;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  animation: celebrate-content-in .56s cubic-bezier(.2, .8, .3, 1) both;
+}
+@keyframes celebrate-content-in {
+  0% { opacity: 0; transform: translateY(30rpx) scale(.94); filter: blur(5rpx); }
+  62% { opacity: 1; transform: translateY(-2rpx) scale(1.012); filter: blur(0); }
+  100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+.celebrate-reward {
+  flex: 0 0 auto;
+  width: 132rpx;
+  height: 120rpx;
+  margin: 0;
+}
+.celebrate-reward::before { display: none; }
+.celebrate-tomato {
+  width: 94rpx;
+  height: 84rpx;
+  border-width: 4rpx;
+  box-shadow: 4rpx 6rpx 0 var(--edge), 0 18rpx 36rpx rgba(13, 39, 58, .14);
+}
+.celebrate-tomato::before { top: -15rpx; left: 24rpx; width: 34rpx; height: 16rpx; border-width: 4rpx; }
+.celebrate-tomato::after { left: 16rpx; top: 18rpx; width: 18rpx; height: 24rpx; }
+.celebrate-copy { min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 8rpx; }
+.celebrate-title {
+  color: var(--ink);
+  font-size: 76rpx;
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: 4rpx;
+  text-shadow: 0 2rpx 0 var(--card), 0 6rpx 24rpx rgba(255, 255, 255, .92), 0 3rpx 12rpx rgba(13, 39, 58, .16);
+}
+.celebrate-message {
+  max-width: 600rpx;
+  margin-top: 0;
+  color: var(--ink);
+  font-size: 34rpx;
+  font-weight: 900;
+  line-height: 1.45;
+  letter-spacing: 3rpx;
+  text-align: center;
+  opacity: 1;
+  text-shadow: 0 2rpx 0 var(--card), 0 5rpx 18rpx rgba(255, 255, 255, .95), 0 2rpx 8rpx rgba(13, 39, 58, .14);
+}
+.timer-page.compact .celebrate-card {
+  min-width: 0;
+  max-width: 92%;
+  padding: 0;
+  gap: 8px;
+}
+.timer-page.compact .celebrate-title { font-size: 46px; letter-spacing: 2px; }
+.timer-page.compact .celebrate-message { font-size: 21px; line-height: 1.4; }
+.timer-page.compact .celebrate-reward { flex-basis: 88px; width: 88px; height: 80px; }
+.timer-page.compact .celebrate-tomato { width: 64px; height: 57px; border-width: 3px; }
+.timer-page.compact .celebrate-tomato::before { top: -10px; left: 16px; width: 23px; height: 11px; border-width: 3px; }
+.timer-page.compact .celebrate-tomato::after { left: 11px; top: 12px; width: 12px; height: 16px; }
+
+/* ===== 时钟样式调整：翻页/积木去背景，数字/极简加框，极简手写，新增果冻 ===== */
+/* 翻页：只保留数字和翻页动作，不要数字卡片背景/描边/阴影 */
+.timer-page .flip-card,
+.timer-page.compact .flip-card,
+.timer-page.immersive .flip-card {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+.flip-card::before,
+.flip-split { display: none; }
+.flip-face,
+.flip-flap,
+.flip-flap-face { background: transparent; }
+.flip-num { color: var(--ink); }
+.flip-colon { color: var(--ink); }
+
+/* 积木：去掉方块底色、边框和投影，只留块面感的数字 */
+.block-tile,
+.timer-page.compact .block-tile,
+.timer-page.immersive .block-tile {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+.block-num,
+.block-colon { color: var(--ink); }
+
+/* 数字时钟：保留面板，但加一圈清楚的轮廓 */
+.clock-digital .plain-num { border: 3rpx solid var(--edge); }
+.timer-page.compact .clock-digital .plain-num { border-width: 2px; }
+
+/* 极简：改成手写体，并加一圈细框 */
+.clock-minimal .plain-clock {
+  padding: 10rpx 30rpx;
+  border: 3rpx solid var(--ink);
+  border-radius: 18rpx;
+}
+.clock-minimal .plain-num {
+  font-family: "Arial Rounded MT Bold", "Yuanti SC", "YouYuan", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  font-weight: 500;
+  letter-spacing: 2rpx;
+}
+.timer-page.compact .clock-minimal .plain-clock { padding: 8px 24px; border-width: 2px; }
+
+/* 新增果冻叠影：糖果色填充 + 深色描边 + 错位投影 */
+.clock-jelly .plain-num {
+  color: var(--primary);
+  -webkit-text-stroke: 2rpx var(--edge);
+  text-shadow: 4rpx 5rpx 0 var(--primary-2), 7rpx 8rpx 0 var(--edge);
+  font-size: 66rpx;
+  letter-spacing: 2rpx;
+}
+.timer-page.compact .clock-jelly .plain-num { font-size: 62px; }
+.flip-card.flip-a .flip-flap-top,
+.flip-card.flip-b .flip-flap-top,
+.flip-card.flip-a .flip-flap-bottom,
+.flip-card.flip-b .flip-flap-bottom { box-shadow: none; }
+.flip-flap-top::after,
+.flip-flap-bottom::after { display: none; }
+
+/* 翻页 / 积木去掉背景后，用中缝和投影保留各自识别度 */
+.flip-split {
+  display: block;
+  left: 18%;
+  right: 18%;
+  height: 1rpx;
+  margin-top: 0;
+  background: rgba(30, 52, 72, .30);
+  opacity: 1;
+}
+.flip-num { text-shadow: 2rpx 2rpx 0 var(--line-strong); }
+.block-num { text-shadow: 3rpx 3rpx 0 var(--line-strong); }
+
+/* 计时页底部控制区：整体放大、拉开间距，避免挤在一起 */
+.timer-page.compact .controls {
+  margin-top: 16px;
+  gap: 18px;
+}
+.timer-page.compact .prev-button,
+.timer-page.compact .pause-button,
+.timer-page.compact .complete-button {
+  flex: 0 0 64px;
+  width: 64px;
+  min-width: 64px;
+  max-width: 64px;
+  height: 64px;
+  min-height: 64px;
+  max-height: 64px;
+  border-width: 3px;
+  box-shadow: 3px 4px 0 var(--shadow);
+  font-size: 28px;
+}
+.timer-page.compact .prev-button { font-size: 24px; }
+.timer-page.compact .complete-button { font-size: 30px; }
+.timer-page.compact .next-button {
+  height: 64px;
+  min-height: 64px;
+  padding: 0 20px;
+  gap: 8px;
+  border-width: 3px;
+  box-shadow: 3px 4px 0 var(--shadow);
+  font-size: 16px;
+}
+.timer-page.compact .next-arrow { font-size: 15px; }
+.timer-page.compact .tick-pill {
+  margin-top: 8px;
+  padding: 6px 16px;
+  gap: 7px;
+  font-size: 14px;
+}
+
+/* 结算画面 v4：无底色、无边框、无矩形轮廓，用柔光背景托起超大的完成主体 */
+.celebrate-mask {
+  background:
+    radial-gradient(circle at 50% 44%,
+      rgba(255, 253, 247, .96) 0%,
+      rgba(255, 253, 247, .86) 30%,
+      rgba(255, 253, 247, .46) 56%,
+      rgba(255, 253, 247, .10) 78%,
+      rgba(255, 253, 247, 0) 94%),
+    rgba(250, 245, 236, .12);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.celebrate-card {
+  min-width: 0;
+  max-width: 96%;
+  padding: 0;
+  gap: 20rpx;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.celebrate-reward {
+  position: relative;
+  flex: 0 0 auto;
+  width: 220rpx;
+  height: 200rpx;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.celebrate-halo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 240rpx;
+  height: 240rpx;
+  margin: -120rpx 0 0 -120rpx;
+  border-radius: 50%;
+  background: radial-gradient(circle,
+    rgba(255, 255, 255, .72) 0%,
+    rgba(255, 255, 255, .34) 42%,
+    rgba(255, 255, 255, 0) 70%);
+  animation: celebrate-halo-pulse 1.9s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes celebrate-halo-pulse {
+  0%, 100% { transform: scale(.92); opacity: .72; }
+  50% { transform: scale(1.16); opacity: 1; }
+}
+.celebrate-reward::before { display: none; }
+.celebrate-tomato {
+  position: relative;
+  z-index: 1;
+  width: 164rpx;
+  height: 146rpx;
+  border-width: 5rpx;
+  border-radius: 48% 48% 52% 52%;
+  box-shadow: 6rpx 8rpx 0 var(--edge), 0 24rpx 44rpx rgba(13, 39, 58, .16);
+}
+.celebrate-tomato::before {
+  top: -18rpx;
+  left: 36rpx;
+  width: 54rpx;
+  height: 24rpx;
+  border-width: 4rpx;
+}
+.celebrate-tomato::after {
+  left: 28rpx;
+  top: 28rpx;
+  width: 26rpx;
+  height: 36rpx;
+}
+.celebrate-copy { gap: 10rpx; }
+.celebrate-title {
+  color: var(--ink);
+  font-size: 118rpx;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 8rpx;
+  text-shadow: 0 2rpx 0 rgba(255, 255, 255, .95), 0 8rpx 26rpx rgba(255, 255, 255, .86), 0 3rpx 10rpx rgba(13, 39, 58, .12);
+}
+.celebrate-message {
+  max-width: 760rpx;
+  color: var(--ink);
+  font-size: 46rpx;
+  font-weight: 900;
+  line-height: 1.35;
+  letter-spacing: 4rpx;
+  text-align: center;
+  text-shadow: 0 2rpx 0 rgba(255, 255, 255, .95), 0 6rpx 22rpx rgba(255, 255, 255, .9);
+}
+
+/* 横屏计时页使用 px 尺寸：主体直接放大一档 */
+.timer-page.compact .celebrate-card {
+  min-width: 0;
+  max-width: 96%;
+  padding: 0;
+  gap: 14px;
+}
+.timer-page.compact .celebrate-reward {
+  flex-basis: 160px;
+  width: 160px;
+  height: 150px;
+}
+.timer-page.compact .celebrate-halo {
+  width: 210px;
+  height: 210px;
+  margin: -105px 0 0 -105px;
+}
+.timer-page.compact .celebrate-tomato {
+  width: 122px;
+  height: 108px;
+  border-width: 4px;
+  box-shadow: 6px 8px 0 var(--edge), 0 18px 38px rgba(13, 39, 58, .15);
+}
+.timer-page.compact .celebrate-tomato::before {
+  top: -14px;
+  left: 27px;
+  width: 40px;
+  height: 18px;
+  border-width: 3px;
+}
+.timer-page.compact .celebrate-tomato::after {
+  left: 21px;
+  top: 21px;
+  width: 19px;
+  height: 27px;
+}
+.timer-page.compact .celebrate-title {
+  font-size: 78px;
+  letter-spacing: 5px;
+}
+.timer-page.compact .celebrate-message {
+  max-width: 92vw;
+  font-size: 27px;
+  line-height: 1.35;
+  letter-spacing: 2px;
+}
+
+/* ===== 翻页时钟 v5：恢复真正的上下翻页牌，并跟随主题主色 ===== */
+.timer-page .flip-card,
+.timer-page.compact .flip-card,
+.timer-page.immersive .flip-card {
+  background: var(--primary, #5AA9E6);
+  border: 3rpx solid var(--edge, #1E3448);
+  border-radius: 12rpx;
+  box-shadow: 4rpx 5rpx 0 var(--shadow, rgba(30, 52, 72, .20));
+  transform-style: preserve-3d;
+}
+.timer-page .flip-card::before {
+  display: block;
+  border-radius: 12rpx 12rpx 0 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .22), rgba(255, 255, 255, 0) 62%);
+}
+.timer-page .flip-face,
+.timer-page .flip-flap,
+.timer-page .flip-flap-face {
+  background: var(--primary, #5AA9E6);
+}
+.timer-page .flip-face-top,
+.timer-page .flip-flap-top,
+.timer-page .flip-flap-face {
+  border-radius: 9rpx 9rpx 0 0;
+}
+.timer-page .flip-face-bottom,
+.timer-page .flip-flap-bottom,
+.timer-page .flip-flap-face-bottom {
+  border-radius: 0 0 9rpx 9rpx;
+  box-shadow: inset 0 6rpx 10rpx rgba(13, 39, 58, .10);
+}
+.timer-page .flip-num,
+.timer-page .flip-face-old .flip-num {
+  color: var(--on-primary, #FFFCF2);
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  font-weight: 900;
+  text-shadow: 0 2rpx 0 rgba(13, 39, 58, .10);
+}
+.timer-page .flip-split {
+  display: block;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 3rpx;
+  margin-top: -1.5rpx;
+  background: var(--edge, #1E3448);
+  opacity: .92;
+  z-index: 6;
+}
+.timer-page .flip-colon {
+  color: var(--ink);
+  font-family: "Helvetica Neue", Arial, sans-serif;
+}
+.timer-page .flip-flap-top::after,
+.timer-page .flip-flap-bottom::after {
+  background: linear-gradient(180deg, rgba(255, 255, 255, .20), rgba(13, 39, 58, .08));
+}
+
+/* 结算主体：直接使用品牌 logo，替换手绘番茄 */
+.celebrate-logo {
+  position: relative;
+  z-index: 1;
+  width: 180rpx;
+  height: 180rpx;
+  display: block;
+  animation: celebrate-logo-in .62s cubic-bezier(.2, .9, .3, 1.15) both .06s;
+  filter: drop-shadow(0 12rpx 18rpx rgba(13, 39, 58, .14));
+}
+@keyframes celebrate-logo-in {
+  0% { opacity: 0; transform: scale(.68) rotate(-8deg); }
+  58% { opacity: 1; transform: scale(1.08) rotate(2deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0); }
+}
+.timer-page.compact .celebrate-logo {
+  width: 132px;
+  height: 132px;
+}
+
+/* 结算背景：强模糊 + 柔和光晕，彻底压掉下层卡片的边框轮廓 */
+.celebrate-mask {
+  background:
+    radial-gradient(circle at 50% 44%,
+      rgba(255, 253, 247, .99) 0%,
+      rgba(255, 253, 247, .94) 36%,
+      rgba(255, 253, 247, .66) 62%,
+      rgba(255, 253, 247, .22) 82%,
+      rgba(255, 253, 247, 0) 96%),
+    rgba(250, 245, 236, .52);
+  -webkit-backdrop-filter: blur(24px) saturate(1.04);
+  backdrop-filter: blur(24px) saturate(1.04);
+}
+.celebrate-card,
+.timer-page.compact .celebrate-card {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+.timer-page.compact .celebrate-reward {
+  flex-basis: 160px;
+  width: 160px;
+  height: 150px;
+}
+
+/* 底部控制区：左右两组分散到两侧，不再挤在中间 */
+.controls {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 16px;
+  justify-content: space-between;
+  gap: 0;
+}
+.timer-page.compact .controls {
+  width: 100%;
+  padding: 0 14px;
+  justify-content: space-between;
+  gap: 0;
+}
+.timer-page.compact .control-group { gap: 10px; }
+
+/* 底部四个控制键在整行内均匀分开，而不是拆成左右两组 */
+.controls {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0;
+}
+.timer-page.compact .controls {
+  width: 100%;
+  padding: 0 15px;
+  justify-content: space-between;
+  gap: 0;
+}
+
+/* 计时页中间时钟整体放大：横屏紧凑模式更饱满，但不挤压控制区 */
+.timer-page.compact .flip-card { width: 72px; height: 122px; }
+.timer-page.compact .flip-num { font-size: 52px; line-height: 122px; }
+.timer-page.compact .flip-colon { font-size: 30px; }
+
+.timer-page.compact .block-tile { width: 74px; height: 100px; }
+.timer-page.compact .block-num { font-size: 44px; }
+.timer-page.compact .block-colon { font-size: 28px; }
+
+.timer-page.compact .plain-num { font-size: 84px; }
+.timer-page.compact .clock-digital .plain-num { font-size: 80px; padding: 10px 32px; }
+.timer-page.compact .clock-minimal .plain-num { font-size: 78px; }
+.timer-page.compact .clock-neon .plain-num,
+.timer-page.compact .clock-outline .plain-num { font-size: 80px; }
+.timer-page.compact .clock-neon .plain-clock,
+.timer-page.compact .clock-outline .plain-clock { padding: 12px 34px; }
+.timer-page.compact .clock-jelly .plain-num { font-size: 80px; }
+
+.timer-page.compact .led-clock { gap: 6px; padding: 12px 22px; }
+.timer-page.compact .led-digit { flex-basis: 68px; width: 68px; height: 116px; }
+.timer-page.compact .led-colon { flex-basis: 9px; width: 9px; height: 68px; gap: 18px; }
+.timer-page.compact .led-dot { width: 8px; height: 8px; }
+
+/* 非紧凑窗口同步放大，保持各时钟比例一致 */
+.flip-card { width: 74rpx; height: 128rpx; }
+.flip-num { font-size: 52rpx; line-height: 128rpx; }
+.flip-colon { font-size: 32rpx; }
+.block-tile { width: 56rpx; height: 74rpx; }
+.block-num { font-size: 40rpx; }
+.block-colon { font-size: 30rpx; }
+.plain-num { font-size: 88rpx; }
+.clock-digital .plain-num { font-size: 84rpx; }
+.clock-minimal .plain-num { font-size: 80rpx; }
+.clock-neon .plain-num, .clock-outline .plain-num { font-size: 84rpx; }
+.clock-jelly .plain-num { font-size: 84rpx; }
+.led-digit { flex-basis: 66px; width: 66px; height: 108px; }
+.led-colon { flex-basis: 9px; width: 9px; height: 60px; gap: 16px; }
+
+/* 全屏过渡：不再换字号/换尺寸，只让时钟做一次连续的位移 + 缩放形变
+   起点由 timer.js 量出（时钟中心 → 页面中心），因此布局切换那一帧的画面与原画面完全重合 */
+.timer-page {
+  --immersive-clock-scale: 1.28;
+}
+.timer-page.clock-flip { --immersive-clock-scale: 1.28; }
+.timer-page.clock-blocks { --immersive-clock-scale: 1.32; }
+.timer-page.clock-led { --immersive-clock-scale: 1.12; }
+.timer-page.clock-digital { --immersive-clock-scale: 1.25; }
+.timer-page.clock-minimal { --immersive-clock-scale: 1.23; }
+.timer-page.clock-neon,
+.timer-page.clock-outline,
+.timer-page.clock-jelly { --immersive-clock-scale: 1.26; }
+
+.timer-page .clock-body {
+  transform-origin: center center;
+  transition: transform .44s cubic-bezier(.22, .78, .26, 1);
+}
+.timer-page.immersive .clock-body { transform: scale(var(--immersive-clock-scale)); }
+
+/* 形变起步的那一帧先关掉过渡与布局过渡，等下一帧再放开，避免起点被二次补间 */
+.timer-page.clock-morphing .clock-body { transition: none; }
+.timer-page.clock-morphing .module-side,
+.timer-page.clock-morphing .timer-main { transition: none; }
+
+/* ===== 时钟皮肤收口：颜色一律取自 styles/clocks.wxss，页面里不再各写一份 ===== */
+.block-tile { background: var(--clk-tile); border-color: var(--clk-line); }
+.block-num,
+.block-colon { color: var(--clk-ink); }
+.clock-led .led-seg.on,
+.clock-led .led-dot { background: var(--clk-glow); box-shadow: 0 0 6px var(--clk-glow), 0 0 14px var(--clk-glow); }
+.clock-digital .plain-num { color: var(--clk-ink); }
+.clock-minimal .plain-num { color: var(--clk-ink); }
+.clock-neon .plain-num { color: var(--clk-ink); }
+.clock-outline .plain-num { -webkit-text-stroke-color: var(--clk-ink); }
+.clock-jelly .plain-num { color: var(--clk-ink); }

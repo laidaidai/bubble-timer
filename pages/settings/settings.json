@@ -2,5 +2,7 @@
   "navigationBarTitleText": "设置",
   "navigationStyle": "custom",
   "pageOrientation": "portrait",
-  "usingComponents": {}
+  "usingComponents": {
+    "brand-dock": "/components/brand-dock/index"
+  }
 }

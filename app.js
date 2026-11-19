@@ -17,7 +17,9 @@ const THEMES = PALETTE.map(theme => ({
 const RINGS = [
   { key: 'chime', name: '轻风铃', src: '/assets/audio/ring-chime.m4a' },
   { key: 'bell', name: '小铜铃', src: '/assets/audio/ring-bell.m4a' },
-  { key: 'drop', name: '水滴音', src: '/assets/audio/ring-drop.m4a' }
+  { key: 'drop', name: '水滴音', src: '/assets/audio/ring-drop.m4a' },
+  { key: 'marimba', name: '木琴', src: '/assets/audio/ring-marimba.m4a' },
+  { key: 'clear', name: '清铃', src: '/assets/audio/ring-clear.m4a' }
 ]
 
 
@@ -134,7 +136,7 @@ const MODES = [
 ]
 
 const DEFAULT_SETTINGS = {
-  theme: 'pearl',
+  theme: 'sky',
   soundMode: 'both',
   ring: 'chime',
   keepScreenOn: true,
@@ -162,7 +164,8 @@ App({
     importantKey: 'exam-timer-important-dates',
     tomatoKey: 'exam-timer-tomatoes',
     presetLimit: 8,
-    presetFold: 4
+    presetFold: 4,
+    dailyTargetSeconds: 180 * 60
   },
   onLaunch() {
     this.normalizeTemplates()
@@ -173,13 +176,22 @@ App({
       saved.tickDefaultOff = true
       wx.setStorageSync(this.globalData.settingsKey, saved)
     }
-    // 参考图新皮肤上线：旧默认粉色一次性迁到「奶油白」，之后仍可在设置里切回
-    if (saved && !saved.pearlMigrated) {
-      if (saved.theme === 'rose') {
-        saved.theme = 'pearl'
-        wx.setStorageSync(this.globalData.themeKey, 'pearl')
+    // 「奶油白」皮肤下线：存量用户的主题一次性迁到默认的「晴空苏打」，之后仍可自己切回
+    if (saved && !saved.pearlRemoved) {
+      if (saved.theme === 'pearl') {
+        saved.theme = 'sky'
+        wx.setStorageSync(this.globalData.themeKey, 'sky')
       }
-      saved.pearlMigrated = true
+      saved.pearlRemoved = true
+      wx.setStorageSync(this.globalData.settingsKey, saved)
+    }
+    // 旧默认「蜂蜜奶霜」一次性迁到新的默认「晴空苏打」；用户之后仍可切回
+    if (saved && typeof saved === 'object' && !saved.skyDefaultApplied) {
+      if (saved.theme === 'cream') {
+        saved.theme = 'sky'
+        wx.setStorageSync(this.globalData.themeKey, 'sky')
+      }
+      saved.skyDefaultApplied = true
       wx.setStorageSync(this.globalData.settingsKey, saved)
     }
   },
@@ -249,6 +261,10 @@ App({
     { key: 'zhiye', name: '事业单位职测', desc: '5 模块 · 90 分钟', modules: [
       { name: '常识判断', targetMinutes: 10 }, { name: '言语理解', targetMinutes: 20 }, { name: '数量关系', targetMinutes: 15 },
       { name: '判断推理', targetMinutes: 25 }, { name: '资料分析', targetMinutes: 20 }
+    ] },
+    { key: 'skshenlun', name: '省考申论', desc: '4 模块 · 150 分钟', modules: [
+      { name: '概括归纳', targetMinutes: 30 }, { name: '综合分析', targetMinutes: 30 },
+      { name: '贯彻执行', targetMinutes: 40 }, { name: '大作文', targetMinutes: 50 }
     ] }
   ],
   modes: MODES,
@@ -273,7 +289,7 @@ App({
       if (entry) return buildCustomTheme(entry, { name: entry.name, key: entry.key })
     }
     if (key === 'custom') return buildCustomTheme(settings.customTheme)
-    return THEMES.find(item => item.key === key) || THEMES.find(item => item.key === 'pearl') || THEMES[0]
+    return THEMES.find(item => item.key === key) || THEMES.find(item => item.key === 'sky') || THEMES[0]
   },
 
   // 自定义主题列表（带旧数据兼容）
@@ -401,7 +417,8 @@ App({
 
     const today = startOfDay(new Date())
     const todayStat = store[keyOf(today)] || {}
-    const targetSeconds = todayStat.targetSeconds || 180 * 60
+    // 今日目标固定为 3 小时，不把当天多次训练的计划时长累加成 11、12 小时
+    const targetSeconds = this.globalData.dailyTargetSeconds || 180 * 60
     const todaySeconds = todayStat.seconds || 0
     const todayPercent = Math.min(100, Math.round(todaySeconds / targetSeconds * 100))
 

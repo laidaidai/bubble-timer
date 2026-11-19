@@ -1,9 +1,11 @@
 <view class="todo-page theme-{{theme}}" style="{{themeStyle}}">
   <view class="topbar">
-    <button class="back-icon" bindtap="handleBack">‹</button>
+    <view class="back-icon" bindtap="handleBack" aria-label="返回">‹</view>
     <view class="topbar-title">待办清单</view>
     <view class="topbar-spacer"></view>
   </view>
+
+  <brand-dock theme-style="{{themeStyle}}" dim="{{dockDim}}"></brand-dock>
 
   <scroll-view class="todo-body" scroll-y>
     <view class="todo-hero" wx:if="{{total}}">
@@ -23,7 +25,7 @@
       </view>
       <view class="sched-week"><text wx:for="{{schedLabels}}" wx:key="*this">{{item}}</text></view>
       <view class="sched-row" wx:for="{{schedRows}}" wx:key="key">
-        <view class="sched-cell {{cell.empty ? 'empty' : ''}} {{cell.today ? 'today' : ''}} {{cell.selected ? 'selected' : ''}}" wx:for="{{item.cells}}" wx:for-item="cell" wx:key="key" data-key="{{cell.key}}" bindtap="selectScheduleDate">
+        <view class="sched-cell {{cell.empty ? 'empty' : ''}} {{cell.count ? 'has-todo' : ''}} {{cell.today ? 'today' : ''}} {{cell.selected ? 'selected' : ''}}" wx:for="{{item.cells}}" wx:for-item="cell" wx:key="key" data-key="{{cell.key}}" bindtap="selectScheduleDate">
           <text class="sched-day num" wx:if="{{!cell.empty}}">{{cell.day}}</text>
           <view class="sched-dot" wx:if="{{cell.count}}"></view>
         </view>
@@ -40,7 +42,7 @@
     </view>
 
     <view class="todo-list" wx:if="{{viewTodos.length}}">
-      <view class="todo-item {{item.done ? 'done' : ''}}" wx:for="{{viewTodos}}" wx:key="id" data-id="{{item.id}}" bindtap="toggleTodo" bindlongpress="removeTodo">
+      <view class="todo-item {{item.done ? 'done' : ''}} {{burstingId === item.id ? 'bubble-bursting' : ''}} {{burstingDone && item.done ? 'bubble-bursting' : ''}}" wx:for="{{viewTodos}}" wx:key="id" data-id="{{item.id}}" bindtap="toggleTodo" bindlongpress="removeTodo">
         <view class="todo-check {{item.done ? 'checked' : ''}}" data-id="{{item.id}}" catchtap="toggleTodo">
           <text class="check-mark" wx:if="{{item.done}}">✓</text>
         </view>
@@ -52,9 +54,17 @@
           </view>
         </view>
         <view class="todo-edit" data-id="{{item.id}}" catchtap="openEdit">›</view>
+        <view class="burst-layer" aria-hidden="true">
+          <view class="burst-ring"></view>
+          <view class="burst-drop d1"></view><view class="burst-drop d2"></view><view class="burst-drop d3"></view><view class="burst-drop d4"></view>
+          <view class="burst-drop d5"></view><view class="burst-drop d6"></view><view class="burst-drop d7"></view><view class="burst-drop d8"></view>
+        </view>
       </view>
     </view>
 
+    <view class="todo-empty" wx:if="{{!viewTodos.length}}">
+      <image class="todo-empty-logo" src="/assets/brand/logo.png" mode="aspectFit"></image>
+    </view>
 
   </scroll-view>
 
@@ -95,7 +105,7 @@
           <text class="cal-weekday" wx:for="{{calWeekLabels}}" wx:key="*this">{{item}}</text>
         </view>
         <view class="cal-row" wx:for="{{calRows}}" wx:key="key">
-          <view class="cal-cell {{cell.empty ? 'empty' : ''}} {{cell.selected ? 'selected' : ''}} {{cell.today ? 'today' : ''}}" wx:for="{{item.cells}}" wx:for-item="cell" wx:key="key" data-key="{{cell.key}}" bindtap="selectDay">{{cell.day}}</view>
+          <view class="cal-cell {{cell.empty ? 'empty' : ''}} {{cell.count ? 'has-todo' : ''}} {{cell.selected ? 'selected' : ''}} {{cell.today ? 'today' : ''}}" wx:for="{{item.cells}}" wx:for-item="cell" wx:key="key" data-key="{{cell.key}}" bindtap="selectDay">{{cell.day}}</view>
         </view>
       </view>
 

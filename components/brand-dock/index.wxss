@@ -1,0 +1,196 @@
+.brand-dock {
+  position: fixed;
+  left: 0;
+  bottom: calc(28rpx + env(safe-area-inset-bottom));
+  z-index: 130;
+  transition: opacity .3s ease, transform .3s ease;
+}
+.brand-dock.above-tab { bottom: calc(126rpx + env(safe-area-inset-bottom)); }
+
+/* 浏览 / 报告 / 沉浸时自动半隐，仍然可点，不彻底消失 */
+.brand-dock.soft {
+  opacity: .34;
+  transform: translateX(-16rpx) scale(.96);
+}
+.brand-dock.open {
+  opacity: 1;
+  transform: none;
+}
+
+.dock-mask {
+  position: fixed;
+  top: 0; right: 0; bottom: 0; left: 0;
+  z-index: 0;
+  background: rgba(24, 42, 55, .10);
+  animation: dock-mask-in .22s ease-out both;
+}
+@keyframes dock-mask-in { from { opacity: 0; } to { opacity: 1; } }
+
+.dock-panel {
+  position: absolute;
+  z-index: 2;
+  left: 12rpx;
+  bottom: 108rpx;
+  width: 360rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10rpx;
+}
+
+.dock-summary {
+  align-self: flex-start;
+  display: flex;
+  align-items: baseline;
+  gap: 8rpx;
+  padding: 9rpx 16rpx;
+  color: var(--ink, #1E3448);
+  background: var(--cream-1, #FFF8E8);
+  border: 2rpx solid var(--edge, #1E3448);
+  border-radius: 999rpx;
+  box-shadow: 3rpx 3rpx 0 var(--shadow-soft, rgba(30, 52, 72, .10));
+  opacity: 0;
+  transform: translateY(12rpx);
+  animation: dock-action-in .26s ease-out both .02s;
+}
+.dock-summary-kicker { color: var(--text-mid, #6C7A86); font-size: 18rpx; font-weight: 700; }
+.dock-summary-main { font-size: 26rpx; font-weight: 900; }
+.dock-summary-rate { color: var(--text-warm, #C97854); font-size: 20rpx; font-weight: 900; }
+
+.dock-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 9rpx;
+}
+.dock-action {
+  width: 360rpx;
+  min-height: 74rpx;
+  padding: 10rpx 16rpx;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  color: var(--ink, #1E3448);
+  background: var(--card, #FFFCF2);
+  border: 2rpx solid var(--edge, #1E3448);
+  border-radius: 20rpx 18rpx 22rpx 19rpx;
+  box-shadow: 3rpx 4rpx 0 var(--shadow-soft, rgba(30, 52, 72, .12));
+  opacity: 0;
+  transform: translateY(14rpx);
+  animation: dock-action-in .28s cubic-bezier(.2, .8, .3, 1) both;
+}
+.act-continue { animation-delay: .04s; }
+.act-timer { animation-delay: .10s; }
+.act-todo { animation-delay: .16s; }
+.dock-action-hover { background: var(--cream-2, #F6E7CB); transform: translateY(1rpx); box-shadow: 2rpx 3rpx 0 var(--shadow-soft, rgba(30, 52, 72, .12)); }
+@keyframes dock-action-in { to { opacity: 1; transform: translateY(0); } }
+
+.dock-action-copy { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2rpx; }
+.dock-action-title { font-size: 23rpx; font-weight: 900; letter-spacing: 1rpx; }
+.dock-action-sub { color: var(--text-mid, #6C7A86); font-size: 17rpx; font-weight: 700; line-height: 1.25; }
+
+.dock-tip { color: var(--text-mid, #6C7A86); font-size: 16rpx; font-weight: 700; padding-left: 6rpx; opacity: 0; animation: dock-action-in .3s ease-out both .2s; }
+
+.dock-logo {
+  position: relative;
+  z-index: 3;
+  width: 92rpx;
+  height: 92rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  background: var(--card, #FFFCF2);
+  border: 3rpx solid var(--edge, #1E3448);
+  border-radius: 50%;
+  box-shadow: 5rpx 6rpx 0 var(--shadow, rgba(30, 52, 72, .18));
+  transition: transform .24s cubic-bezier(.2, .8, .3, 1), opacity .24s ease;
+}
+/* 收起时露出半个 logo，展开后完整露出 */
+.brand-dock:not(.open) .dock-logo { transform: translateX(-33rpx); }
+.brand-dock.open .dock-logo { transform: translateX(0) rotate(-7deg) scale(.94); }
+.dock-logo-hover { opacity: .9; }
+.dock-logo:active { transform: translateX(0) scale(.92); }
+.dock-logo-img { position: relative; z-index: 3; width: 66rpx; height: 66rpx; display: block; }
+
+.dock-ring {
+  position: absolute;
+  z-index: 1;
+  left: -7rpx;
+  top: -7rpx;
+  right: -7rpx;
+  bottom: -7rpx;
+  border-radius: 50%;
+  padding: 5rpx;
+  box-sizing: border-box;
+  opacity: .66;
+}
+.dock-ring-hole {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: var(--card, #FFFCF2);
+  border: 3rpx solid var(--edge, #1E3448);
+  box-sizing: border-box;
+}
+.dock-progress-label { display: none; }
+
+.dock-shine {
+  position: absolute;
+  z-index: 4;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  pointer-events: none;
+}
+.dock-shine::before {
+  content: "";
+  position: absolute;
+  top: -30%;
+  left: -60%;
+  width: 34%;
+  height: 160%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .85), transparent);
+  transform: rotate(24deg);
+  animation: dock-shine .72s ease-out both;
+}
+@keyframes dock-shine {
+  from { left: -60%; opacity: 0; }
+  20% { opacity: .9; }
+  to { left: 130%; opacity: 0; }
+}
+
+.brand-dock.celebrate {
+  opacity: 1;
+  transform: none;
+}
+.brand-dock.celebrate .dock-logo {
+  animation: dock-celebrate .85s cubic-bezier(.2, .8, .3, 1) both;
+}
+.brand-dock.celebrate .dock-ring {
+  animation: dock-ring-celebrate .9s ease-out both;
+}
+@keyframes dock-celebrate {
+  0% { transform: translateX(-33rpx) scale(.96); }
+  35% { transform: translateX(0) scale(1.06); }
+  70% { transform: translateX(-3rpx) scale(.99); }
+  100% { transform: translateX(-33rpx) scale(1); }
+}
+@keyframes dock-ring-celebrate {
+  0% { opacity: .66; transform: scale(1); }
+  45% { opacity: 1; transform: scale(1.05); }
+  100% { opacity: .66; transform: scale(1); }
+}
+
+.dock-x { position: absolute; z-index: 5; right: -2rpx; top: -2rpx; width: 32rpx; height: 32rpx; display: flex; align-items: center; justify-content: center; background: var(--primary, #5AA9E6); border: 2rpx solid var(--edge, #1E3448); border-radius: 50%; }
+.dock-x-line { position: absolute; width: 15rpx; height: 2rpx; background: var(--on-primary, #FFFCF2); border-radius: 2rpx; }
+.dock-x-line.l1 { transform: rotate(42deg); }
+.dock-x-line.l2 { transform: rotate(-42deg); }
+
+.dock-dot { width: 18rpx; height: 18rpx; flex: 0 0 18rpx; box-sizing: border-box; border: 2rpx solid var(--edge, #1E3448); border-radius: 50%; background: var(--primary, #5AA9E6); }
+.dot-continue { background: var(--primary, #5AA9E6); }
+.dot-timer { background: var(--primary-2, #F2A65A); }
+.dot-todo { background: var(--cream-3, #F3E5D2); }

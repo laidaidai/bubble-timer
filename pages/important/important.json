@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "重要日子",
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "brand-dock": "/components/brand-dock/index"
+  },
+  "pageOrientation": "portrait"
+}

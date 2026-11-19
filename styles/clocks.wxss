@@ -1,0 +1,52 @@
+/* ===== 时钟皮肤（唯一改动入口） =====
+ * 计时页（.clock-<style>）、快捷计时（.q-shell-<style>）、设置页预览（.q-shell-<style>）
+ * 三种页面共用这套变量；每页只保留自己的尺寸与动画。
+ * 想调某个时钟样式的配色/发光，改这里一处即可。
+ */
+.clock-flip,
+.q-shell-flip {
+  --clk-face: var(--cream-2);
+  --clk-ink: var(--ink);
+  --clk-line: var(--line-strong);
+  --clk-accent: var(--accent-text);
+}
+.clock-blocks,
+.q-shell-blocks {
+  --clk-tile: var(--card);
+  --clk-ink: var(--ink);
+  --clk-line: var(--edge);
+  --clk-deco: var(--line-strong);
+}
+.clock-led,
+.q-shell-led {
+  --clk-panel: var(--panel);
+  --clk-panel-edge: var(--edge-deep);
+  --clk-ink: var(--primary-2);
+  --clk-glow: var(--primary-2);
+}
+.clock-digital,
+.q-shell-digital {
+  --clk-panel: var(--panel);
+  --clk-panel-edge: var(--edge-deep);
+  --clk-ink: var(--on-panel);
+  --clk-glow: rgba(255, 255, 255, .18);
+}
+.clock-minimal,
+.q-shell-minimal {
+  --clk-ink: var(--ink);
+}
+.clock-neon,
+.q-shell-neon {
+  --clk-panel: var(--ink);
+  --clk-ink: #FFE9F4;
+  --clk-glow: #FF3CAC;
+}
+.clock-outline,
+.q-shell-outline {
+  --clk-ink: var(--ink);
+}
+.clock-jelly,
+.q-shell-jelly {
+  --clk-ink: var(--ink);
+  --clk-glow: var(--primary-2);
+}

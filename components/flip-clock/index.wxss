@@ -1,0 +1,230 @@
+/* ===== 翻页时钟：共享组件 =====
+   翻页牌数字每变化一次：上半页绕中轴向下翻 → 盖住下半页 → 下半页接着翻上来。
+   a / b 必须用不同的动画名：连续变化同一位时节点不会重建，只有 animation-name 变了
+   才会重新触发动画。写同一个名字就只有第一下会翻。 */
+
+.fc-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6rpx;
+  perspective: 760rpx;
+}
+.fc-colon {
+  color: var(--ink);
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  font-size: 36rpx;
+  font-weight: 900;
+  padding: 0 2rpx;
+  line-height: 1;
+  opacity: .92;
+}
+.fc-card {
+  position: relative;
+  width: 96rpx;
+  height: 168rpx;
+  flex: 0 0 auto;
+  overflow: hidden;
+  background: var(--primary);
+  border: 3rpx solid var(--edge);
+  border-radius: 14rpx;
+  box-shadow: 4rpx 5rpx 0 var(--shadow);
+  transform-style: preserve-3d;
+}
+.fc-card::before {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 50%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .10), rgba(255, 255, 255, 0));
+  border-radius: 12rpx 12rpx 0 0;
+  pointer-events: none;
+}
+.fc-face {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  overflow: hidden;
+  z-index: 1;
+  background: var(--primary);
+}
+.fc-face-top {
+  top: 0;
+  border-radius: 11rpx 11rpx 0 0;
+}
+.fc-face-bottom {
+  bottom: 0;
+  border-radius: 0 0 11rpx 11rpx;
+}
+.fc-face-old {
+  z-index: 2;
+}
+.fc-num {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 200%;
+  color: var(--on-primary, #FFFCF2);
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  font-size: 72rpx;
+  font-weight: 900;
+  line-height: 168rpx;
+  text-align: center;
+  letter-spacing: 0;
+  text-shadow: 0 2rpx 0 rgba(13, 39, 58, .10);
+}
+.fc-face-top .fc-num {
+  top: 0;
+}
+.fc-face-bottom .fc-num {
+  top: -100%;
+}
+.fc-flap {
+  position: absolute;
+  z-index: 4;
+  left: 0;
+  right: 0;
+  height: 50%;
+  overflow: hidden;
+  background: var(--primary);
+  backface-visibility: hidden;
+  will-change: transform;
+}
+.fc-flap-top {
+  top: 0;
+  border-radius: 11rpx 11rpx 0 0;
+  transform-origin: 50% 100%;
+}
+.fc-flap-bottom {
+  bottom: 0;
+  border-radius: 0 0 11rpx 11rpx;
+  transform-origin: 50% 0;
+  transform: rotateX(90deg);
+}
+.fc-flap-face {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 200%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary);
+  border-radius: 11rpx 11rpx 0 0;
+}
+.fc-flap-face-bottom {
+  top: -100%;
+  border-radius: 0 0 11rpx 11rpx;
+}
+.fc-flap-face .fc-num {
+  position: relative;
+  height: auto;
+  line-height: 1;
+  top: auto;
+  left: auto;
+  width: auto;
+}
+
+.fc-card.flip-a .fc-flap-top {
+  animation: fc-flip-top-a 280ms cubic-bezier(.32, .02, .2, 1) 0ms both;
+}
+.fc-card.flip-b .fc-flap-top {
+  animation: fc-flip-top-b 280ms cubic-bezier(.32, .02, .2, 1) 0ms both;
+}
+.fc-card.flip-a .fc-flap-bottom {
+  animation: fc-flip-bottom-a 280ms cubic-bezier(.32, .02, .2, 1) 280ms both;
+}
+.fc-card.flip-b .fc-flap-bottom {
+  animation: fc-flip-bottom-b 280ms cubic-bezier(.32, .02, .2, 1) 280ms both;
+}
+@keyframes fc-flip-top-a {
+  0% { transform: rotateX(0deg); }
+  100% { transform: rotateX(-90deg); }
+}
+@keyframes fc-flip-top-b {
+  0% { transform: rotateX(0deg); }
+  100% { transform: rotateX(-90deg); }
+}
+@keyframes fc-flip-bottom-a {
+  0% { transform: rotateX(90deg); }
+  100% { transform: rotateX(0deg); }
+}
+@keyframes fc-flip-bottom-b {
+  0% { transform: rotateX(90deg); }
+  100% { transform: rotateX(0deg); }
+}
+
+.fc-split {
+  position: absolute;
+  z-index: 6;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 3rpx;
+  margin-top: -1.5rpx;
+  background: var(--edge);
+  opacity: .92;
+}
+
+/* 毫秒牌：与主牌同款，尺寸略小 */
+.fc-card-ms {
+  width: 64rpx;
+  height: 116rpx;
+}
+.fc-card-ms .fc-num {
+  font-size: 48rpx;
+  line-height: 116rpx;
+}
+.fc-ms-dot {
+  align-self: flex-end;
+  margin: 0 2rpx 12rpx;
+  color: var(--ink);
+  font-family: "Courier New", Menlo, monospace;
+  font-size: 36rpx;
+  font-weight: 900;
+  line-height: 1;
+}
+
+/* 紧凑态（横屏计时页 / 高度紧张时由页面加 .fc-compact 到外层） */
+.fc-compact .fc-card {
+  width: 58px;
+  height: 96px;
+  border-width: 2px;
+  border-radius: 10px;
+  box-shadow: 3px 4px 0 var(--shadow-soft);
+}
+.fc-compact .fc-card::before,
+.fc-compact .fc-flap-top,
+.fc-compact .fc-face-top,
+.fc-compact .fc-flap-face {
+  border-radius: 10px 10px 0 0;
+}
+.fc-compact .fc-face-bottom,
+.fc-compact .fc-flap-bottom,
+.fc-compact .fc-flap-face-bottom {
+  border-radius: 0 0 10px 10px;
+}
+.fc-compact .fc-num {
+  font-size: 40px;
+  line-height: 96px;
+}
+.fc-compact .fc-colon {
+  font-size: 24px;
+  padding: 0 2px;
+}
+.fc-compact .fc-card-ms {
+  width: 38px;
+  height: 66px;
+}
+.fc-compact .fc-card-ms .fc-num {
+  font-size: 26px;
+  line-height: 66px;
+}
+.fc-compact .fc-row {
+  gap: 4px;
+}

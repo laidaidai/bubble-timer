@@ -1,13 +1,5 @@
 const app = getApp()
-const { pad, clockFull: clock, clock: shortClock, dateTimeText: dateTime, dateKey, clone } = require('../../utils/format')
-
-const CLOCK_STYLES = [
-  { key: 'flip', name: '翻页时钟' },
-  { key: 'digital', name: '数字时钟' },
-  { key: 'blocks', name: '积木方块' },
-  { key: 'minimal', name: '极简线条' },
-  { key: 'led', name: 'LED 灯' }
-]
+const { pad, clockFull: clock, clock: shortClock, dateTimeText: dateTime, dateKey, clone, CLOCK_STYLES } = require('../../utils/format')
 
 // 七段数码管：a, b, c, d, e, f, g
 const LED_PATTERNS = {
@@ -27,6 +19,15 @@ const FOCUS_SECONDS = 25 * 60
 const REST_SECONDS = 5 * 60
 const LONG_REST_SECONDS = 15 * 60
 const LONG_REST_EVERY = 4
+const RECORD_LIMIT = 20
+
+// 全屏时各时钟样式的放大倍率，需与 timer.wxss 里的 --immersive-clock-scale 保持一致
+const IMMERSIVE_CLOCK_SCALE = {
+  flip: 1.28, blocks: 1.32, led: 1.12, digital: 1.25,
+  minimal: 1.23, neon: 1.26, outline: 1.26, jelly: 1.26
+}
+const OUTRO_DELAY = 180   // 外围组件淡出的时长，之后才切换沉浸布局
+const MORPH_GAP = 36      // 切换布局后等一帧再放开过渡，保证起点画面与切换前一致
 
 Page({
   data: {
@@ -35,10 +36,13 @@ Page({
     globalTimeText: '00:00:00', moduleTimeText: '00:00:00', mainTimeText: '00:00:00',
     progressPercent: 0, isPaused: false, isOvertime: false, isHolding: false,
     clockStyle: 'flip', clockStyleName: '翻页时钟', flipCells: [], flipDigits: [], ledDigits: [], flipPhase: false,
-    msText: '000', theme: 'pearl', themeStyle: '',
+    msText: '00', theme: 'sky', themeStyle: '',
     isLastModule: false, isFirstModule: true,
     mode: 'countup', modeName: '正计时', mainLabel: '总用时',
-    phaseLabel: '', phaseText: '', tickMuted: true, compact: true, immersive: false
+    phaseLabel: '', phaseText: '', tickMuted: true, compact: true, immersive: false, moduleCollapsed: false,
+    celebrating: false, celebrationBubbles: [], celebrationMessage: '',
+    timerReveal: false, immersiveAnim: false, immersiveLeaving: false,
+    clockMorph: false, clockMorphStyle: ''
   },
 
   onLoad() {
@@ -50,7 +54,7 @@ Page({
 
     const session = wx.getStorageSync(app.globalData.storageKey)
     if (!session || !session.modules) {
-      wx.navigateBack()
+      this.leaveTimer()
       return
     }
 
@@ -80,11 +84,24 @@ Page({
       modeName: modeInfo ? modeInfo.name : '正计时'
     }, () => {
       this.updateDisplay()
+      this.playTimerReveal()
       if (!this.data.isPaused) {
         this.startTicker()
         this.startMsTicker()
       }
       this.setupFocusGuard(settings)
+    })
+  },
+
+  onShow() {
+    if (this.data.runtimeModules && this.data.runtimeModules.length) this.playTimerReveal()
+  },
+
+  // 进入 / 返回计时页时重新播放入场动效
+  playTimerReveal() {
+    clearTimeout(this.timerRevealTimer)
+    this.setData({ timerReveal: false }, () => {
+      this.timerRevealTimer = setTimeout(() => this.setData({ timerReveal: true }), 40)
     })
   },
 
@@ -111,7 +128,7 @@ Page({
     if (this.data.isPaused || this.finished) return
     const base = this.lastTickAt || Date.now()
     const ms = Date.now() - base
-    const text = String(((ms % 1000) + 1000) % 1000).padStart(3, '0')
+    const text = String(Math.floor((((ms % 1000) + 1000) % 1000) / 10)).padStart(2, '0')
     if (text !== this.data.msText) this.setData({ msText: text })
   },
 
@@ -133,6 +150,9 @@ Page({
       try { this.tick() } catch (error) { /* 已销毁计时器，忽略 */ }
       this.persistSession()
     }
+    clearTimeout(this.timerRevealTimer)
+    clearTimeout(this.immersiveAnimTimer)
+    clearTimeout(this.immersivePhaseTimer)
     this.stopTicker()
     this.stopMsTicker()
     this.stopTotalBuzz()
@@ -221,7 +241,7 @@ Page({
       if (this.data.mode === 'pomodoro' && this.pomodoroPhase === 'focus' && !this.pomodoroAllDone) {
         if (this.settlePomodoroModule()) {
           this.pomodoroAllDone = true
-          setTimeout(() => this.exitTraining(), 900)
+          setTimeout(() => this.exitTraining(true), 900)
           return
         }
       }
@@ -266,7 +286,7 @@ Page({
       if (allDone) {
         if (app.vibrate) app.vibrate('heavy')
         if (app.playRing) app.playRing()
-        setTimeout(() => this.exitTraining(), 900)
+        setTimeout(() => this.exitTraining(true), 900)
         return
       }
       const completed = this.pomodoroCycle
@@ -347,7 +367,7 @@ Page({
   finishWithAlert() {
     if (this.finished) return
     this.startTotalBuzz()
-    setTimeout(() => this.exitTraining(), 1200)
+    setTimeout(() => this.exitTraining(true), 1200)
   },
 
   updateDisplay() {
@@ -418,10 +438,103 @@ Page({
     this.setData(patch)
   },
 
-  toggleImmersive() {
-    const immersive = !this.data.immersive
-    this.setData({ immersive })
+  toggleModuleSide() {
+    const moduleCollapsed = !this.data.moduleCollapsed
+    this.setData({ moduleCollapsed })
     if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
+  },
+
+  toggleImmersive() {
+    // 动画进行中忽略再次点击，避免两段形变互相打断
+    if (this.immersiveBusy) return
+    clearTimeout(this.immersiveAnimTimer)
+    clearTimeout(this.immersivePhaseTimer)
+    if (this.data.immersive) this.closeImmersive()
+    else this.openImmersive()
+    if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
+  },
+
+  // 量出「时钟中心 → 页面中心」的位移，切换布局前后用同一段 transform 衔接，避免尺寸/位置跳变
+  measureImmersiveShift(callback) {
+    const finish = shift => {
+      if (shift) this.immersiveShift = shift
+      callback(this.immersiveShift || { dx: 0, dy: 0 })
+    }
+    try {
+      wx.createSelectorQuery()
+        .select('.clock-body')
+        .boundingClientRect()
+        .select('.timer-page')
+        .boundingClientRect()
+        .exec(res => {
+          const clock = res && res[0]
+          const page = res && res[1]
+          if (!clock || !page || !clock.width || !page.width) {
+            finish(null)
+            return
+          }
+          finish({
+            dx: Math.round(((page.left + page.width / 2) - (clock.left + clock.width / 2)) * 10) / 10,
+            dy: Math.round(((page.top + page.height / 2) - (clock.top + clock.height / 2)) * 10) / 10
+          })
+        })
+    } catch (error) {
+      finish(null)
+    }
+  },
+
+  openImmersive() {
+    this.immersiveBusy = true
+    // 进场时先摘掉入场动画：否则 immersiveAnim 结束、reveal 里的动画回到默认层，
+    // 会重新排队播一遍，看起来就是「切完又多一下」
+    clearTimeout(this.timerRevealTimer)
+    this.setData({ timerReveal: false })
+    this.measureImmersiveShift(shift => {
+      // 第一拍：外围组件快速向外淡出
+      this.setData({ immersiveLeaving: true })
+      this.immersivePhaseTimer = setTimeout(() => {
+        // 第二拍：切到沉浸布局，同时把时钟钉在它原来的位置和大小上
+        this.setData({
+          immersive: true,
+          immersiveLeaving: false,
+          immersiveAnim: false,
+          clockMorph: true,
+          clockMorphStyle: `transform: translate3d(${shift.dx}px, ${shift.dy}px, 0) scale(1);`
+        }, () => {
+          // 下一帧放开过渡：由同一个 transform 平滑长到全屏倍率与页面中心
+          this.immersiveAnimTimer = setTimeout(() => {
+            this.setData({ clockMorph: false, clockMorphStyle: '' })
+            this.immersivePhaseTimer = setTimeout(() => { this.immersiveBusy = false }, 460)
+          }, MORPH_GAP)
+        })
+      }, OUTRO_DELAY)
+    })
+  },
+
+  closeImmersive() {
+    this.immersiveBusy = true
+    const shift = this.immersiveShift || { dx: 0, dy: 0 }
+    const scale = IMMERSIVE_CLOCK_SCALE[this.data.clockStyle] || 1.26
+    // 退场期间关掉 reveal：出全屏动画收尾时 immersiveAnim 撤掉，
+    // reveal 那套入场动画会被重新命中再播一遍（内容都复原了才突然多一下）
+    clearTimeout(this.timerRevealTimer)
+    // 先回到普通布局，但把时钟起点设成「全屏倍率 + 页面中心」，与关闭前那一帧完全重合
+    this.setData({
+      immersive: false,
+      immersiveLeaving: false,
+      immersiveAnim: true,
+      timerReveal: false,
+      clockMorph: true,
+      clockMorphStyle: `transform: translate3d(${shift.dx}px, ${shift.dy}px, 0) scale(${scale});`
+    }, () => {
+      this.immersiveAnimTimer = setTimeout(() => {
+        this.setData({ clockMorph: false, clockMorphStyle: '' })
+        this.immersivePhaseTimer = setTimeout(() => {
+          this.setData({ immersiveAnim: false })
+          this.immersiveBusy = false
+        }, 460)
+      }, MORPH_GAP)
+    })
   },
 
   togglePause() {
@@ -442,7 +555,7 @@ Page({
     this.setData({ isHolding: true })
     this.completeHoldTimer = setTimeout(() => {
       this.completeHoldTimer = null
-      if (this.data.isHolding) this.exitTraining()
+      if (this.data.isHolding) this.exitTraining(true)
     }, 1000)
   },
 
@@ -491,7 +604,7 @@ Page({
     const fallbackIndex = modules.findIndex(item => item.status !== 'done')
     const targetIndex = nextIndex >= 0 ? nextIndex : fallbackIndex
     if (targetIndex < 0) {
-      this.exitTraining()
+      this.exitTraining(true)
       return
     }
     modules[targetIndex].status = 'current'
@@ -525,12 +638,12 @@ Page({
     })
   },
 
-  exitTraining() {
+  exitTraining(celebrate = false) {
     this.tick()
-    this.finish(clone(this.data.runtimeModules))
+    this.finish(clone(this.data.runtimeModules), celebrate)
   },
 
-  finish(modules) {
+  finish(modules, celebrate = false) {
     if (this.finished) return
     this.stopTicker()
     this.stopMsTicker()
@@ -540,6 +653,15 @@ Page({
       const deltaSeconds = item.elapsedSeconds - item.targetMinutes * 60
       return { ...item, actualText: shortClock(item.elapsedSeconds), deltaSeconds, deltaText: deltaSeconds > 0 ? `超时 ${shortClock(deltaSeconds)}` : `提前 ${shortClock(Math.abs(deltaSeconds))}` }
     })
+    const overtimeCount = rows.filter(item => item.deltaSeconds > 0).length
+    const overtimeCheers = ['再接再厉', '锲而不舍', '厚积薄发', '渐入佳境', '稳中求进']
+    const successCheers = ['一气呵成', '稳扎稳打', '水到渠成', '行云流水', '渐入佳境']
+    const englishCheers = ['nice work', 'well done', 'keep going', 'good job', 'stay sharp', 'one more round']
+    const cheerPool = overtimeCount ? overtimeCheers : successCheers
+    // 偶尔用简短英文代替中文成语，让结算画面更有变化
+    const celebrationMessage = Math.random() < 0.35
+      ? englishCheers[Math.floor(Math.random() * englishCheers.length)]
+      : cheerPool[Math.floor(Math.random() * cheerPool.length)]
     const report = {
       id: `record-${Date.now()}`,
       startedAt: this.startedAt,
@@ -547,14 +669,14 @@ Page({
       totalTarget: modules.reduce((sum, item) => sum + item.targetMinutes, 0),
       totalActual: this.data.globalSeconds,
       totalActualText: shortClock(this.data.globalSeconds),
-      overtimeCount: rows.filter(item => item.deltaSeconds > 0).length,
+      overtimeCount,
       passRate: rows.length ? Math.round(rows.filter(item => item.deltaSeconds <= 0).length / rows.length * 100) : 0,
       rows,
       mode: this.data.mode,
       modeName: this.data.modeName,
       quote: '稳定节奏，持续精进。'
     }
-    const records = [report].concat(wx.getStorageSync(app.globalData.recordsKey) || []).slice(0, 10)
+    const records = [report].concat(wx.getStorageSync(app.globalData.recordsKey) || []).slice(0, RECORD_LIMIT)
     wx.setStorageSync(app.globalData.recordsKey, records)
     wx.setStorageSync('exam-timer-pending-report', report)
     if (app.addDailyStat) {
@@ -567,6 +689,30 @@ Page({
     }
     if (app.addTomato) app.addTomato(1)
     wx.removeStorageSync(app.globalData.storageKey)
-    wx.navigateBack()
+    if (celebrate) {
+      const bubbles = Array.from({ length: 18 }).map((_, index) => ({
+        id: index,
+        x: 8 + Math.round(Math.random() * 84),
+        size: 10 + Math.round(Math.random() * 18),
+        delay: index * 22,
+        duration: 850 + Math.round(Math.random() * 380),
+        tone: index % 3
+      }))
+      this.setData({ celebrating: true, celebrationBubbles: bubbles, celebrationMessage })
+      this.celebrateTimer = setTimeout(() => {
+        this.celebrateTimer = null
+        this.leaveTimer()
+      }, celebrationMessage ? 1800 : 1250)
+    } else {
+      this.leaveTimer()
+    }
+  },
+
+  // 横屏计时页先经过竖屏空白页，规避微信「横屏直接返回竖屏」导致的 rpx 放大
+  leaveTimer() {
+    wx.redirectTo({
+      url: '/pages/blank/blank',
+      fail: () => wx.navigateBack()
+    })
   }
 })

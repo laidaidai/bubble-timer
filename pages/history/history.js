@@ -2,8 +2,11 @@ const app = getApp()
 
 Page({
   data: {
-    theme: 'pearl', themeStyle: '',
-    records: []
+    theme: 'sky', themeStyle: '',
+    records: [],
+    timerLaunching: false,
+    historyReveal: false,
+    burstingIndex: -1
   },
 
   syncTheme() {
@@ -20,9 +23,35 @@ Page({
   },
 
   onShow() {
+    if (this.data.timerLaunching) {
+      clearTimeout(this.timerCoverTimer)
+      this.timerCoverTimer = setTimeout(() => this.setData({ timerLaunching: false }), 160)
+    }
     this.syncTheme()
     if (this.getTabBar && this.getTabBar()) this.getTabBar().sync()
     this.loadRecords()
+    this.playHistoryReveal()
+  },
+
+  // 每次回到记录页都重新播放一次入场动效
+  playHistoryReveal() {
+    clearTimeout(this.historyRevealTimer)
+    this.setData({ historyReveal: false }, () => {
+      this.historyRevealTimer = setTimeout(() => this.setData({ historyReveal: true }), 40)
+    })
+  },
+
+  launchTimer() {
+    if (this.data.timerLaunching) return
+    this.setData({ timerLaunching: true }, () => {
+      clearTimeout(this.timerCoverTimer)
+      this.timerCoverTimer = setTimeout(() => {
+        wx.navigateTo({
+          url: '/pages/blank/blank?mode=enter',
+          fail: () => this.setData({ timerLaunching: false })
+        })
+      }, 60)
+    })
   },
 
   loadRecords() {
@@ -37,6 +66,8 @@ Page({
     const record = this.data.records[Number(event.currentTarget.dataset.index)]
     if (!record) return
     wx.setStorageSync('exam-timer-pending-report', record)
+    // 让首页知道报告是从记录页点开的，返回时回到记录列表
+    wx.setStorageSync('exam-timer-report-origin', 'history')
     this.backToIndex()
   },
 
@@ -70,7 +101,7 @@ Page({
       mode,
       totalTargetSeconds
     })
-    wx.navigateTo({ url: '/pages/timer/timer' })
+    this.launchTimer()
   },
 
   removeRecord(event) {
@@ -85,11 +116,20 @@ Page({
       success: ({ confirm }) => {
         if (!confirm) return
         const next = this.data.records.filter((item, i) => i !== index)
+        if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
         wx.setStorageSync(app.globalData.recordsKey, next)
-        this.setData({ records: next })
-        wx.showToast({ title: '已删除', icon: 'none' })
+        this.setData({ burstingIndex: index })
+        clearTimeout(this.burstTimer)
+        this.burstTimer = setTimeout(() => {
+          this.setData({ records: next, burstingIndex: -1 })
+          wx.showToast({ title: '已删除', icon: 'none' })
+        }, 580)
       }
     })
+  },
+
+  onUnload() {
+    clearTimeout(this.burstTimer)
   },
 
   backToIndex() {
@@ -98,5 +138,10 @@ Page({
 
   handleBack() {
     this.backToIndex()
+  },
+
+  onPageScroll(event) {
+    const next = (event.scrollTop || 0) > 48
+    if (next !== this.data.dockDim) this.setData({ dockDim: next })
   }
 })
