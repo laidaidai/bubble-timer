@@ -66,6 +66,20 @@ const CLOCK_STYLES = [
   { key: 'jelly', name: '果冻叠影', desc: '糖果描边，圆润轻快' }
 ]
 
+// 七段数码管段码（LED 灯共用：计时页与快捷计时同一张表）
+const LED_PATTERNS = {
+  '0': [1, 1, 1, 1, 1, 1, 0],
+  '1': [0, 1, 1, 0, 0, 0, 0],
+  '2': [1, 1, 0, 1, 1, 0, 1],
+  '3': [1, 1, 1, 1, 0, 0, 1],
+  '4': [0, 1, 1, 0, 0, 1, 1],
+  '5': [1, 0, 1, 1, 0, 1, 1],
+  '6': [1, 0, 1, 1, 1, 1, 1],
+  '7': [1, 1, 1, 0, 0, 0, 0],
+  '8': [1, 1, 1, 1, 1, 1, 1],
+  '9': [1, 1, 1, 1, 0, 1, 1]
+}
+
 const DEFAULT_CLOCK_STYLE = 'flip'
 
 const resolveClockStyle = key => CLOCK_STYLES.find(item => item.key === key) || CLOCK_STYLES[0]
@@ -82,6 +96,7 @@ module.exports = {
   clone,
   fold,
   CLOCK_STYLES,
+  LED_PATTERNS,
   DEFAULT_CLOCK_STYLE,
   resolveClockStyle
 }

@@ -444,6 +444,11 @@ Page({
     const dueAt = Number(item.dueAt) || 0
     const remind = Number(item.remindBefore) || 0
     const startTime = Math.floor(dueAt / 1000)
+    const settings = app.getSettings ? app.getSettings() : {}
+    if (settings.privacyCalendar === false) {
+      wx.showToast({ title: '已在设置里关闭日历写入', icon: 'none' })
+      return
+    }
     const remindText = remind >= 60 ? `${remind / 60} 小时` : `${remind} 分钟`
     wx.addPhoneCalendar({
       title: `小鱼计时器 · ${item.text}`,

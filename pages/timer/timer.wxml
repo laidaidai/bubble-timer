@@ -64,7 +64,7 @@
       <view class="stage-meta">
         <text class="meta-module">{{currentModule.name || '训练完成'}}</text>
         <text class="meta-total"><text class="num">{{moduleTimeText}}</text></text>
-        <text class="meta-ms">{{msText}}ms</text>
+        <text class="meta-ms" wx:if="{{msShow}}">{{msText}}ms</text>
       </view>
       <view class="stage-target">
         <text>TARGET: <text class="num">{{currentModule.targetMinutes}}</text> 分</text>

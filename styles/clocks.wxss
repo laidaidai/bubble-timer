@@ -49,4 +49,113 @@
 .q-shell-jelly {
   --clk-ink: var(--ink);
   --clk-glow: var(--primary-2);
+  --clk-fill: var(--primary);
+}
+
+/* ===== 共享外观：同一个 clockStyle 在计时页 / 快捷计时 / 设置预览里必须长得一样 =====
+ * 这里只写「外观」：字体、字重、颜色、发光、描边、七段几何、牌面底色与描边色。
+ * 尺寸（font-size / padding / 宽高）仍由各页自己定。
+ * 选择器带页面根类（.timer-page / .quick-page / .settings-page），
+ * 这样即使本文件在 wxss 顶部 @import，也能压过后面的页面级覆盖。
+ */
+.timer-page .clock-digital .plain-num,
+.quick-page .q-shell-digital .q-plain-num,
+.settings-page .q-shell-digital .q-plain-num {
+  color: var(--clk-ink);
+  font-family: "Courier New", "Menlo", monospace;
+  font-weight: 900;
+  letter-spacing: 2rpx;
+  text-shadow: 0 0 10rpx rgba(255, 255, 255, .20);
+}
+.timer-page .clock-neon .plain-num,
+.quick-page .q-shell-neon .q-plain-num,
+.settings-page .q-shell-neon .q-plain-num {
+  color: var(--clk-ink);
+  font-family: "Courier New", "Menlo", monospace;
+  font-weight: 900;
+  letter-spacing: 3rpx;
+  text-shadow: 0 0 6rpx var(--clk-glow), 0 0 18rpx var(--clk-glow), 0 0 36rpx rgba(80, 220, 255, .75);
+}
+.timer-page .clock-outline .plain-num,
+.quick-page .q-shell-outline .q-plain-num,
+.settings-page .q-shell-outline .q-plain-num {
+  color: transparent;
+  font-family: "Courier New", "Menlo", monospace;
+  font-weight: 900;
+  letter-spacing: 3rpx;
+  -webkit-text-stroke: 4rpx var(--clk-ink);
+}
+.timer-page .clock-minimal .plain-num,
+.quick-page .q-shell-minimal .q-plain-num,
+.settings-page .q-shell-minimal .q-plain-num {
+  color: var(--clk-ink);
+  font-family: "Arial Rounded MT Bold", "Yuanti SC", "YouYuan", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  font-weight: 500;
+  letter-spacing: 2rpx;
+}
+.timer-page .clock-jelly .plain-num,
+.quick-page .q-shell-jelly .q-plain-num,
+.settings-page .q-shell-jelly .q-plain-num {
+  color: var(--clk-fill, var(--primary));
+  -webkit-text-stroke: 2rpx var(--clk-ink);
+  text-shadow: 4rpx 5rpx 0 var(--clk-glow), 7rpx 8rpx 0 var(--clk-ink);
+}
+
+/* 毫秒读数：跟主数字同一族，只是小一号，颜色/发光/描边保持一致 */
+.quick-page .q-shell-digital .q-ms-inline,
+.quick-page .q-shell-digital .q-ms-dot { color: var(--clk-ink); }
+.quick-page .q-shell-neon .q-ms-inline,
+.quick-page .q-shell-neon .q-ms-dot { color: var(--clk-ink); text-shadow: 0 0 5rpx var(--clk-glow), 0 0 14rpx var(--clk-glow); }
+.quick-page .q-shell-outline .q-ms-inline { color: transparent; -webkit-text-stroke: 3rpx var(--clk-ink); }
+.quick-page .q-shell-outline .q-ms-dot { color: var(--clk-ink); }
+.quick-page .q-shell-minimal .q-ms-inline,
+.quick-page .q-shell-minimal .q-ms-dot { color: var(--clk-ink); font-family: "Arial Rounded MT Bold", "Yuanti SC", "YouYuan", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; font-weight: 500; }
+.quick-page .q-shell-jelly .q-ms-inline { color: var(--clk-fill, var(--primary)); -webkit-text-stroke: 2rpx var(--clk-ink); text-shadow: 3rpx 4rpx 0 var(--clk-glow), 5rpx 6rpx 0 var(--clk-ink); }
+.quick-page .q-shell-jelly .q-ms-dot { color: var(--clk-ink); }
+
+/* 积木方块：牌面底色 / 描边 / 投影两端共用 */
+.timer-page .block-tile,
+.quick-page .q-block-tile {
+  background: var(--clk-tile);
+  border: 3rpx solid var(--clk-line);
+  border-radius: 12rpx;
+  box-shadow: 4rpx 5rpx 0 var(--shadow-soft);
+}
+.timer-page .block-num,
+.timer-page .block-colon,
+.quick-page .q-block-num,
+.quick-page .q-block-colon {
+  color: var(--clk-ink);
+  font-family: "Courier New", "Menlo", monospace;
+  font-weight: 900;
+}
+
+/* LED 灯：面板底色 + 七段几何两端共用（几何按百分比，跟着各页尺寸缩放） */
+.timer-page .led-clock,
+.quick-page .q-led-clock {
+  background: var(--clk-panel);
+  border: 2rpx solid var(--clk-panel-edge);
+  box-shadow: inset 0 0 20rpx rgba(0, 0, 0, .32), 4rpx 5rpx 0 var(--shadow-soft);
+}
+.timer-page .led-seg,
+.quick-page .q-led-seg { position: absolute; background: rgba(255, 255, 255, .10); border-radius: 3rpx; }
+.timer-page .led-seg.on,
+.quick-page .q-led-seg.on {
+  background: var(--clk-glow);
+  box-shadow: 0 0 6rpx var(--clk-glow), 0 0 14rpx var(--clk-glow);
+}
+.seg-a, .seg-d, .seg-g { left: 12%; width: 76%; height: 9%; }
+.seg-a { top: 0; }
+.seg-g { top: 45.5%; }
+.seg-d { bottom: 0; }
+.seg-b, .seg-c, .seg-e, .seg-f { width: 9%; height: 38%; }
+.seg-f { top: 8%; left: 0; }
+.seg-b { top: 8%; right: 0; }
+.seg-e { bottom: 8%; left: 0; }
+.seg-c { bottom: 8%; right: 0; }
+.timer-page .led-dot,
+.quick-page .q-led-dot {
+  border-radius: 50%;
+  background: var(--clk-glow);
+  box-shadow: 0 0 6rpx var(--clk-glow), 0 0 13rpx var(--clk-glow);
 }

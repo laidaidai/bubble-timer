@@ -73,7 +73,7 @@
 .q-shell-flip .q-flip-split { background: var(--line-strong); opacity: .8; }
 
 .q-plain-clock { display: flex; align-items: center; justify-content: center; }
-.q-plain-num { font-family: "Courier New", "Menlo", monospace; font-weight: 900; font-size: 100rpx; line-height: 1; letter-spacing: 2rpx; }
+.q-plain-num { display: inline-block; min-width: 3.3em; text-align: center; font-family: "Courier New", "Menlo", monospace; font-weight: 900; font-size: 100rpx; line-height: 1; letter-spacing: 2rpx; font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
 
 /* 毫秒读数：翻页风格用迷你翻页卡片，数字风格用内联小字 */
 .q-clock-shell { display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 4rpx; }
@@ -92,7 +92,7 @@
 .q-shell-minimal .q-ms-inline, .q-shell-minimal .q-ms-dot { color: var(--ink); font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif; font-weight: 200; letter-spacing: 4rpx; }
 .q-ms-dot { color: var(--ink); font-family: "Courier New", Menlo, monospace; font-size: 40rpx; font-weight: 900; line-height: 1; margin: 0 2rpx; align-self: flex-end; }
 .q-shell-flip .q-ms-dot { color: var(--accent-text); opacity: 1; }
-.q-ms-inline { color: var(--ink); font-family: "Courier New", Menlo, monospace; font-size: 100rpx; font-weight: 900; line-height: 1; letter-spacing: 1rpx; }
+.q-ms-inline { color: var(--ink); font-family: "Courier New", Menlo, monospace; font-size: 100rpx; font-weight: 900; line-height: 1; letter-spacing: 1rpx; font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
 .q-flip-card-ms { width: 92rpx; height: 160rpx; }
 .q-flip-card-ms .q-flip-num { font-size: 66rpx; line-height: 160rpx; }
 .q-flip-card-ms .q-flip-split { height: 2rpx; margin-top: -1rpx; }
@@ -573,6 +573,9 @@
   background: transparent;
   border: 3rpx solid var(--ink);
   border-radius: 18rpx;
+  box-sizing: border-box;
+  justify-content: center;
+  transition: none;
 }
 .q-shell-minimal.q-clock-long { padding: 8rpx 20rpx; }
 .q-shell-minimal .q-plain-num,
@@ -581,7 +584,12 @@
   font-family: "Arial Rounded MT Bold", "Yuanti SC", "YouYuan", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   font-weight: 500;
   letter-spacing: 2rpx;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  text-align: center;
 }
+/* 极简壳的宽度锁死在最高位数量上，个位数字变化时外框不再抽动 */
+.q-shell-minimal .q-plain-clock { justify-content: center; }
 
 .q-shell-jelly .q-plain-num {
   color: var(--primary);
@@ -658,3 +666,64 @@
 .q-shell-minimal .q-plain-num,
 .q-shell-minimal .q-ms-inline,
 .q-shell-minimal .q-ms-dot { color: var(--clk-ink); }
+
+/* ===== 积木 / LED：尺寸按快捷计时主舞台给，外观统一来自 styles/clocks.wxss ===== */
+.q-block-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6rpx;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+.q-block-tile {
+  width: 76rpx;
+  height: 132rpx;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.q-block-num { font-size: 66rpx; line-height: 1; }
+.q-block-colon { font-size: 52rpx; line-height: 1; padding: 0 2rpx; }
+
+.q-led-clock {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6rpx;
+  padding: 16rpx 26rpx;
+  border-radius: 22rpx;
+}
+.q-led-digit { position: relative; flex: 0 0 64rpx; width: 64rpx; height: 112rpx; }
+.q-led-colon {
+  flex: 0 0 10rpx;
+  width: 10rpx;
+  height: 64rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18rpx;
+}
+.q-led-dot { width: 8rpx; height: 8rpx; }
+
+.q-clock-long .q-block-tile { width: 62rpx; height: 108rpx; }
+.q-clock-long .q-block-num { font-size: 54rpx; }
+.q-clock-long .q-block-colon { font-size: 42rpx; }
+.q-clock-long .q-led-clock { padding: 12rpx 20rpx; }
+.q-clock-long .q-led-digit { flex-basis: 52rpx; width: 52rpx; height: 92rpx; }
+.q-clock-long .q-led-colon { flex-basis: 8rpx; width: 8rpx; height: 52rpx; gap: 14rpx; }
+.q-clock-long .q-led-dot { width: 7rpx; height: 7rpx; }
+
+/* 积木 / LED 的毫秒：跟主数字同一族，只小一号；>1 小时由 msShow 收起 */
+.q-clock-ms.blocks { align-items: flex-end; margin-left: 6rpx; }
+.q-clock-ms.blocks .q-ms-dot { font-size: 30rpx; margin: 0 1rpx 14rpx; }
+.q-clock-ms.blocks .q-ms-inline { color: var(--ink); font-family: "Courier New", "Menlo", monospace; font-weight: 900; font-size: 58rpx; letter-spacing: 1rpx; padding-bottom: 14rpx; }
+.q-clock-ms.led { align-items: flex-end; margin-left: 8rpx; }
+.q-clock-ms.led .q-ms-dot { font-size: 28rpx; margin: 0 1rpx 16rpx; color: var(--primary-2); }
+.q-clock-ms.led .q-ms-inline { color: var(--primary-2); font-family: "Courier New", "Menlo", monospace; font-weight: 900; font-size: 54rpx; letter-spacing: 1rpx; padding-bottom: 16rpx; text-shadow: 0 0 8rpx var(--primary-2); }
+.q-clock-long .q-clock-ms.blocks .q-ms-inline { font-size: 46rpx; }
+.q-clock-long .q-clock-ms.led .q-ms-inline { font-size: 44rpx; }

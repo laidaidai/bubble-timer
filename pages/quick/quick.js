@@ -1,5 +1,5 @@
 const app = getApp()
-const { pad, CLOCK_STYLES, resolveClockStyle } = require('../../utils/format')
+const { pad, CLOCK_STYLES, LED_PATTERNS, resolveClockStyle } = require('../../utils/format')
 
 const PRESETS = [
   { minutes: 10, label: '10 分钟' },
@@ -818,6 +818,12 @@ Page({
       text: char,
       sep: char === ':'
     }))
+    // LED 七段：段码表与计时页共用 utils/format 里的同一张
+    const ledCells = text.split('').map((char, index) => ({
+      key: `q-led-${index}`,
+      sep: char === ':',
+      segs: char === ':' ? [] : (LED_PATTERNS[char] || [0, 0, 0, 0, 0, 0, 0])
+    }))
     if (flipCells.some(item => item.changed)) this.flipPhase = !this.flipPhase
     this.lastClockText = text
     const styleKey = style || this.data.clockStyle
@@ -834,6 +840,7 @@ Page({
         mainText: text,
         flipCells,
         blockCells,
+        ledCells,
         flipPhase: !!this.flipPhase,
         msShow: showMs,
         long: text.length > 5,

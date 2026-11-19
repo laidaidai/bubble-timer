@@ -101,11 +101,15 @@
   <view class="settings-entry" bindtap="openSettings" aria-label="设置">
     <view class="settings-entry-icon">
       <view class="di-gear">
-        <view class="gear-tooth g1"></view><view class="gear-tooth g2"></view>
-        <view class="gear-tooth g3"></view><view class="gear-tooth g4"></view>
-        <view class="gear-tooth g5"></view><view class="gear-tooth g6"></view>
-        <view class="gear-tooth g7"></view><view class="gear-tooth g8"></view>
-        <view class="gear-core"></view><view class="gear-hole"></view>
+        <view class="gear-ring"></view>
+        <view class="gear-tooth t1"></view>
+        <view class="gear-tooth t2"></view>
+        <view class="gear-tooth t3"></view>
+        <view class="gear-tooth t4"></view>
+        <view class="gear-tooth t5"></view>
+        <view class="gear-tooth t6"></view>
+        <view class="gear-tooth t7"></view>
+        <view class="gear-tooth t8"></view>
       </view>
     </view>
   </view>

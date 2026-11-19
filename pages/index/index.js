@@ -1791,6 +1791,16 @@ Page({
   },
 
   exportReport() {
+    const settings = app.getSettings ? app.getSettings() : {}
+    if (settings.privacyAlbum === false) {
+      wx.showModal({
+        title: '相册保存已关闭',
+        content: '可在设置 → 隐私与权限里重新打开「保存图片到相册」。',
+        confirmText: '去设置',
+        success: res => { if (res.confirm) wx.navigateTo({ url: '/pages/settings/settings' }) }
+      })
+      return
+    }
     wx.showLoading({ title: '正在生成…', mask: true })
     this.createReportImage(tempFilePath => {
       wx.hideLoading()

@@ -4,6 +4,33 @@
       <flip-clock cells="{{flipCells}}" ms-cells="{{msCells}}" ms-show="{{msShow}}" flip-phase="{{flipPhase}}"/>
     </block>
 
+    <!-- 积木方块：与计时页同一套牌面 -->
+    <view class="q-block-row" wx:elif="{{clockStyle === 'blocks'}}">
+      <block wx:for="{{blockCells}}" wx:key="key">
+        <view class="q-block-colon" wx:if="{{item.sep}}">:</view>
+        <view class="q-block-tile" wx:else><text class="q-block-num">{{item.text}}</text></view>
+      </block>
+    </view>
+
+    <!-- LED 灯：与计时页同一套七段 -->
+    <view class="q-led-clock" wx:elif="{{clockStyle === 'led'}}">
+      <block wx:for="{{ledCells}}" wx:key="key">
+        <view class="q-led-colon" wx:if="{{item.sep}}">
+          <view class="q-led-dot"></view>
+          <view class="q-led-dot"></view>
+        </view>
+        <view class="q-led-digit" wx:else>
+          <view class="q-led-seg seg-a {{item.segs[0] ? 'on' : ''}}"></view>
+          <view class="q-led-seg seg-b {{item.segs[1] ? 'on' : ''}}"></view>
+          <view class="q-led-seg seg-c {{item.segs[2] ? 'on' : ''}}"></view>
+          <view class="q-led-seg seg-d {{item.segs[3] ? 'on' : ''}}"></view>
+          <view class="q-led-seg seg-e {{item.segs[4] ? 'on' : ''}}"></view>
+          <view class="q-led-seg seg-f {{item.segs[5] ? 'on' : ''}}"></view>
+          <view class="q-led-seg seg-g {{item.segs[6] ? 'on' : ''}}"></view>
+        </view>
+      </block>
+    </view>
+
     <view class="q-plain-clock" wx:else>
       <text class="q-plain-num">{{mainText}}</text>
     </view>

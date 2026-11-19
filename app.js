@@ -145,7 +145,9 @@ const DEFAULT_SETTINGS = {
   tickSound: false,
   tickDefaultOff: true,
   homePrimary: 'timer',
-  incentiveType: 'tomato'
+  incentiveType: 'tomato',
+  privacyAlbum: true,
+  privacyCalendar: true
 }
 
 App({

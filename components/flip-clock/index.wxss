@@ -173,21 +173,44 @@
 
 /* 毫秒牌：与主牌同款，尺寸略小 */
 .fc-card-ms {
-  width: 64rpx;
-  height: 116rpx;
+  width: 96rpx;
+  height: 168rpx;
 }
 .fc-card-ms .fc-num {
-  font-size: 48rpx;
-  line-height: 116rpx;
+  font-size: 72rpx;
+  line-height: 168rpx;
 }
 .fc-ms-dot {
   align-self: flex-end;
-  margin: 0 2rpx 12rpx;
+  margin: 0 2rpx 22rpx;
   color: var(--ink);
   font-family: "Courier New", Menlo, monospace;
-  font-size: 36rpx;
+  font-size: 40rpx;
   font-weight: 900;
   line-height: 1;
+}
+
+/* 带毫秒时整排等比收一档：毫秒牌与主牌保持同样大小，同时不超出手机宽度 */
+.fc-with-ms {
+  gap: 4rpx;
+}
+.fc-with-ms .fc-card,
+.fc-with-ms .fc-card-ms {
+  width: 88rpx;
+  height: 156rpx;
+}
+.fc-with-ms .fc-card .fc-num,
+.fc-with-ms .fc-card-ms .fc-num {
+  font-size: 66rpx;
+  line-height: 156rpx;
+}
+.fc-with-ms .fc-colon {
+  font-size: 32rpx;
+  padding: 0 1rpx;
+}
+.fc-with-ms .fc-ms-dot {
+  margin: 0 1rpx 20rpx;
+  font-size: 30rpx;
 }
 
 /* 紧凑态（横屏计时页 / 高度紧张时由页面加 .fc-compact 到外层） */

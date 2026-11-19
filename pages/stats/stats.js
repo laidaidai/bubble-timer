@@ -464,6 +464,16 @@ Page({
       itemList: ['保存到相册', '发送给朋友'],
       success: ({ tapIndex }) => {
         if (tapIndex === 0) {
+          const settings = app.getSettings ? app.getSettings() : {}
+          if (settings.privacyAlbum === false) {
+            wx.showModal({
+              title: '相册保存已关闭',
+              content: '可在设置 → 隐私与权限里重新打开「保存图片到相册」。',
+              confirmText: '去设置',
+              success: res => { if (res.confirm) wx.navigateTo({ url: '/pages/settings/settings' }) }
+            })
+            return
+          }
           wx.saveImageToPhotosAlbum({
             filePath: path,
             success: () => wx.showToast({ title: '已保存到相册', icon: 'success' }),

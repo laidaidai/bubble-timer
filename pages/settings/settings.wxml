@@ -166,6 +166,22 @@
       <view class="pane-more" wx:if="{{habitPresets.length > 4}}" bindtap="toggleExpand">{{presetExpanded ? '收起' : '全部 ' + habitPresets.length + ' 个'}}</view>
     </view>
 
+    <view class="pane" wx:if="{{section === 'privacy'}}">
+      <view class="row" data-key="privacyAlbum" bindtap="toggleSwitch">
+        <view class="row-main">
+          <view class="row-name">保存图片到相册</view>
+        </view>
+        <view class="switch {{privacyAlbum ? 'on' : ''}}"><view class="knob"></view></view>
+      </view>
+      <view class="row" data-key="privacyCalendar" bindtap="toggleSwitch">
+        <view class="row-main">
+          <view class="row-name">写入系统日历</view>
+        </view>
+        <view class="switch {{privacyCalendar ? 'on' : ''}}"><view class="knob"></view></view>
+      </view>
+      <button class="privacy-btn ghost" bindtap="openAuthSetting">在微信中管理授权</button>
+    </view>
+
     <view class="data-zone">
       <view class="data-title">本地数据</view>
       <view class="data-desc">清除后不可恢复，日历提醒不受影响。</view>

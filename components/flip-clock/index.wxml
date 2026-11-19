@@ -1,4 +1,4 @@
-<view class="fc-row {{compact ? 'fc-compact' : ''}}">
+<view class="fc-row {{compact ? 'fc-compact' : ''}} {{msShow ? 'fc-with-ms' : ''}}">
   <block wx:for="{{cells}}" wx:key="key">
     <view class="fc-colon" wx:if="{{item.sep}}">:</view>
     <view class="fc-card {{item.changed ? (flipPhase ? 'flip-a' : 'flip-b') : ''}}" wx:else>

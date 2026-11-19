@@ -1,20 +1,7 @@
 const app = getApp()
-const { pad, clockFull: clock, clock: shortClock, dateTimeText: dateTime, dateKey, clone, CLOCK_STYLES } = require('../../utils/format')
+const { pad, clockFull: clock, clock: shortClock, dateTimeText: dateTime, dateKey, clone, CLOCK_STYLES, LED_PATTERNS } = require('../../utils/format')
 
-// 七段数码管：a, b, c, d, e, f, g
-const LED_PATTERNS = {
-  '0': [1, 1, 1, 1, 1, 1, 0],
-  '1': [0, 1, 1, 0, 0, 0, 0],
-  '2': [1, 1, 0, 1, 1, 0, 1],
-  '3': [1, 1, 1, 1, 0, 0, 1],
-  '4': [0, 1, 1, 0, 0, 1, 1],
-  '5': [1, 0, 1, 1, 0, 1, 1],
-  '6': [1, 0, 1, 1, 1, 1, 1],
-  '7': [1, 1, 1, 0, 0, 0, 0],
-  '8': [1, 1, 1, 1, 1, 1, 1],
-  '9': [1, 1, 1, 1, 0, 1, 1]
-}
-
+// 七段数码管：a, b, c, d, e, f, g（段码表已收到 utils/format 共享）
 const FOCUS_SECONDS = 25 * 60
 const REST_SECONDS = 5 * 60
 const LONG_REST_SECONDS = 15 * 60
@@ -36,7 +23,7 @@ Page({
     globalTimeText: '00:00:00', moduleTimeText: '00:00:00', mainTimeText: '00:00:00',
     progressPercent: 0, isPaused: false, isOvertime: false, isHolding: false,
     clockStyle: 'flip', clockStyleName: '翻页时钟', flipCells: [], flipDigits: [], ledDigits: [], flipPhase: false,
-    msText: '00', theme: 'sky', themeStyle: '',
+    msText: '00', msShow: true, theme: 'sky', themeStyle: '',
     isLastModule: false, isFirstModule: true,
     mode: 'countup', modeName: '正计时', mainLabel: '总用时',
     phaseLabel: '', phaseText: '', tickMuted: true, compact: true, immersive: false, moduleCollapsed: false,
@@ -129,7 +116,9 @@ Page({
     const base = this.lastTickAt || Date.now()
     const ms = Date.now() - base
     const text = String(Math.floor((((ms % 1000) + 1000) % 1000) / 10)).padStart(2, '0')
-    if (text !== this.data.msText) this.setData({ msText: text })
+    // 超过 1 小时（时间变成 HH:MM:SS）就收起毫秒，8 种时钟样式统一遵守这条
+    const showMs = String(this.data.mainTimeText || '').length <= 5
+    if (text !== this.data.msText || showMs !== this.data.msShow) this.setData({ msText: text, msShow: showMs })
   },
 
   cycleClockStyle() {
@@ -419,6 +408,7 @@ Page({
       globalTimeText: globalText,
       moduleTimeText: moduleText,
       mainTimeText,
+      msShow: mainTimeText.length <= 5,
       mainLabel,
       phaseLabel,
       phaseText,

@@ -51,6 +51,8 @@ Page({
     keepScreenOn: true,
     exitGuard: true,
     overtimeAlert: true,
+    privacyAlbum: true,
+    privacyCalendar: true,
     tickSound: false,
     homePrimary: 'timer',
     homePrimaryOptions: [
@@ -82,7 +84,8 @@ Page({
       { key: 'clock', name: '时钟' },
       { key: 'remind', name: '提醒' },
       { key: 'guard', name: '专注' },
-      { key: 'habit', name: '模板' }
+      { key: 'habit', name: '模板' },
+      { key: 'privacy', name: '隐私' }
     ],
     clockStyles: [],
     clockStyle: 'flip',
@@ -162,6 +165,8 @@ Page({
       exitGuard: !!settings.exitGuard,
       overtimeAlert: !!settings.overtimeAlert,
       tickSound: settings.tickSound === true,
+      privacyAlbum: settings.privacyAlbum !== false,
+      privacyCalendar: settings.privacyCalendar !== false,
       homePrimary: settings.homePrimary === 'quick' ? 'quick-stopwatch' : (settings.homePrimary || 'timer'),
       incentiveType: settings.incentiveType || 'tomato',
       hasCustomRing: (app.getRings ? app.getRings() : []).some(item => String(item.key).indexOf('cr-') === 0 || item.key === 'custom')
@@ -474,6 +479,26 @@ Page({
     }
     if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
     wx.showToast({ title: next ? '已开启' : '已关闭', icon: 'none', duration: 1000 })
+  },
+
+  openAuthSetting() {
+    if (!wx.openSetting) {
+      wx.showToast({ title: '当前版本不支持授权管理', icon: 'none' })
+      return
+    }
+    wx.openSetting({
+      success: (res) => {
+        const granted = (res && res.authSetting) || {}
+        const album = granted['scope.writePhotosAlbum']
+        const calendar = granted['scope.addPhoneCalendar']
+        wx.showToast({
+          title: `相册${album === false ? '未授权' : '可用'} · 日历${calendar === false ? '未授权' : '可用'}`,
+          icon: 'none',
+          duration: 1800
+        })
+      },
+      fail: () => wx.showToast({ title: '打开失败，请稍后重试', icon: 'none' })
+    })
   },
 
   selectHomePrimary(event) {

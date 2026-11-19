@@ -48,18 +48,38 @@
 .chart-bar.b3 { height: 38rpx; }
 .gear-entry { flex: 0 0 70rpx; width: 70rpx; height: 60rpx; display: flex; align-items: center; justify-content: center; }
 .gear-entry:active { opacity: .62; }
-.di-gear { position: relative; width: 38rpx; height: 38rpx; }
-.di-gear .gear-core { position: absolute; left: 6rpx; top: 6rpx; width: 26rpx; height: 26rpx; background: var(--ink); border-radius: 50%; }
-.di-gear .gear-hole { position: absolute; left: 15rpx; top: 15rpx; width: 8rpx; height: 8rpx; background: var(--nav); border-radius: 50%; }
-.di-gear .gear-tooth { position: absolute; background: var(--ink); border-radius: 2rpx; }
-.di-gear .g1 { top: 0; left: 15rpx; width: 8rpx; height: 8rpx; }
-.di-gear .g2 { right: 0; top: 15rpx; width: 8rpx; height: 8rpx; }
-.di-gear .g3 { bottom: 0; left: 15rpx; width: 8rpx; height: 8rpx; }
-.di-gear .g4 { left: 0; top: 15rpx; width: 8rpx; height: 8rpx; }
-.di-gear .g5 { left: 3rpx; top: 3rpx; width: 7rpx; height: 7rpx; }
-.di-gear .g6 { right: 3rpx; top: 3rpx; width: 7rpx; height: 7rpx; }
-.di-gear .g7 { left: 3rpx; bottom: 3rpx; width: 7rpx; height: 7rpx; }
-.di-gear .g8 { right: 3rpx; bottom: 3rpx; width: 7rpx; height: 7rpx; }
+.di-gear { position: relative; width: 40rpx; height: 40rpx; }
+/* 齿轮：空心圆环做本体，八枚小齿沿半径向外排，比原来的实心圆更像齿轮 */
+.di-gear .gear-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  box-sizing: border-box;
+  width: 26rpx;
+  height: 26rpx;
+  margin: -13rpx 0 0 -13rpx;
+  border: 5rpx solid var(--ink);
+  border-radius: 50%;
+}
+.di-gear .gear-tooth {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 7rpx;
+  height: 9rpx;
+  margin: -4.5rpx 0 0 -3.5rpx;
+  background: var(--ink);
+  border-radius: 2rpx 2rpx 1rpx 1rpx;
+  transform-origin: 50% 50%;
+}
+.di-gear .t1 { transform: rotate(0deg) translateY(-15rpx); }
+.di-gear .t2 { transform: rotate(45deg) translateY(-15rpx); }
+.di-gear .t3 { transform: rotate(90deg) translateY(-15rpx); }
+.di-gear .t4 { transform: rotate(135deg) translateY(-15rpx); }
+.di-gear .t5 { transform: rotate(180deg) translateY(-15rpx); }
+.di-gear .t6 { transform: rotate(225deg) translateY(-15rpx); }
+.di-gear .t7 { transform: rotate(270deg) translateY(-15rpx); }
+.di-gear .t8 { transform: rotate(315deg) translateY(-15rpx); }
 
 .todo-summary { margin-top: 14rpx; display: flex; align-items: stretch; gap: 10rpx; min-width: 0; }
 .todo-sum-item { flex: 0 0 105rpx; padding: 10rpx 12rpx; display: flex; flex-direction: column; gap: 2rpx; background: var(--accent-bg); border-radius: 14rpx; }
