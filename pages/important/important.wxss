@@ -276,3 +276,82 @@
 
 /* 重要日子为空：只留 logo，不再放解释文字 */
 .imp-empty-logo { width: 168rpx; height: 168rpx; opacity: .9; animation: history-logo-float 4.2s ease-in-out infinite; }
+
+/* ===== 桌面 / 大屏：重要日子 =====
+ * 只看主内容（条目名称 + 日期 + 倒计时）稍微放大；
+ * 添加胶囊、加号、弹层里的输入框 / 日期块 / 日历格 / 按钮一律锁手机档，不随窗口放大。
+ */
+/* 底部内距避开左下角悬浮球 */
+.desk .imp-body { padding: 12px 13px calc(env(safe-area-inset-bottom) + 64px); }
+.desk .imp-add {
+  height: 49px;
+  padding: 0 12px;
+  gap: 7px;
+  border-width: 2px;
+  box-shadow: 3px 4px 0 var(--shadow);
+  font-size: 14px;
+}
+.desk .imp-add-plus { flex: 0 0 19px; width: 19px; height: 19px; border-width: 1px; }
+.desk .imp-add-plus::before { width: 9px; height: 2px; }
+.desk .imp-add-plus::after { width: 2px; height: 9px; }
+.desk .imp-list { margin-top: 12px; gap: 8px; }
+.desk .imp-row {
+  min-height: 47px;
+  padding: 9px 10px;
+  gap: 7px;
+  border-width: 1px;
+  border-radius: 10px;
+}
+.desk .imp-dot { flex: 0 0 8px; width: 8px; height: 8px; border-width: 1px; }
+.desk .imp-main { gap: 2px; }
+.desk .imp-title-row { gap: 6px; }
+.desk .imp-title { font-size: 15px; }
+.desk .imp-date { font-size: 11px; }
+.desk .imp-count, .desk .imp-unit { font-size: 12px; }
+.desk .imp-empty { margin-top: 13px; min-height: 179px; gap: 10px; border-width: 2px; border-radius: 15px; }
+.desk .imp-empty-plus { width: 46px; height: 46px; border-width: 2px; box-shadow: 2px 3px 0 var(--shadow); }
+.desk .imp-empty-plus::before { width: 19px; height: 3px; }
+.desk .imp-empty-plus::after { width: 3px; height: 19px; }
+.desk .imp-empty-text { font-size: 12px; }
+.desk .imp-empty-logo { width: 94px; height: 94px; }
+
+/* 添加 / 编辑弹层 */
+.desk .modal-mask { padding: 0 22px; }
+.desk .modal-card { padding: 17px 15px 15px; border-width: 2px; border-radius: 16px; box-shadow: 4px 5px 0 var(--shadow); }
+.desk .important-modal { max-height: 76vh; }
+.desk .modal-title { font-size: 18px; }
+.desk .modal-input {
+  height: 46px;
+  margin-top: 11px;
+  padding: 0 10px;
+  border-width: 1px;
+  border-radius: 9px;
+  font-size: 15px;
+}
+.desk .important-form-row { margin-top: 8px; gap: 6px; }
+.desk .important-date-btn { padding: 7px 9px; border-width: 1px; border-radius: 8px; }
+.desk .important-date-label { font-size: 10px; }
+.desk .important-date-value { margin-top: 2px; font-size: 13px; }
+.desk .important-yearly {
+  flex: 0 0 83px;
+  padding: 0 5px;
+  border-width: 1px;
+  border-radius: 8px;
+  font-size: 11px;
+}
+.desk .important-calendar { margin-top: 7px; padding: 7px; border-width: 1px; border-radius: 10px; }
+.desk .important-cal-nav { width: 29px; font-size: 16px; }
+.desk .important-cal-title { font-size: 12px; }
+.desk .important-cal-weekdays { margin-top: 4px; gap: 3px; }
+.desk .important-cal-weekday { font-size: 10px; }
+.desk .important-cal-row { margin-top: 3px; gap: 3px; }
+.desk .important-cal-cell { height: 27px; border-width: 1px; border-radius: 6px; font-size: 11px; }
+.desk .modal-actions { margin-top: 12px; gap: 8px; }
+.desk .modal-cancel,
+.desk .modal-confirm {
+  padding: 11px 0;
+  border-width: 1px;
+  border-radius: 999px;
+  font-size: 14px;
+}
+.desk .modal-confirm { box-shadow: 2px 3px 0 var(--shadow); }

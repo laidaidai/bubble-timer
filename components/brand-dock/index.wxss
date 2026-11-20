@@ -36,6 +36,8 @@
   flex-direction: column;
   align-items: stretch;
   gap: 10rpx;
+  max-height: 78vh;
+  overflow-y: auto;
 }
 
 .dock-summary {
@@ -89,7 +91,6 @@
 .dock-action-title { font-size: 23rpx; font-weight: 900; letter-spacing: 1rpx; }
 .dock-action-sub { color: var(--text-mid, #6C7A86); font-size: 17rpx; font-weight: 700; line-height: 1.25; }
 
-.dock-tip { color: var(--text-mid, #6C7A86); font-size: 16rpx; font-weight: 700; padding-left: 6rpx; opacity: 0; animation: dock-action-in .3s ease-out both .2s; }
 
 .dock-logo {
   position: relative;
@@ -194,3 +195,34 @@
 .dot-continue { background: var(--primary, #5AA9E6); }
 .dot-timer { background: var(--primary-2, #F2A65A); }
 .dot-todo { background: var(--cream-3, #F3E5D2); }
+
+/* ===== 悬浮球二级菜单：首页显示哪一项 ===== */
+.dock-switch {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: 7rpx;
+  padding: 10rpx 12rpx 12rpx;
+  background: var(--cream-1, #FFF8E8);
+  border: 2rpx solid var(--edge, #1E3448);
+  border-radius: 18rpx;
+  box-shadow: 3rpx 3rpx 0 var(--shadow-soft, rgba(30, 52, 72, .10));
+  opacity: 0;
+  transform: translateY(12rpx);
+  animation: dock-action-in .26s ease-out both .05s;
+}
+.dock-switch-title { color: var(--text-mid, #6C7A86); font-size: 18rpx; font-weight: 800; }
+.dock-switch-grid { display: flex; flex-wrap: wrap; gap: 6rpx; }
+.dock-switch-chip {
+  flex: 0 0 auto;
+  padding: 6rpx 12rpx;
+  color: var(--ink, #1E3448);
+  background: var(--card, #FFFFFF);
+  border: 1.5rpx solid var(--line-strong, rgba(30, 52, 72, .25));
+  border-radius: 999rpx;
+  font-size: 18rpx;
+  font-weight: 800;
+  line-height: 1.3;
+}
+.dock-switch-chip.on { background: var(--primary, #5AA9E6); border-color: var(--edge, #1E3448); }
+.dock-switch-chip.soon { opacity: .55; border-style: dashed; }

@@ -48,7 +48,7 @@
 .sched-title { flex: 1; color: var(--ink); text-align: center; font-size: 25rpx; font-weight: 900; letter-spacing: 1rpx; }
 .sched-nav { width: 52rpx; height: 52rpx; display: flex; align-items: center; justify-content: center; color: var(--ink); background: var(--cream-1); border: 2rpx solid var(--edge); border-radius: 999rpx; font-size: 30rpx; font-weight: 900; line-height: 1; }
 .sched-week { margin: 12rpx 0 6rpx; display: flex; }
-.sched-week text { flex: 1; color: var(--text-3); text-align: center; font-size: 19rpx; font-weight: 800; }
+.sched-week .sched-week-cell { flex: 1; color: var(--text-3); text-align: center; font-size: 19rpx; font-weight: 800; }
 .sched-row { display: flex; margin-top: 6rpx; }
 .sched-cell { flex: 1; height: 62rpx; margin: 0 3rpx; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2rpx solid transparent; border-radius: 14rpx; }
 .sched-cell.empty { opacity: 0; }
@@ -149,3 +149,111 @@
 /* 待办为空：只显示 logo */
 .todo-empty { padding: 54rpx 0 120rpx; display: flex; align-items: center; justify-content: center; }
 .todo-empty-logo { width: 170rpx; height: 170rpx; opacity: .9; animation: history-logo-float 4.2s ease-in-out infinite; }
+
+/* ===== 桌面 / 大屏：待办清单 =====
+ * 只看主内容（完成度、日历、待办条目）适度放大；
+ * 悬浮 +、勾选圈、日历箭头、输入框、日期/时间入口、提醒胶囊、底部按钮全部锁手机档。
+ */
+/* 底部内距同时避开左下角悬浮球和右下角加号（60px + 27px 落点） */
+.desk .todo-body { padding: 11px 13px calc(env(safe-area-inset-bottom) + 96px); }
+
+/* 完成度（主体） */
+.desk .todo-hero { padding: 13px 15px; border-width: 1px; border-radius: 15px; box-shadow: 3px 4px 0 var(--shadow); }
+.desk .hero-eyebrow { font-size: 12px; }
+.desk .hero-percent .num { font-size: 36px; }
+.desk .hero-unit { margin-left: 2px; font-size: 15px; }
+.desk .hero-bar { margin-top: 9px; height: 9px; }
+.desk .hero-meta { margin-top: 7px; font-size: 12px; }
+
+.desk .list-head { margin: 16px 2px 7px; }
+.desk .list-title { font-size: 12px; }
+.desk .list-clear { font-size: 11px; }
+.desk .todo-list { gap: 8px; }
+.desk .todo-item { padding: 12px 12px; gap: 10px; border-width: 1px; border-radius: 12px; box-shadow: 2px 3px 0 var(--shadow-soft); }
+.desk .todo-check { flex: 0 0 27px; width: 27px; height: 27px; border-width: 1px; }
+.desk .check-mark { font-size: 13px; }
+.desk .todo-text { font-size: 16px; line-height: 1.4; }
+.desk .todo-meta { margin-top: 3px; gap: 7px; }
+.desk .todo-due { font-size: 12px; }
+.desk .todo-remind { padding: 1px 6px; font-size: 10px; }
+.desk .todo-edit { font-size: 15px; }
+
+.desk .empty-card { margin-top: 22px; padding: 28px 15px; gap: 7px; border-width: 1px; border-radius: 15px; }
+.desk .empty-icon { font-size: 27px; }
+.desk .empty-title { font-size: 13px; }
+.desk .empty-desc { font-size: 11px; }
+.desk .todo-foot { margin: 22px 0 11px; font-size: 11px; }
+.desk .todo-empty { padding: 30px 0 67px; }
+.desk .todo-empty-logo { width: 95px; height: 95px; }
+
+/* 悬浮 +（控件，不放大，贴右下留边距） */
+.desk .fab {
+  right: 22px;
+  bottom: calc(27px + env(safe-area-inset-bottom));
+  width: 60px;
+  height: 60px;
+  border-width: 2px;
+  box-shadow: 4px 5px 0 var(--shadow);
+}
+.desk .fab-plus { font-size: 26px; }
+
+/* 月度日程（主体） */
+.desk .sched-card { margin-top: 10px; padding: 10px 10px 8px; border-width: 1px; border-radius: 13px; box-shadow: 3px 4px 0 var(--shadow-soft); }
+.desk .sched-head { gap: 7px; }
+.desk .sched-title { font-size: 15px; }
+.desk .sched-nav { width: 29px; height: 29px; border-width: 1px; font-size: 17px; }
+.desk .sched-week { margin: 7px 0 3px; }
+.desk .sched-week .sched-week-cell { font-size: 11px; }
+.desk .sched-row { margin-top: 3px; }
+.desk .sched-cell { height: 35px; margin: 0 2px; border-width: 1px; border-radius: 8px; }
+.desk .sched-day { font-size: 12px; }
+.desk .sched-dot { width: 5px; height: 5px; margin-top: 2px; }
+.desk .sched-filter { margin-top: 7px; padding-top: 7px; gap: 7px; border-top-width: 1px; }
+.desk .sched-filter-text { font-size: 12px; }
+.desk .sched-clear { padding: 3px 10px; border-width: 1px; font-size: 11px; }
+.desk .sched-tip { margin-top: 6px; font-size: 10px; }
+
+/* 日期 / 时间入口 + 选择面板（控件） */
+.desk .pick-row { margin-top: 10px; gap: 8px; }
+.desk .pick-btn { padding: 9px 11px; border-width: 1px; border-radius: 10px; box-shadow: 2px 2px 0 var(--shadow-soft); }
+.desk .pick-k { font-size: 11px; }
+.desk .pick-v { font-size: 13px; }
+.desk .picker-panel { margin-top: 9px; padding: 10px 11px 12px; border-width: 1px; border-radius: 11px; }
+.desk .pp-head { margin-bottom: 6px; }
+.desk .pp-title { font-size: 12px; }
+.desk .pp-done { padding: 3px 12px; border-width: 1px; font-size: 11px; }
+
+/* 新建 / 编辑待办弹层 */
+.desk .sheet {
+  border-top-width: 2px;
+  border-radius: 17px 17px 0 0;
+  box-shadow: 0 -4px 0 rgba(75, 58, 42, .12);
+}
+.desk .sheet-head { padding: 15px 16px 8px; }
+.desk .sheet-title { font-size: 16px; }
+.desk .sheet-del { font-size: 12px; }
+.desk .sheet-body { padding: 0 16px; }
+.desk .sheet-textarea { height: 84px; padding: 11px 12px; border-width: 1px; border-radius: 10px; box-shadow: 2px 2px 0 var(--shadow-soft); font-size: 15px; line-height: 1.5; }
+.desk .cal-head { margin-top: 13px; }
+.desk .cal-nav { width: 31px; font-size: 16px; }
+.desk .cal-title { font-size: 13px; }
+.desk .cal-weekdays { margin-top: 7px; gap: 3px; }
+.desk .cal-weekday { font-size: 10px; }
+.desk .cal-row { margin-top: 3px; gap: 3px; }
+.desk .cal-cell { height: 35px; border-width: 1px; border-radius: 7px; font-size: 12px; }
+.desk .time-picker { margin-top: 6px; height: 121px; border-width: 1px; border-radius: 10px; }
+.desk .time-item { height: 40px; font-size: 15px; }
+.desk .remind-head { margin-top: 12px; font-size: 12px; }
+.desk .remind-row { margin-top: 7px; gap: 6px; padding-bottom: 6px; }
+.desk .remind-chip { padding: 7px 11px; border-width: 1px; font-size: 11px; }
+.desk .remind-tip { margin: 1px 0 6px; font-size: 10px; }
+.desk .sheet-actions { gap: 8px; padding: 9px 16px 12px; }
+.desk .sheet-btn { min-height: 45px; padding: 10px 4px; border-width: 1px; border-radius: 999px; box-shadow: 2px 3px 0 var(--shadow); font-size: 13px; }
+
+/* 弹层内容收成一列，避免输入框被拉成一整条 */
+.desk .sheet-head,
+.desk .sheet-body,
+.desk .sheet-actions { width: 100%; max-width: 620px; margin: 0 auto; box-sizing: border-box; }
+
+/* 桌面下加法按钮保持静止：呼吸动画里的阴影偏移是 rpx，宽窗口会被放大成一大团深色块 */
+.desk .fab { animation: none !important; }

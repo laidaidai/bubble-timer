@@ -3,7 +3,7 @@
 .quick-tabs { flex: 0 0 auto; margin: 18rpx 24rpx 0; padding: 8rpx; display: flex; gap: 8rpx; background: var(--cream-1); border: 2rpx solid var(--line-strong); border-radius: 999rpx; }
 .quick-tab { flex: 1; padding: 13rpx 0; color: var(--text-2); text-align: center; border-radius: 999rpx; font-size: 25rpx; font-weight: 900; }
 .quick-tab.on { color: var(--ink); background: var(--primary); border: 2rpx solid var(--edge); box-shadow: 3rpx 4rpx 0 var(--shadow); }
-.quick-body { flex: 1; min-height: 0; padding: 22rpx 24rpx calc(env(safe-area-inset-bottom) + 18rpx); display: flex; flex-direction: column; gap: 14rpx; overflow-y: auto; }
+.quick-body { flex: 1; min-height: 0; padding: 22rpx 24rpx 8rpx; display: flex; flex-direction: column; gap: 14rpx; overflow-y: auto; }
 .quick-clock-card { position: relative; flex: 1; min-height: 0; width: 100%; margin-top: 0; padding: 10rpx 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12rpx; background: transparent; border: 0; border-radius: 0; box-shadow: none; }
 .quick-clock-card.picker-mode { flex: 0 0 auto; padding-top: 2rpx; }
 
@@ -22,9 +22,9 @@
 .time-picker { width: 100%; height: 320rpx; overflow: hidden; background: var(--card); border: 2rpx solid var(--edge); border-radius: 22rpx; box-shadow: 4rpx 5rpx 0 var(--shadow-soft); }
 .picker-item { height: 88rpx; display: flex; align-items: center; justify-content: center; color: var(--ink); font-family: "Courier New", Menlo, monospace; font-size: 42rpx; font-weight: 900; line-height: 88rpx; }
 .picker-units { margin-top: 6rpx; display: flex; color: var(--text-3); font-size: 20rpx; font-weight: 800; }
-.picker-units text { flex: 1; text-align: center; }
+.picker-units .picker-unit { flex: 1; text-align: center; }
 
-.quick-actions { flex: 0 0 auto; margin-top: auto; padding-top: 10rpx; display: flex; gap: 12rpx; }
+.quick-actions { flex: 0 0 auto; display: flex; gap: 12rpx; }
 .quick-primary, .quick-lap, .quick-reset { height: 92rpx; min-height: 92rpx; margin: 0; padding: 0; display: flex; align-items: center; justify-content: center; border: 3rpx solid var(--edge); border-radius: 999rpx; box-shadow: 4rpx 5rpx 0 var(--shadow); font-size: 27rpx; font-weight: 900; line-height: 1; }
 .quick-primary { flex: 1; color: var(--ink); background: var(--primary); }
 .quick-lap { flex: 0 0 150rpx; color: var(--ink); background: var(--cream-3); }
@@ -36,11 +36,21 @@
 .time-picker { width: 100%; height: 280rpx; overflow: hidden; background: var(--cream-1); border: 2rpx solid var(--line-strong); border-radius: 20rpx; }
 .picker-item { height: 88rpx; display: flex; align-items: center; justify-content: center; color: var(--ink); font-family: "Courier New", Menlo, monospace; font-size: 36rpx; font-weight: 900; line-height: 88rpx; }
 .picker-units { margin-top: 4rpx; display: flex; color: var(--text-2); font-size: 20rpx; font-weight: 800; }
-.picker-units text { flex: 1; text-align: center; }
+.picker-units .picker-unit { flex: 1; text-align: center; }
 
 /* ---- 快捷计时的时钟特效 ---- */
 .quick-clock-stage { flex: 1; min-height: 0; width: 100%; display: flex; justify-content: center; align-items: center; }
 .clock-display { width: 100%; display: flex; justify-content: center; align-items: center; }
+/* 时钟容器：高度由 JS 按窗口写入（--clockSlotH），皮肤统一等比缩进容器。
+   zoom 会真的改变布局尺寸，所以换皮肤时卡片、按钮都不会跟着跳。 */
+.quick-page .q-clock-slot {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+.quick-page .q-clock-shell { zoom: var(--q-fit, 1); transform-origin: center center; }
 
 .q-clock-shell.q-shell-flip { padding: 10rpx 14rpx; background: var(--cream-2); border: 2rpx solid var(--line-strong); border-radius: 22rpx; box-shadow: 4rpx 5rpx 0 var(--shadow-soft); gap: 2rpx; }
 .q-clock-shell.q-shell-flip.q-clock-long { padding: 8rpx 10rpx; }
@@ -78,37 +88,31 @@
 /* 毫秒读数：翻页风格用迷你翻页卡片，数字风格用内联小字 */
 .q-clock-shell { display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 4rpx; }
 .q-clock-line { display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 4rpx; max-width: 100%; }
-.q-clock-shell.q-shell-digital { padding: 10rpx 18rpx; background: var(--panel); border: 2rpx solid var(--edge-deep); border-radius: 20rpx; box-shadow: 4rpx 5rpx 0 var(--shadow-soft), inset 0 0 24rpx rgba(255, 209, 102, .14); gap: 4rpx; }
-.q-clock-shell.q-shell-digital.q-clock-long { padding: 8rpx 14rpx; }
-.q-shell-digital { align-items: flex-end; gap: 2rpx; }
-.q-shell-digital .q-plain-num { color: var(--on-panel); text-shadow: 0 0 10rpx rgba(255,255,255,.18); }
-.q-shell-digital .q-ms-inline, .q-shell-digital .q-ms-dot { color: var(--on-panel); }
-.q-clock-ms { display: flex; align-items: flex-end; justify-content: center; gap: 3rpx; flex: 0 0 auto; }
+.q-clock-shell.q-shell-gradient { padding: 10rpx 18rpx; background: var(--panel); border: 2rpx solid var(--edge-deep); border-radius: 20rpx; box-shadow: 4rpx 5rpx 0 var(--shadow-soft), inset 0 0 24rpx rgba(255, 209, 102, .14); gap: 4rpx; }
+.q-clock-shell.q-shell-gradient.q-clock-long { padding: 8rpx 14rpx; }
+.q-shell-gradient { align-items: flex-end; gap: 2rpx; }
+.q-shell-gradient .q-plain-num { color: var(--on-panel); text-shadow: 0 0 10rpx rgba(255,255,255,.18); }
+.q-shell-gradient .q-ms-inline, .q-shell-gradient .q-ms-dot { color: var(--on-panel); }
+.q-clock-ms { display: flex; align-items: flex-end; justify-content: center; gap: 3rpx; flex: 0 0 auto; min-width: 3.6ch; }
 .q-clock-ms.flip { margin-left: 4rpx; padding-left: 4rpx; }
 .q-ms-flip { color: var(--accent-text); font-size: 46rpx; letter-spacing: 1rpx; opacity: 1; padding-bottom: 10rpx; }
-.q-shell-neon .q-ms-inline, .q-shell-neon .q-ms-dot { color: #FFE9F4; text-shadow: 0 0 6rpx #FF3CAC, 0 0 18rpx #FF3CAC; }
 .q-shell-outline .q-ms-inline { color: transparent; -webkit-text-stroke: 4rpx var(--ink); }
 .q-shell-outline .q-ms-dot { color: var(--ink); }
 .q-shell-minimal .q-ms-inline, .q-shell-minimal .q-ms-dot { color: var(--ink); font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif; font-weight: 200; letter-spacing: 4rpx; }
 .q-ms-dot { color: var(--ink); font-family: "Courier New", Menlo, monospace; font-size: 40rpx; font-weight: 900; line-height: 1; margin: 0 2rpx; align-self: flex-end; }
 .q-shell-flip .q-ms-dot { color: var(--accent-text); opacity: 1; }
-.q-ms-inline { color: var(--ink); font-family: "Courier New", Menlo, monospace; font-size: 100rpx; font-weight: 900; line-height: 1; letter-spacing: 1rpx; font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+.q-ms-inline { display: inline-block; min-width: 2.1ch; text-align: center; color: var(--ink); font-family: "Courier New", Menlo, monospace; font-size: 100rpx; font-weight: 900; line-height: 1; letter-spacing: 0; font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
 .q-flip-card-ms { width: 92rpx; height: 160rpx; }
 .q-flip-card-ms .q-flip-num { font-size: 66rpx; line-height: 160rpx; }
 .q-flip-card-ms .q-flip-split { height: 2rpx; margin-top: -1rpx; }
 
-/* ---- 快速计时：霓虹 / 描边 / 极简 三种数字时钟 ---- */
-/* neon：深底霓虹，夜里最醒目 */
-.q-shell-neon { padding: 14rpx 26rpx; background: var(--ink); border-radius: 22rpx; box-shadow: 0 0 22rpx rgba(255, 60, 172, .35), inset 0 0 26rpx rgba(80, 220, 255, .16); }
-.q-shell-neon .q-plain-num { color: #FFE9F4; text-shadow: 0 0 6rpx #FF3CAC, 0 0 18rpx #FF3CAC, 0 0 36rpx rgba(80, 220, 255, .75); letter-spacing: 3rpx; }
+/* ---- 快速计时：荧光划线 / 描边空心 / 细体留白 三种数字时钟 ----
+ * 外观（无框、描边、配色）统一在 styles/clocks.wxss，这里只留内边距。 */
+.q-shell-neon { padding: 14rpx 26rpx; }
 .q-shell-neon.q-clock-long { padding: 10rpx 18rpx; }
-/* outline：透明填充 + 粗描边 */
-.q-shell-outline { padding: 10rpx 26rpx; border: 4rpx solid var(--ink); border-radius: 20rpx; background: transparent; }
-.q-shell-outline .q-plain-num { color: transparent; -webkit-text-stroke: 4rpx var(--ink); letter-spacing: 3rpx; }
+.q-shell-outline { padding: 10rpx 26rpx; }
 .q-shell-outline.q-clock-long { padding: 8rpx 18rpx; }
-/* minimal：细体无衬线，安静 */
-.q-shell-minimal { padding: 0; background: transparent; }
-.q-shell-minimal .q-plain-num { font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif; font-weight: 200; color: var(--ink); letter-spacing: 4rpx; }
+.q-shell-minimal { padding: 0; }
 .q-shell-minimal.q-clock-long { padding: 0; }
 
 /* 超过 1 小时：时间整体缩小，避免超出屏幕 */
@@ -219,7 +223,7 @@
 .picker-indicator { height: 88rpx; background: transparent; border-top: 2rpx solid var(--line-strong); border-bottom: 2rpx solid var(--line-strong); border-radius: 14rpx; }
 .picker-item { height: 88rpx; color: var(--ink); font-size: 38rpx; }
 .picker-units { margin-top: 8rpx; padding: 0 18rpx; color: var(--text-2); }
-.picker-units text { flex: 1; text-align: center; font-size: 20rpx; }
+.picker-units .picker-unit { flex: 1; text-align: center; font-size: 20rpx; }
 
 .preset-wrap { padding-top: 2rpx; }
 .preset-head { margin-bottom: 12rpx; }
@@ -284,8 +288,8 @@
 .pomo-dot { width: 10rpx; height: 10rpx; }
 
 .q-clock-shell.q-shell-flip { padding: 12rpx 16rpx; border: 3rpx solid var(--edge); border-radius: 24rpx; box-shadow: 6rpx 7rpx 0 var(--shadow-soft); background: var(--cream-1); }
-.q-clock-shell.q-shell-digital { padding: 12rpx 20rpx; border: 3rpx solid var(--edge-deep); border-radius: 22rpx; box-shadow: 6rpx 7rpx 0 var(--shadow-soft); }
-.q-clock-shell.q-shell-outline { padding: 12rpx 28rpx; border: 4rpx solid var(--ink); border-radius: 22rpx; box-shadow: 5rpx 6rpx 0 var(--shadow-soft); }
+.q-clock-shell.q-shell-gradient { padding: 12rpx 20rpx; border: 3rpx solid var(--edge-deep); border-radius: 22rpx; box-shadow: 6rpx 7rpx 0 var(--shadow-soft); }
+.q-clock-shell.q-shell-outline { padding: 12rpx 28rpx; }
 
 /* 时钟再放大一档，填满快捷计时主舞台 */
 .q-flip-card, .q-flip-card-ms { width: 100rpx; height: 176rpx; }
@@ -357,7 +361,7 @@
 
 .q-clock-ms { margin-left: 2rpx; }
 .q-clock-ms .q-ms-dot { font-size: 34rpx; }
-.q-shell-digital .q-ms-inline { font-size: 62rpx; padding-bottom: 4rpx; }
+.q-shell-gradient .q-ms-inline { font-size: 62rpx; padding-bottom: 4rpx; }
 .q-shell-neon .q-ms-inline { font-size: 62rpx; padding-bottom: 8rpx; }
 .q-shell-outline .q-ms-inline { font-size: 58rpx; }
 .q-shell-minimal .q-ms-inline { font-size: 58rpx; }
@@ -381,7 +385,7 @@
 .q-clock-long .q-block-tile-ms .q-block-num { font-size: 48rpx; }
 
 .q-clock-ms .q-ms-inline { padding-bottom: 0; }
-.q-shell-digital .q-ms-inline { font-size: 112rpx; }
+.q-shell-gradient .q-ms-inline { font-size: 112rpx; }
 .q-shell-neon .q-ms-inline { font-size: 112rpx; }
 .q-shell-outline .q-ms-inline { font-size: 112rpx; }
 .q-shell-minimal .q-ms-inline { font-size: 112rpx; }
@@ -430,9 +434,6 @@
 
 .q-shell-minimal {
   padding: 10rpx 26rpx;
-  background: transparent;
-  border: 3rpx solid var(--ink);
-  border-radius: 18rpx;
   box-sizing: border-box;
   justify-content: center;
   transition: none;
@@ -441,9 +442,6 @@
 .q-shell-minimal .q-plain-num,
 .q-shell-minimal .q-ms-inline,
 .q-shell-minimal .q-ms-dot {
-  font-family: "Arial Rounded MT Bold", "Yuanti SC", "YouYuan", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-  font-weight: 500;
-  letter-spacing: 2rpx;
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
   text-align: center;
@@ -497,9 +495,9 @@
 .q-shell-flip .q-flip-colon { color: var(--clk-ink); }
 .q-shell-flip .q-flip-split { background: var(--clk-line); }
 .q-shell-flip .q-ms-dot { color: var(--clk-accent); }
-.q-shell-digital .q-plain-num,
-.q-shell-digital .q-ms-inline,
-.q-shell-digital .q-ms-dot { color: var(--clk-ink); }
+.q-shell-gradient .q-plain-num,
+.q-shell-gradient .q-ms-inline,
+.q-shell-gradient .q-ms-dot { color: var(--clk-ink); }
 .q-shell-neon .q-plain-num,
 .q-shell-neon .q-ms-inline,
 .q-shell-neon .q-ms-dot { color: var(--clk-ink); }
@@ -586,3 +584,164 @@
 .q-clock-long .q-block-ms-dot { font-size: 26rpx; padding-bottom: 18rpx; }
 .q-clock-long .q-led-digit-ms { flex-basis: 52rpx; width: 52rpx; height: 92rpx; }
 
+
+/* ===== 毫秒读数紧贴主体：带毫秒时主数字不再撑 3.3em 定宽，整排收拢 ===== */
+.q-clock-shell.q-with-ms { gap: 0; }
+.q-clock-shell.q-with-ms .q-plain-num { min-width: 0; }
+.q-clock-shell.q-with-ms .q-plain-clock { flex: 0 0 auto; }
+.q-clock-shell.q-with-ms .q-clock-ms { margin-left: 4rpx; }
+
+/* ===== 轻点切换样式：主题色小胶囊，进页面提示一次，不常驻 ===== */
+.clock-style-hint {
+  position: absolute;
+  z-index: 6;
+  left: 50%;
+  bottom: 6rpx;
+  transform: translate(-50%, 10rpx);
+  padding: 8rpx 20rpx;
+  border-radius: 999rpx;
+  background: var(--primary);
+  color: var(--on-primary);
+  border: 2rpx solid var(--edge);
+  box-shadow: 3rpx 4rpx 0 var(--shadow-soft);
+  font-size: 20rpx;
+  font-weight: 900;
+  letter-spacing: 1rpx;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .26s ease, transform .26s cubic-bezier(.2, .8, .3, 1);
+}
+.clock-style-hint.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ===== 桌面 / 大屏：快捷计时 =====
+ * 原则：看的主体（时钟）随屏幕适度放大；
+ *       功能性的小控件（分段 tab、开始/计次/重置、预设、计次行）锁手机档，不跟着放大，
+ *       只在布局上摊到屏幕边缘并保留边距。
+ */
+.desk .quick-tabs {
+  margin: 10px 26px 0;
+  padding: 4px;
+  gap: 4px;
+  border-width: 1px;
+  border-radius: 999px;
+}
+.desk .quick-tab { padding: 7px 0; border-radius: 999px; font-size: 14px; }
+.desk .quick-body { padding: 12px 26px 8px; gap: 8px; }
+.desk .quick-clock-card { padding: 6px 0; gap: 7px; }
+.desk .pomo-chip { gap: 4px; padding: 3px 9px; border-width: 1px; font-size: 11px; }
+.desk .pomo-dot { width: 6px; height: 6px; }
+.desk .pomo-cycle { margin-left: 2px; font-size: 10px; }
+
+.desk .time-picker { height: 157px; border-width: 1px; border-radius: 11px; }
+.desk .picker-item { height: 49px; font-size: 20px; line-height: 49px; }
+.desk .picker-units { margin-top: 2px; font-size: 11px; }
+
+.desk .quick-actions { gap: 10px; padding-top: 6px; }
+.desk .quick-primary,
+.desk .quick-lap,
+.desk .quick-reset {
+  height: 46px;
+  min-height: 46px;
+  border-width: 2px;
+  border-radius: 999px;
+  box-shadow: 2px 3px 0 var(--shadow);
+  font-size: 15px;
+}
+.desk .quick-lap,
+.desk .quick-reset { flex: 0 0 76px; }
+
+.desk .preset-head { margin-bottom: 8px; }
+.desk .preset-title { font-size: 13px; }
+.desk .preset-hint { font-size: 11px; }
+.desk .preset-grid { gap: 6px; }
+.desk .preset-chip {
+  flex: 1 1 calc(33.333% - 4px);
+  min-width: calc(33.333% - 4px);
+  padding: 9px 4px;
+  border-width: 1px;
+  border-radius: 9px;
+  font-size: 13px;
+}
+.desk .preset-chip.on { box-shadow: 2px 3px 0 var(--shadow-soft); }
+.desk .preset-badge { top: -7px; right: -4px; padding: 1px 4px; border-width: 1px; font-size: 9px; }
+
+.desk .lap-list { max-height: 129px; margin-top: 1px; }
+.desk .lap-row { height: 31px; padding: 0 6px; gap: 6px; font-size: 13px; }
+.desk .clock-style-hint { font-size: 11px; padding: 4px 11px; border-width: 1px; }
+
+/* 时钟（主体）的放大由 JS 注入 clockBoxStyle 控制：
+ * 8 种皮肤内部尺寸都是 rpx，这里按窗口算出反缩系数，
+ * 让时钟在大屏下的实际字号落在 62–76px（手机约 50px 的 1.25–1.5 倍），
+ * 不再依赖 rpx 无限膨胀，也不影响三种皮肤的等比关系。 */
+
+/* ===== 预设时间：改成一块一块的“板砖” =====
+   竖屏一行两块、大屏一行三块，宽度按 1fr 平分铺满，高度用固定 px/rpx 做厚，
+   不再是一排细长的小胶囊。 */
+.preset-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18rpx;
+}
+.preset-chip {
+  box-sizing: border-box;
+  width: auto;
+  min-width: 0;
+  height: 152rpx;
+  padding: 0 10rpx;
+  border-width: 3rpx;
+  border-radius: 22rpx;
+  box-shadow: 4rpx 5rpx 0 var(--shadow-soft);
+  font-size: 30rpx;
+}
+.preset-chip.on {
+  transform: none;
+  box-shadow: 6rpx 7rpx 0 var(--shadow);
+}
+.preset-chip:active {
+  transform: translate(2rpx, 3rpx);
+  box-shadow: 2rpx 2rpx 0 var(--shadow-soft);
+}
+
+.desk .preset-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.desk .preset-chip {
+  height: 96px;
+  min-width: 0;
+  padding: 0 10px;
+  border-width: 1px;
+  border-radius: 14px;
+  box-shadow: 3px 4px 0 var(--shadow-soft);
+  font-size: 16px;
+}
+.desk .preset-chip.on { box-shadow: 4px 5px 0 var(--shadow); }
+
+/* ===== 时间选择器：三个单位标签与三列滚轮严格对齐 =====
+   滚轮是 content-box，width:100% 再加 2rpx 边框会让三列比下面那行标签宽一点点，
+   放大到宽屏后误差被乘出来，看起来就是“时/分/秒对不上轮子”。 */
+.time-picker { box-sizing: border-box; }
+.picker-units {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  padding: 0;
+  margin-top: 10rpx;
+  font-size: 22rpx;
+}
+.picker-units .picker-unit { text-align: center; }
+.desk .picker-units { margin-top: 6px; font-size: 12px; }
+
+/* 大屏的滚轮整体加高一档，三行数字更大、也更接近“板砖”的厚实感 */
+.desk .time-picker { height: 236px; border-radius: 14px; }
+.desk .picker-item { height: 76px; line-height: 76px; font-size: 30px; }
+
+/* ===== 时间选择器限高：窗口再高也不许把预设和按钮顶出屏幕 ===== */
+.time-picker { max-height: 40vh; }
+
+/* ===== 底部操作条：做成页面页脚（flex 尾项），不再用 fixed =====
+ * 之前用 position:fixed 挂在 .quick-body 里，而 .quick-body 带 app-rise-in 动画（transform），
+ * transform 会让 fixed 的参照系变成这个滚动容器，于是按钮跟着内容一起滚、停不到屏幕底部。 */
+.quick-actions {
+  position: static;
+  padding: 12rpx 24rpx calc(env(safe-area-inset-bottom) + 14rpx);
+  background: var(--bg);
+}
+.desk .quick-actions { padding: 10px 26px calc(env(safe-area-inset-bottom) + 12px); }

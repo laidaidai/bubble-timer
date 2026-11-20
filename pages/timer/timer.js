@@ -1,5 +1,6 @@
 const app = getApp()
-const { pad, clockFull: clock, clock: shortClock, dateTimeText: dateTime, dateKey, clone, CLOCK_STYLES, LED_PATTERNS } = require('../../utils/format')
+const { pad, clockFull: clock, clock: shortClock, dateTimeText: dateTime, dateKey, clone, CLOCK_STYLES, LED_PATTERNS, resolveClockStyle } = require('../../utils/format')
+const { CLOCK_BASE, computeSlotSize, fitScale } = require('../../utils/clock-layout')
 
 // 七段数码管：a, b, c, d, e, f, g（段码表已收到 utils/format 共享）
 const FOCUS_SECONDS = 25 * 60
@@ -10,8 +11,8 @@ const RECORD_LIMIT = 20
 
 // 全屏时各时钟样式的放大倍率，需与 timer.wxss 里的 --immersive-clock-scale 保持一致
 const IMMERSIVE_CLOCK_SCALE = {
-  flip: 1.28, blocks: 1.32, led: 1.12, digital: 1.25,
-  minimal: 1.23, neon: 1.26, outline: 1.26, jelly: 1.26
+  flip: 1.28, blocks: 1.32, sticker: 1.12, outline: 1.26, jelly: 1.26,
+  doodle: 1.20, stamp: 1.18, jellypop: 1.20
 }
 const OUTRO_DELAY = 180   // 外围组件淡出的时长，之后才切换沉浸布局
 const MORPH_GAP = 36      // 切换布局后等一帧再放开过渡，保证起点画面与切换前一致
@@ -19,35 +20,42 @@ const CHROME_IDLE_DELAY = 3000  // 全屏时退出键闲置多久后自动收起
 
 Page({
   data: {
+    // 首帧就按当前设备与主题渲染，避免桌面上先闪一下手机版顶栏 / 默认配色
+    isDesktop: !!(getApp() && getApp().globalData && getApp().globalData.isDesktop),
     runtimeModules: [], currentModule: {}, currentIndex: 0, moduleScrollTarget: 'module-0',
     globalSeconds: 0, moduleSeconds: 0,
     globalTimeText: '00:00:00', moduleTimeText: '00:00:00', mainTimeText: '00:00:00',
     progressPercent: 0, isPaused: false, isOvertime: false, isHolding: false,
     clockStyle: 'flip', clockStyleName: '翻页时钟', flipCells: [], flipDigits: [], ledDigits: [], flipPhase: false,
-    msText: '00', msShow: true, theme: 'sky', themeStyle: '',
+    msText: '00', msShow: true, theme: 'sky', themeStyle: '', immersiveVars: '', immersiveScale: 0,
     isLastModule: false, isFirstModule: true,
     mode: 'countup', modeName: '正计时', mainLabel: '总用时',
-    phaseLabel: '', phaseText: '', tickMuted: true, compact: true, immersive: false, moduleCollapsed: true, chromeIdle: false,
+    phaseLabel: '', phaseText: '', tickMuted: true, compact: true, immersive: false, moduleOpen: false, chromeIdle: false, portrait: false, wide: false, orientAnim: false, orientStyle: '',
     celebrating: false, celebrationBubbles: [], celebrationMessage: '',
     timerReveal: false, immersiveAnim: false, immersiveLeaving: false,
-    clockMorph: false, clockMorphStyle: ''
+    clockMorph: false, clockMorphStyle: '',
+    stageVars: '', slotVars: '', styleHint: '', clockFitVars: ''
   },
 
   onLoad() {
+    this.setData({ isDesktop: !!(getApp().globalData && getApp().globalData.isDesktop) })
     const theme = app.getTheme ? app.getTheme() : { key: 'rose' }
     const settings = app.getSettings ? app.getSettings() : {}
     this.tickAudioFlip = false
     this.setData({ theme: theme.key, themeStyle: theme.style || '', tickMuted: settings.tickSound !== true, compact: true })
     if (app.applyNavBar) app.applyNavBar()
+    this.syncOrientation()
 
     const session = wx.getStorageSync(app.globalData.storageKey)
     if (!session || !session.modules) {
-      this.leaveTimer()
+      // onLoad 里直接 redirect 会撞上「LifeCycle.load fail: Cannot set a non-pending waiting value」，
+      // 延到下一拍再跳，等页面 load 落地
+      setTimeout(() => this.leaveTimer(), 0)
       return
     }
 
-    const savedStyle = wx.getStorageSync(app.globalData.clockStyleKey)
-    const clockStyle = CLOCK_STYLES.find(item => item.key === savedStyle) || CLOCK_STYLES[0]
+    // 旧版本保存过已删除的皮肤（gradient / neon / minimal）时，按 utils/format 的 legacy 表迁移到新皮肤
+    const clockStyle = resolveClockStyle(wx.getStorageSync(app.globalData.clockStyleKey))
     const mode = session.mode || wx.getStorageSync(app.globalData.modeKey) || 'countup'
     const modeInfo = (app.modes || []).find(item => item.key === mode)
 
@@ -82,7 +90,175 @@ Page({
   },
 
   onShow() {
+    this.syncOrientation()
     if (this.data.runtimeModules && this.data.runtimeModules.length) this.playTimerReveal()
+  },
+
+  // ===== 时钟永远不越界：按实测尺寸把时钟整体缩到能放下（只缩不放） =====
+  // 用 zoom 而不是 transform：zoom 会真的改变布局尺寸，缩小时
+  // 模块名 / 进度条 / 按钮会一起往中间收，不会「视觉变小了但还占原来那么宽」。
+  // 每次量之前先把倍率复位成 1，避免量到缩放后的尺寸、来回抖动。
+  scheduleFitClock() {
+    if (this.fitClockTimer) clearTimeout(this.fitClockTimer)
+    this.fitClockTimer = setTimeout(() => {
+      this.fitClockTimer = null
+      this.fitClock()
+    }, 32)
+  },
+
+  clockNaturalKey(style) {
+    const name = style || this.data.clockStyle
+    return `${name}|${this.data.portrait ? 'p' : 'l'}|${this.data.compact ? 'c' : 'n'}|${this.data.wide ? 'w' : 'n'}`
+  },
+
+  // 进出全屏的形态过渡期间不许量尺寸：
+  // boundingClientRect 把 transform 的放大也算进去，量出来的「原始尺寸」被放大，
+  // 算出的 --clk-fit 偏小，退出全屏后时钟就会莫名缩水。
+  isClockMorphing() {
+    if (this.data.clockMorph || this.data.clockMorphStyle) return true
+    return Date.now() - (this.clockMorphAt || 0) < 520
+  },
+
+  fitClock() {
+    // 全屏时时钟尺寸归 --ic 管，--clk-fit 保持普通档的值不动，退出时直接复用
+    if (this.data.immersive) return
+    if (this.isClockMorphing()) {
+      if (this.fitClockTimer) clearTimeout(this.fitClockTimer)
+      const since = Date.now() - (this.clockMorphAt || 0)
+      this.fitClockTimer = setTimeout(() => {
+        this.fitClockTimer = null
+        this.fitClock()
+      }, Math.max(60, 560 - since))
+      return
+    }
+    const query = wx.createSelectorQuery().in(this)
+    query.select('.clock-slot').boundingClientRect()
+    query.select('.clock-body').boundingClientRect()
+    query.exec((res) => {
+      const slot = res[0]
+      const clock = res[1]
+      if (!slot || !slot.width || !slot.height) return
+      if (!clock || !clock.width || !clock.height) return
+      // 不再「先缩回 1 再量」：那会让切皮肤时先闪一下原始大小。
+      // 当前 zoom 已经把元素放大/缩小，rect 除以当前倍率就是原始尺寸。
+      const current = this.clockFitValue || 1
+      const naturalW = clock.width / current
+      const naturalH = clock.height / current
+      // 记下这个皮肤的原始尺寸：下次切回它时可以直接算倍率，和切换同一帧渲染，不会先闪一下旧尺寸
+      this.clockNatural = this.clockNatural || {}
+      this.clockNatural[this.clockNaturalKey()] = { w: naturalW, h: naturalH }
+      // 容器尺寸只跟窗口有关，皮肤只决定自己被缩到多少
+      const fit = fitScale(slot.width, slot.height, naturalW, naturalH, { max: 4.2 })
+      if (Math.abs(fit - current) < 0.02) {
+        this.clockFitValue = fit
+        return
+      }
+      this.clockFitValue = fit
+      const vars = Math.abs(fit - 1) < 0.02 ? '' : `--clk-fit: ${fit};`
+      if (vars === this.data.clockFitVars) return
+      this.setData({ clockFitVars: vars }, () => this.verifyClockFit(naturalW * fit, slot.width))
+    })
+  },
+
+  // 万一某些环境不认 zoom（WXSS 被过滤掉），退回 transform 缩放，画面一样不越界
+  verifyClockFit (naturalW, availW) {
+    const query = wx.createSelectorQuery().in(this)
+    query.select('.clock-body').boundingClientRect()
+    query.exec((res) => {
+      const rect = res && res[0]
+      if (!rect || !rect.width) return
+      if (rect.width <= availW + 2) return
+      const fit = this.clockFitValue || 1
+      this.setData({ clockFitVars: `--clk-fit: 1; --clk-scale: ${fit};` })
+    })
+  },
+
+  // 竖屏判定：窗口比宽高「高」就走竖屏那一套（手机计时页强制横屏，只有电脑/平板的窄竖窗口会命中）
+  syncOrientation() {
+    let info = null
+    try {
+      info = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync()
+    } catch (error) {
+      info = null
+    }
+    if (!info || !info.windowWidth || !info.windowHeight) return
+    const portrait = info.windowHeight > info.windowWidth
+    const winChanged = info.windowWidth !== this.lastWinW || info.windowHeight !== this.lastWinH
+    this.lastWinW = info.windowWidth
+    this.lastWinH = info.windowHeight
+    // 宽窗口（电脑/平板横屏）：组件往屏幕四周铺开，只略微放大，不再挤在中间
+    const wide = !portrait && info.windowWidth >= 900
+    // 时钟装在一个“只跟窗口有关”的容器里（尺寸写进 --slot-w / --slot-h），
+    // 每种皮肤只负责等比缩放到容器内（JS 算 --clk-fit），所以换皮肤时容器和周围组件都不动。
+    const slot = computeSlotSize(info.windowWidth, info.windowHeight, portrait)
+    this.lastSlot = slot
+    if (winChanged) this.clockNatural = {}
+    const slotVars = `--slot-w: ${slot.w}px; --slot-h: ${slot.h}px;`
+    // 外围组件（模块名、进度、按钮）只温和跟随窗口，避免按钮在大屏上变成巨块；
+    // 时钟本身不再吃 --ts / --fc-scale，全部交给容器。
+    const chromeScale = Math.min(1.28, Math.max(1, Math.min(info.windowWidth, info.windowHeight) / 780))
+    const stageVars = `--ts: 1; --cs: ${chromeScale.toFixed(3)}; --fc-scale: 1;`
+    const patch = { wide }
+    if (slotVars !== this.data.slotVars) patch.slotVars = slotVars
+    if (stageVars !== this.data.stageVars) patch.stageVars = stageVars
+    this.setData(patch)
+    if (portrait !== this.data.portrait) this.switchOrientation(portrait)
+    else if (winChanged && this.data.immersive) this.refreshImmersiveScale()
+    this.scheduleFitClock()
+    if (wx.onWindowResize && !this.orientationBound) {
+      this.orientationBound = true
+      this.boundOrientationResize = () => this.syncOrientation()
+      wx.onWindowResize(this.boundOrientationResize)
+    }
+  },
+
+  // 全屏中窗口尺寸/朝向变了：按新窗口重算倍率，避免沿用旧的倍率顶出边界
+  refreshImmersiveScale() {
+    const scale = this.computeImmersiveScale()
+    this.immersiveScaleTarget = scale
+    this.setData({ immersiveScale: scale, immersiveVars: `--ic: ${scale}; --fc-scale: 1;` })
+  },
+
+  // 横竖屏切换：先把新布局的时钟钉回旧时钟的位置，再放开过渡滑到自己的位置
+  switchOrientation(portrait) {
+    clearTimeout(this.orientTimer)
+    const measure = cb => {
+      try {
+        wx.createSelectorQuery().select('.clock-stage').boundingClientRect(rect => cb(rect || null)).exec(() => {})
+      } catch (error) {
+        cb(null)
+      }
+    }
+    measure(from => {
+      this.setData({ portrait, orientAnim: false, orientStyle: '' }, () => {
+        if (!from || !from.width) return
+        wx.nextTick(() => {
+          measure(to => {
+            if (!to || !to.width) return
+            const dx = Math.round(((from.left + from.width / 2) - (to.left + to.width / 2)) * 10) / 10
+            const dy = Math.round(((from.top + from.height / 2) - (to.top + to.height / 2)) * 10) / 10
+            const sc = Math.round((from.width / to.width) * 100) / 100
+            this.setData({
+              orientStyle: `transform: translate(${dx}px, ${dy}px) scale(${sc});`
+            }, () => {
+              wx.nextTick(() => {
+                this.setData({ orientAnim: true }, () => {
+                  wx.nextTick(() => {
+                    this.setData({ orientStyle: '' })
+                    if (this.data.immersive) this.refreshImmersiveScale()
+                    this.orientTimer = setTimeout(() => this.setData({ orientAnim: false }), 560)
+                  })
+                })
+              })
+            })
+          })
+        })
+      })
+    })
+  },
+
+  onResize() {
+    this.syncOrientation()
   },
 
   // 进入 / 返回计时页时重新播放入场动效
@@ -125,9 +301,33 @@ Page({
   cycleClockStyle() {
     const index = CLOCK_STYLES.findIndex(item => item.key === this.data.clockStyle)
     const next = CLOCK_STYLES[(index + 1) % CLOCK_STYLES.length]
-    this.setData({ clockStyle: next.key, clockStyleName: next.name })
+    // 切皮肤最容易「屏闪」的原因是：新皮肤先按旧倍率渲染一帧，再改成新倍率。
+    // 这里先用缓存过的该皮肤原始尺寸算好倍率，和新皮肤同一帧写进去。
+    const payload = { clockStyle: next.key, clockStyleName: next.name, styleHint: `已切换为${next.name}` }
+    if (!this.data.immersive && this.lastSlot) {
+      const cached = (this.clockNatural || {})[this.clockNaturalKey(next.key)]
+      if (cached) {
+        const fit = fitScale(this.lastSlot.w, this.lastSlot.h, cached.w, cached.h, { max: 4.2 })
+        this.clockFitValue = fit
+        payload.clockFitVars = Math.abs(fit - 1) < 0.02 ? '' : `--clk-fit: ${fit};`
+      }
+    }
+    this.setData(payload, () => {
+      this.fitClock()
+      if (this.data.immersive) this.refreshImmersiveScale()
+    })
     wx.setStorageSync(app.globalData.clockStyleKey, next.key)
     if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
+    this.flashStyleHint()
+  },
+
+  // 切换提示只短暂出现，1.3 秒后自动收起（不是常驻元素）
+  flashStyleHint() {
+    if (this.styleHintTimer) clearTimeout(this.styleHintTimer)
+    this.styleHintTimer = setTimeout(() => {
+      this.styleHintTimer = null
+      if (this.data.styleHint) this.setData({ styleHint: '' })
+    }, 1300)
   },
 
   onHide() {
@@ -138,6 +338,15 @@ Page({
 
   onUnload() {
     this.clearChromeIdle()
+    if (this.styleHintTimer) {
+      clearTimeout(this.styleHintTimer)
+      this.styleHintTimer = null
+    }
+    if (this.boundOrientationResize && wx.offWindowResize) {
+      wx.offWindowResize(this.boundOrientationResize)
+      this.boundOrientationResize = null
+      this.orientationBound = false
+    }
     // 离开前结算最后一秒，避免会话里少记一段
     if (!this.finished) {
       try { this.tick() } catch (error) { /* 已销毁计时器，忽略 */ }
@@ -453,10 +662,14 @@ Page({
     this.scheduleChromeIdle()
   },
 
-  toggleModuleSide() {
-    const moduleCollapsed = !this.data.moduleCollapsed
-    this.setData({ moduleCollapsed })
+  toggleModuleFab() {
+    this.setData({ moduleOpen: !this.data.moduleOpen })
     if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
+  },
+
+  closeModuleFab() {
+    if (!this.data.moduleOpen) return
+    this.setData({ moduleOpen: false })
   },
 
   toggleImmersive() {
@@ -470,6 +683,49 @@ Page({
   },
 
   // 量出「时钟中心 → 页面中心」的位移，切换布局前后用同一段 transform 衔接，避免尺寸/位置跳变
+  // 全屏倍率：用非全屏时量到的「原始尺寸」算，而不是查表估算。
+  // 之前按 CLOCK_BASE 估算：翻页、积木的基准接近真实尺寸，看着正好；
+  // 印章/手绘/果冻这些文字皮肤的基准比真实尺寸大，算出来的倍率偏小，全屏反而显得很小。
+  // 现在统一用 natural × scale ≈ 可用宽高，左右留 3%、上下留 14%（退出键 + 安全区）。
+  computeImmersiveScale(natural) {
+    const info = (wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync()) || {}
+    const winW = info.windowWidth || 375
+    const winH = info.windowHeight || 667
+    const cached = natural || (this.clockNatural || {})[this.clockNaturalKey()]
+    const base = CLOCK_BASE[this.data.clockStyle] || CLOCK_BASE.flip
+    const natW = (cached && cached.w > 1) ? cached.w : base.w
+    const natH = (cached && cached.h > 1) ? cached.h : base.h
+    const byWidth = (winW * 0.94) / natW
+    const byHeight = (winH * 0.86) / natH
+    const scale = Math.min(byWidth, byHeight)
+    return Math.round(Math.min(12, Math.max(0.8, scale)) * 100) / 100
+  },
+
+  // 读当前皮肤的原始（未缩放）尺寸：优先用 fitClock 的缓存，缺失时现场量一次
+  readNaturalSize(callback) {
+    const cached = (this.clockNatural || {})[this.clockNaturalKey()]
+    if (cached && cached.w > 1 && cached.h > 1) {
+      callback(cached)
+      return
+    }
+    try {
+      wx.createSelectorQuery().in(this)
+        .select('.clock-body')
+        .boundingClientRect()
+        .exec(res => {
+          const rect = res && res[0]
+          if (!rect || !rect.width) { callback(null); return }
+          const current = this.data.immersive ? 1 : (this.clockFitValue || 1)
+          const nat = { w: rect.width / current, h: rect.height / current }
+          this.clockNatural = this.clockNatural || {}
+          this.clockNatural[this.clockNaturalKey()] = nat
+          callback(nat)
+        })
+    } catch (error) {
+      callback(null)
+    }
+  },
+
   measureImmersiveShift(callback) {
     const finish = shift => {
       if (shift) this.immersiveShift = shift
@@ -500,30 +756,46 @@ Page({
 
   openImmersive() {
     this.immersiveBusy = true
-    // 进场时先摘掉入场动画：否则 immersiveAnim 结束、reveal 里的动画回到默认层，
-    // 会重新排队播一遍，看起来就是「切完又多一下」
-    clearTimeout(this.timerRevealTimer)
-    this.setData({ timerReveal: false })
-    this.measureImmersiveShift(shift => {
-      // 第一拍：外围组件快速向外淡出
-      this.setData({ immersiveLeaving: true })
-      this.immersivePhaseTimer = setTimeout(() => {
-        // 第二拍：切到沉浸布局，同时把时钟钉在它原来的位置和大小上
-        this.setData({
-          immersive: true,
-          immersiveLeaving: false,
-          immersiveAnim: false,
-          clockMorph: true,
-          clockMorphStyle: `transform: translate3d(${shift.dx}px, ${shift.dy}px, 0) scale(1);`
-        }, () => {
-          // 下一帧放开过渡：由同一个 transform 平滑长到全屏倍率与页面中心
-          this.immersiveAnimTimer = setTimeout(() => {
-            this.setData({ clockMorph: false, clockMorphStyle: '' })
-            this.scheduleChromeIdle()
-            this.immersivePhaseTimer = setTimeout(() => { this.immersiveBusy = false }, 460)
-          }, MORPH_GAP)
-        })
-      }, OUTRO_DELAY)
+    // 进全屏时收起模块球，避免悬浮在时钟上
+    if (this.data.moduleOpen) this.setData({ moduleOpen: false })
+    // 先拿到当前皮肤的真实原始尺寸，再算全屏倍率：
+    // 文字类皮肤按 CLOCK_BASE 估算会明显偏小，实测之后四种样式在全屏里一样大
+    this.readNaturalSize(nat => {
+      const immersiveScale = this.computeImmersiveScale(nat)
+      this.immersiveScaleTarget = immersiveScale
+      // 先不注入倍率：进场起点是 1，等时钟落位后再放开，长到铺满的过程才连续
+      this.setData({ immersiveScale, immersiveVars: '' })
+      // 进场时先摘掉入场动画：否则 immersiveAnim 结束、reveal 里的动画回到默认层，
+      // 会重新排队播一遍，看起来就是「切完又多一下」
+      clearTimeout(this.timerRevealTimer)
+      this.setData({ timerReveal: false })
+      this.measureImmersiveShift(shift => {
+        // 第一拍：外围组件快速向外淡出
+        this.setData({ immersiveLeaving: true })
+        this.immersivePhaseTimer = setTimeout(() => {
+          // 第二拍：切到沉浸布局，同时把时钟钉在它原来的位置和大小上
+          this.clockMorphAt = Date.now()
+          this.setData({
+            immersive: true,
+            immersiveLeaving: false,
+            immersiveAnim: false,
+            clockMorph: true,
+            clockMorphStyle: `transform: translate3d(${shift.dx}px, ${shift.dy}px, 0) scale(1);`
+          }, () => {
+            // 下一帧放开过渡：由同一个 transform 平滑长到全屏倍率与页面中心
+            this.immersiveAnimTimer = setTimeout(() => {
+              this.setData({
+                clockMorph: false,
+                clockMorphStyle: '',
+                immersiveVars: `--ic: ${this.immersiveScaleTarget || 1}; --fc-scale: 1;`
+              })
+              this.clockMorphAt = Date.now()
+              this.scheduleChromeIdle()
+              this.immersivePhaseTimer = setTimeout(() => { this.immersiveBusy = false }, 460)
+            }, MORPH_GAP)
+          })
+        }, OUTRO_DELAY)
+      })
     })
   },
 
@@ -532,25 +804,51 @@ Page({
     this.clearChromeIdle()
     if (this.data.chromeIdle) this.setData({ chromeIdle: false })
     const shift = this.immersiveShift || { dx: 0, dy: 0 }
-    const scale = IMMERSIVE_CLOCK_SCALE[this.data.clockStyle] || 1.26
+    const scale = this.data.immersiveScale || IMMERSIVE_CLOCK_SCALE[this.data.clockStyle] || 1.26
+    // 退出前先按缓存算好普通档的倍率：全屏期间可能切过皮肤，数据里的 --clk-fit 未必对应当前皮肤
+    const slot = this.lastSlot
+    const cached = (this.clockNatural || {})[this.clockNaturalKey()]
+    const exitFit = (slot && cached) ? fitScale(slot.w, slot.h, cached.w, cached.h, { max: 4.2 }) : null
+    const exitFitVars = exitFit === null ? '' : (Math.abs(exitFit - 1) < 0.02 ? '' : `--clk-fit: ${exitFit};`)
     // 退场期间关掉 reveal：出全屏动画收尾时 immersiveAnim 撤掉，
     // reveal 那套入场动画会被重新命中再播一遍（内容都复原了才突然多一下）
     clearTimeout(this.timerRevealTimer)
-    // 先回到普通布局，但把时钟起点设成「全屏倍率 + 页面中心」，与关闭前那一帧完全重合
+    this.clockMorphAt = Date.now()
+    // 第一步：回到普通布局。zoom 先清空（全屏里视觉上就是 zoom=1），
+    // 时钟继续用 transform 撑在全屏倍率上，和关闭前那一帧完全重合，不会先缩一下
     this.setData({
       immersive: false,
       immersiveLeaving: false,
       immersiveAnim: true,
       timerReveal: false,
       clockMorph: true,
+      clockFitVars: '',
       clockMorphStyle: `transform: translate3d(${shift.dx}px, ${shift.dy}px, 0) scale(${scale});`
     }, () => {
       this.immersiveAnimTimer = setTimeout(() => {
-        this.setData({ clockMorph: false, clockMorphStyle: '' })
-        this.immersivePhaseTimer = setTimeout(() => {
-          this.setData({ immersiveAnim: false })
-          this.immersiveBusy = false
-        }, 460)
+        this.clockMorphAt = Date.now()
+        if (exitFit !== null) {
+          // 第二步：用 transform 从全屏倍率平滑收回普通档倍率（此时 zoom 还是 1）
+          this.setData({ clockMorph: false, clockMorphStyle: `transform: translate3d(0, 0, 0) scale(${exitFit});` })
+          this.immersivePhaseTimer = setTimeout(() => {
+            this.clockMorphAt = Date.now()
+            // 第三步：同一帧把 transform 交还给 zoom（视觉尺寸完全一致，所以不会跳）
+            this.clockFitValue = exitFit
+            this.setData({ clockMorph: true, clockMorphStyle: '', clockFitVars: exitFitVars, immersiveAnim: false }, () => {
+              this.setData({ clockMorph: false })
+              // 过渡结束后再校准一次（此时不会再量到 transform 的放大量）
+              this.scheduleFitClock()
+              this.immersiveBusy = false
+            })
+          }, 460)
+        } else {
+          this.setData({ clockMorph: false, clockMorphStyle: '' })
+          this.immersivePhaseTimer = setTimeout(() => {
+            this.setData({ immersiveAnim: false })
+            this.scheduleFitClock()
+            this.immersiveBusy = false
+          }, 460)
+        }
       }, MORPH_GAP)
     })
   },
@@ -604,6 +902,7 @@ Page({
   },
 
   selectModule(event) {
+    this.setData({ moduleOpen: false })
     this.goModule(Number(event.currentTarget.dataset.index))
   },
 

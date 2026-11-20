@@ -2,13 +2,16 @@ const app = getApp()
 
 Page({
   data: {
-    theme: 'sky',
-    themeStyle: '',
+    // 首帧就按当前设备与主题渲染，避免桌面上先闪一下手机版顶栏 / 默认配色
+    isDesktop: !!(getApp() && getApp().globalData && getApp().globalData.isDesktop),
+    theme: (getApp() && getApp().getTheme && getApp().getTheme().key) || 'sky',
+    themeStyle: (getApp() && getApp().getThemeStyle && getApp().getThemeStyle()) || '',
     mode: 'exit',
     leaving: false
   },
 
   onLoad(options) {
+    this.setData({ isDesktop: !!(getApp().globalData && getApp().globalData.isDesktop) })
     const theme = app.getTheme ? app.getTheme() : { key: 'sky', style: '' }
     const mode = (options && options.mode) || 'exit'
     this.setData({ theme: theme.key, themeStyle: theme.style || '', mode })

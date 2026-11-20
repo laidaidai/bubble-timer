@@ -13,9 +13,9 @@
   ],
   "window": {
     "navigationBarTitleText": "小鱼计时器",
-    "navigationBarBackgroundColor": "#FFD874",
+    "navigationBarBackgroundColor": "#7CC0EC",
     "navigationBarTextStyle": "black",
-    "backgroundColor": "#FBF3DF"
+    "backgroundColor": "#EFF6FE"
   },
   "lazyCodeLoading": "requiredComponents",
   "style": "v2",

@@ -16,23 +16,78 @@ Component({
     continueSub: '',
     todoSub: '',
     timerRunning: false,
-    celebrate: false
+    celebrate: false,
+    dockStyle: '',
+    pinnedFeature: 'timer',
+    featureOptions: [
+      { key: 'timer', name: '训练计时' },
+      { key: 'quick-stopwatch', name: '秒表' },
+      { key: 'quick-countdown', name: '计时器' },
+      { key: 'quick-pomodoro', name: '番茄钟' },
+      { key: 'todo', name: '待办' },
+      { key: 'important', name: '重要日子' },
+      { key: 'stats', name: '打卡' }
+    ]
   },
   lifetimes: {
     attached() {
+      this.syncDeskScale()
       this.refreshContext()
+      // PC 上拖动窗口大小不会触发 pageLifetimes.show，靠窗口尺寸事件重算反缩倍率。
+      // 监听必须延后注册：attached 阶段页面 load 还没结束，立刻注册容易在首帧就回调、在
+      // 生命周期未落地时 setData，触发基础库的 "LifeCycle ... non-pending waiting value" 报错。
+      // 只有桌面需要按窗口反缩；手机端不注册，避免每个页面实例都往 WindowInfoChanged 上挂监听
+      const desktop = !!(getApp() && getApp().globalData && getApp().globalData.isDesktop)
+      if (wx.onWindowResize && desktop) {
+        this._onWinResize = () => this.syncDeskScale()
+        this._winResizeTimer = setTimeout(() => {
+          this._winResizeTimer = null
+          if (this._destroyed) return
+          wx.onWindowResize(this._onWinResize)
+          this._winResizeListening = true
+        }, 600)
+      }
     },
     detached() {
+      this._destroyed = true
       if (this.celebrateTimer) clearTimeout(this.celebrateTimer)
       if (this.longPressTimer) clearTimeout(this.longPressTimer)
+      if (this._winResizeTimer) clearTimeout(this._winResizeTimer)
+      if (this._winResizeListening && this._onWinResize && wx.offWindowResize) {
+        wx.offWindowResize(this._onWinResize)
+      }
+      this._onWinResize = null
+      this._winResizeListening = false
     }
   },
   pageLifetimes: {
     show() {
+      this.syncDeskScale()
       this.refreshContext()
     }
   },
   methods: {
+    // 桌面 / 大屏：rpx 会按窗口宽度放大，这里以 375 宽为基准反缩，视觉回到手机大小。
+    // 只缩组件自身（fixed 浮层），不影响文档流，也不动其他页面。
+    syncDeskScale() {
+      let winW = 0
+      try {
+        winW = (wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync()).windowWidth || 0
+      } catch (e) {
+        winW = 0
+      }
+      if (!winW || winW <= 480) {
+        if (this.data.dockStyle) this.setData({ dockStyle: '' })
+        return
+      }
+      // 基准 420：手机档 1.12 倍的观感，不是完全等尺寸，也不跟着窗口一起爆炸
+      const k = Math.min(1, 420 / winW)
+      // 桌面下 rpx 的 bottom 会被放大成几百 px，浮球飘到半空；这里同时把贴边距离改成 px
+      const bottom = this.data.aboveTabbar ? 64 : 12
+      const style = `left:8px; bottom:${bottom}px; transform-origin: left bottom; transform: scale(${k.toFixed(3)});`
+      if (style !== this.data.dockStyle) this.setData({ dockStyle: style })
+    },
+
     noop() {},
 
     refreshContext() {
@@ -50,6 +105,7 @@ Component({
 
       const quick = wx.getStorageSync(QUICK_STATE_KEY) || {}
       const todayMinutes = Math.max(0, Math.round((summary.todaySeconds || 0) / 60))
+      const settings = app && app.getSettings ? app.getSettings() : {}
 
       this.setData({
         progress: Math.max(0, Math.min(100, summary.todayPercent || 0)),
@@ -59,7 +115,8 @@ Component({
         continueSub: this._lastRecord
           ? `${lastRows.length} 个模块 · ${last.totalActualText || '上次训练'}`
           : '',
-        todoSub: pendingTodos ? `${pendingTodos} 项待完成` : '今天没有待办'
+        todoSub: pendingTodos ? `${pendingTodos} 项待完成` : '今天没有待办',
+        pinnedFeature: settings.pinnedFeature || 'timer'
       })
     },
 
@@ -134,6 +191,32 @@ Component({
       this.close()
       wx.setStorageSync('exam-timer-pending-modules', modules)
       wx.reLaunch({ url: '/pages/index/index' })
+    },
+
+    // 悬浮球二级菜单：直接换首页显示的功能（不再依赖顶部长按）
+    switchFeature(event) {
+      const key = event && event.currentTarget && event.currentTarget.dataset && event.currentTarget.dataset.key
+      if (!key) return
+      // 七项都是首页真实可渲染的视图；其他未知 key 仍拦下来，避免记成不存在的固定项
+      if (['timer', 'quick-stopwatch', 'quick-countdown', 'quick-pomodoro', 'todo', 'important', 'stats'].indexOf(key) < 0) {
+        wx.showToast({ title: '暂不支持', icon: 'none', duration: 1200 })
+        if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
+        return
+      }
+      const pages = getCurrentPages()
+      const page = pages[pages.length - 1]
+      const app = getApp()
+      if (page && typeof page.applyPinnedFeature === 'function') {
+        this.setData({ pinnedFeature: key })
+        this.close()
+        page.applyPinnedFeature(key)
+        return
+      }
+      if (app && app.saveSettings) app.saveSettings({ pinnedFeature: key })
+      this.setData({ pinnedFeature: key })
+      this.close()
+      if (this.currentRoute() === 'pages/index/index') return
+      wx.switchTab({ url: '/pages/index/index', fail: () => wx.showToast({ title: '切换失败，请重试', icon: 'none' }) })
     },
 
     openTodo() {

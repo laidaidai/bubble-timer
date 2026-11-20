@@ -1,5 +1,5 @@
-<view class="imp-page theme-{{theme}}" style="{{themeStyle}}">
-  <view class="topbar">
+<view class="imp-page theme-{{theme}} {{isDesktop ? 'desk' : ''}}" style="{{themeStyle}} {{kbVars}}">
+  <view class="topbar" wx:if="{{!isDesktop}}">
     <view class="back-icon" bindtap="goBack" aria-label="返回">‹</view>
     <view class="topbar-title">重要日子</view>
     <view class="topbar-spacer"></view>

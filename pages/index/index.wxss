@@ -98,8 +98,8 @@
 .control-bar.solo { justify-content: center; }
 .primary-button { color:var(--ink); background:var(--primary); font-weight: 900; border:2rpx solid var(--edge); border-radius: 999rpx; }
 .control-bar .primary-button { display: inline-flex; align-items: center; justify-content: center; width: 204rpx; margin: 0; padding: 22rpx 12rpx; font-size: 27rpx; line-height: 1; white-space: nowrap; box-shadow:4rpx 5rpx 0 var(--shadow); }
-.primary-button text { margin-left: 8rpx; color:var(--warn-text); }
-.primary-button[disabled] { opacity: .45; }
+.primary-button .primary-arrow { margin-left: 8rpx; color:var(--warn-text); }
+.primary-button.is-disabled { opacity: .45; }
 
 .section-title-row, .module-head, .module-foot { display: flex; align-items: center; justify-content: space-between; }
 .section-title-row { margin-top: 30rpx; }
@@ -244,7 +244,19 @@
 .mode-seg.on { color: var(--on-primary); background: var(--primary); }
 .mode-seg:active { opacity: .75; }
 .config-scroll .page-content { padding-bottom: 48rpx; }
-.add-module-row { margin: 22rpx 0 8rpx; display: flex; justify-content: center; }
+/* 加号行常驻占位、只切换可见性：原来用 wx:if 插入/移除，
+ * 滚到底部时它会突然把内容撑高，触底判定立刻翻回 false，
+ * 于是「出现-消失-出现」反复一次，屏幕看起来在抽搐。 */
+.add-module-row {
+  margin: 22rpx 0 8rpx;
+  display: flex;
+  justify-content: center;
+  opacity: 0;
+  transform: translateY(10rpx);
+  pointer-events: none;
+  transition: opacity .24s ease, transform .24s ease;
+}
+.add-module-row.on { opacity: 1; transform: translateY(0); pointer-events: auto; }
 .add-module-plus { width: 82rpx; height: 82rpx; display: flex; align-items: center; justify-content: center; color: var(--text-warm); background: var(--cream-1); border: 2rpx solid var(--edge); border-radius: 50%; box-shadow: 4rpx 5rpx 0 var(--shadow); font-size: 36rpx; font-weight: 900; line-height: 1; }
 .add-module-plus:active { background: var(--cream-2); }
 
@@ -499,9 +511,8 @@
 /* 首页空模块：只放 logo，不显示说明文字 */
 .home-module-empty { margin-top: 18rpx; padding: 26rpx 0 14rpx; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .home-module-empty-logo { width: 132rpx; height: 132rpx; opacity: .9; animation: history-logo-float 4.2s ease-in-out infinite; }
-.home-module-add { margin-top: 18rpx; display: flex; align-items: center; justify-content: center; padding: 16rpx 40rpx; background: var(--cream-1); border: 2rpx solid var(--edge); border-radius: 999rpx; box-shadow: 4rpx 5rpx 0 var(--shadow); }
-.home-module-add-plus { margin-right: 8rpx; color: var(--ink); font-size: 30rpx; font-weight: 900; line-height: 1; }
-.home-module-add-text { color: var(--ink); font-size: 23rpx; font-weight: 800; letter-spacing: 1rpx; }
+.home-module-add { margin-top: 18rpx; width: 92rpx; height: 92rpx; box-sizing: border-box; display: flex; align-items: center; justify-content: center; padding: 0; background: var(--cream-1); border: 2rpx solid var(--edge); border-radius: 50%; box-shadow: 4rpx 5rpx 0 var(--shadow); }
+.home-module-add-plus { color: var(--ink); font-size: 36rpx; font-weight: 900; line-height: 1; }
 .home-module-add:active { background: var(--cream-2); transform: translateY(2rpx); box-shadow: 2rpx 3rpx 0 var(--shadow); }
 
 /* 奖牌擦亮：金属盘上扫过一道高光 */
@@ -546,7 +557,8 @@
 .page-content.reveal .template-list { animation: home-drop-in .38s .19s cubic-bezier(.2, .8, .3, 1) backwards; }
 .page-content.reveal .module-card { animation: home-drop-in .42s cubic-bezier(.2, .8, .3, 1) backwards; }
 .page-content.reveal .home-module-empty { animation: home-drop-in .40s .19s cubic-bezier(.2, .8, .3, 1) backwards; }
-.page-content.reveal .add-module-row { animation: home-drop-in .38s .30s cubic-bezier(.2, .8, .3, 1) backwards; }
+/* 加号行不再参与整页入场动画：它的出现完全交给 .on 的 opacity 过渡，
+ * 避免动画把 opacity 拉到 1 之后又立刻回落造成的闪一下。 */
 
 @keyframes home-drop-in {
   0% { opacity: 0; transform: translateY(-18rpx); }
@@ -1572,3 +1584,579 @@
 .report-page .rp4-md { animation: rp4-fade-in .38s ease-out backwards; }
 .report-page .rp3-brand-badge { animation: rp4-pop-in .52s cubic-bezier(.2, .8, .3, 1) .3s backwards; }
 .report-page .rp3-brand-title { animation: rp4-fade-in .4s ease-out .34s backwards; }
+
+/* ===== 桌面 / 大屏：分析报告按手机档物理尺寸渲染，避免内容被放大挤出 ===== */
+/* 报告页的顶部暖色渐层原本挂在 .report-scroll 上，而它是 .desk 的子元素、宽度只有 1280px，
+ * 于是在 1400px 以上的窗口里，这层渐变到 1280 的两侧就断掉，露出底下纯 --bg，
+ * 看起来就是「左右两侧没跟着主题走」。这里把滚动容器拉成整屏宽（内容列仍由
+ * .report-page 的 900px 居中约束），渐变才能铺满左右两侧。 */
+.desk .report-scroll {
+  width: 100vw;
+  margin-left: calc((100% - 100vw) / 2);
+  background: linear-gradient(180deg, var(--accent-bg) 0%, var(--bg) 258px, var(--bg) 100%);
+}
+/* 报告页底部内距同样要避开悬浮球，否则最后一张卡被压住 */
+.desk .report-page { padding: 10px 12px calc(72px + env(safe-area-inset-bottom)); background: transparent; }
+.desk .report-page .rp3-summary { padding: 15px 15px 11px; border-width: 1px; border-radius: 16px 13px 17px 14px; }
+.desk .report-page .rp3-summary::before { left: 15px; right: 15px; height: 3px; border-radius: 0 0 3px 3px; }
+.desk .rp3-sum-head { gap: 8px; }
+.desk .rp3-sum-title-wrap { gap: 7px; }
+.desk .rp3-kicker { font-size: 11px; letter-spacing: 1px; }
+.desk .rp3-date { font-size: 10px; }
+.desk .rp3-mode { padding: 2px 7px; border-width: 1px; font-size: 10px; box-shadow: 1px 1px 0 var(--shadow-soft); }
+.desk .rp3-sum-body { margin-top: 10px; gap: 10px; }
+.desk .rp3-sum-label { font-size: 11px; }
+.desk .rp3-big { margin-top: 3px; font-size: 36px; letter-spacing: 0; }
+.desk .rp3-sum-sub { margin-top: 3px; font-size: 10px; }
+
+/* 圆环：物理尺寸锁定，避免被拉成巨环挤出卡片 */
+.desk .rp3-ring { flex: 0 0 93px; width: 93px; height: 93px; padding: 8px; border-width: 1px; box-shadow: 0 4px 10px rgba(27, 54, 84, .07); }
+.desk .rp3-ring-value { font-size: 21px; }
+.desk .rp3-ring-unit { margin-left: 1px; font-size: 10px; }
+.desk .rp3-ring-label { margin-top: 3px; font-size: 9px; }
+
+.desk .rp3-stat-row { margin-top: 10px; padding-top: 8px; }
+.desk .rp3-stat + .rp3-stat { padding-left: 9px; }
+.desk .rp3-stat-v { font-size: 16px; }
+.desk .rp3-stat-k { margin-top: 2px; font-size: 9px; }
+
+/* 摘要卡里的三粒胶囊 */
+.desk .report-page .rp3-stat-row { margin-top: 10px; gap: 6px; }
+.desk .report-page .rp3-stat-pill { padding: 7px 6px; gap: 4px; border-width: 1px; box-shadow: 1px 2px 0 var(--shadow-soft); }
+.desk .report-page .rp3-stat-v { font-size: 16px; }
+.desk .report-page .rp3-stat-k { font-size: 9px; }
+
+.desk .report-page .rp3-section-head { margin: 15px 2px 7px; gap: 7px; }
+.desk .report-page .rp3-section-title { font-size: 14px; letter-spacing: 1px; }
+.desk .rp3-section-sub { font-size: 10px; }
+.desk .report-page .rp3-section-chip { padding: 2px 7px; border-width: 1px; font-size: 9px; }
+
+.desk .report-page .rp3-card,
+.desk .report-page .rp3-module-card { border-width: 1px; border-radius: 13px; box-shadow: 0 2px 8px rgba(27, 54, 84, .05); }
+.desk .report-page .rp3-card { padding: 11px 12px; }
+.desk .report-page .rp3-module-card { padding: 10px 11px; }
+.desk .report-page .rp3-dist-bar { height: 20px; border-radius: 8px; }
+.desk .report-page .rp3-compare-track { height: 12px; }
+.desk .rp3-dist-note,
+.desk .rp3-metric-k { font-size: 10px; }
+
+/* ===== 桌面 / 大屏：报告 v5 卡片（rp4）按手机档物理尺寸渲染 ===== */
+.desk .rp4-frame { margin-top: 12px; padding: 12px 13px 13px; border-width: 2px; border-radius: 18px; box-shadow: 4px 5px 0 var(--shadow); }
+.desk .rp4-head { gap: 8px; }
+.desk .rp4-title { font-size: 15px; letter-spacing: 1px; }
+.desk .rp4-meta { font-size: 10px; }
+.desk .rp4-diff { padding: 2px 8px; font-size: 10px; }
+.desk .rp4-diff-big { margin: 9px 0 2px; font-size: 24px; letter-spacing: 0; line-height: 1.22; }
+.desk .rp4-v { flex: 0 0 auto; min-width: 67px; font-size: 12px; }
+.desk .rp4-u { margin-left: 1px; font-size: 9px; }
+
+.desk .rp4-mod { margin-top: 9px; padding: 10px 10px 12px; border-width: 1px; border-radius: 13px; box-shadow: 2px 3px 0 var(--shadow-soft); }
+.desk .rp4-mod-head { gap: 7px; }
+.desk .rp4-mod-name { font-size: 14px; }
+.desk .rp4-tag { padding: 2px 7px; border-width: 0; font-size: 9px; }
+.desk .rp4-mod-meta { margin-top: 6px; gap: 4px; }
+.desk .rp4-mk { font-size: 9px; }
+.desk .rp4-mv { margin-right: 4px; font-size: 11px; }
+.desk .rp4-md { font-size: 10px; }
+
+/* 进度滑杆 */
+.desk .rp4-gauge { margin-top: 10px; height: 22px; }
+.desk .rp4-gauge-track { height: 10px; border-width: 1px; border-radius: 8px 6px 9px 6px; box-shadow: 2px 3px 0 var(--shadow-soft); }
+.desk .rp4-gauge-theme,
+.desk .rp4-gauge-diff.over,
+.desk .rp4-gauge-diff.ahead { border-right-width: 1px; }
+.desk .rp4-gauge-knob { width: 17px; height: 17px; border-width: 2px; box-shadow: 2px 3px 0 var(--shadow-soft); }
+.desk .rp4-gauge-knob::after { left: 3px; top: 2px; width: 4px; height: 6px; }
+
+.desk .report-page .rp3-summary { padding: 13px 15px 12px; border-width: 2px; border-radius: 18px; box-shadow: 4px 5px 0 var(--shadow); }
+.desk .report-page .rp3-brand-card.rp4-fish { margin-top: 14px; padding: 11px 12px; border-width: 2px; border-radius: 18px; box-shadow: 4px 5px 0 var(--shadow); }
+
+/* ===== 桌面 / 大屏：首页训练模块（config 视图）按手机档物理尺寸渲染 =====
+ * rpx 在宽窗口下会被放大 2 倍多，卡片标题、数字、步进器全跟着涨，
+ * 边框与 padding 跟不上，就会出现文字被卡片上沿切掉、整块过大。
+ */
+.desk .config-scroll .page-content { padding: 9px 11px 36px; }
+.desk .target-row { gap: 8px; }
+.desk .hero-card,
+.desk .timer-card,
+.desk .module-card,
+.desk .compare-card,
+.desk .template-card { border-width: 1px; border-radius: 16px; box-shadow: 3px 4px 0 var(--shadow); }
+.desk .hero-card { min-height: 84px; padding: 12px 13px; }
+.desk .eyebrow { font-size: 13px; }
+.desk .total-target { font-size: 36px; }
+.desk .total-target .unit { font-size: 15px; }
+.desk .goal-medal { width: 25px; height: 26px; }
+.desk .medal-ribbon { width: 5px; height: 13px; border-width: 1px; }
+.desk .medal-ribbon.left { left: 6px; }
+.desk .medal-ribbon.right { right: 6px; }
+.desk .medal-disc { width: 19px; height: 19px; border-width: 1px; box-shadow: 1px 2px 0 var(--shadow-soft); }
+.desk .medal-count { font-size: 9px; letter-spacing: 0; }
+.desk .medal-count.compact { font-size: 7px; letter-spacing: 0; }
+.desk .tomato-board { gap: 4px; }
+.desk .tomato-grid { gap: 3px; }
+.desk .tomato { width: 16px; height: 14px; border-width: 1px; box-shadow: 1px 2px 0 var(--shadow); }
+.desk .tomato-caption { font-size: 10px; }
+.desk .tomato-count-badge { font-size: 9px; }
+
+.desk .control-bar { margin: 10px 0 15px; gap: 7px; }
+.desk .mode-capsule { height: 45px; border-width: 1px; }
+.desk .mode-seg { padding: 0 2px; font-size: 11px; }
+.desk .mode-seg + .mode-seg { border-left-width: 1px; }
+.desk .control-bar .primary-button { width: 114px; padding: 12px 7px; border-width: 1px; font-size: 15px; box-shadow: 2px 3px 0 var(--shadow); }
+
+.desk .section-title-row { margin-top: 17px; }
+.desk .section-title { font-size: 17px; }
+.desk .section-title-main { gap: 7px; }
+.desk .template-plus { flex: 0 0 29px; width: 29px; height: 29px; border-width: 1px; font-size: 17px; }
+.desk .section-title-actions { gap: 6px; }
+.desk .template-save { padding: 3px 9px; border-width: 1px; font-size: 11px; }
+.desk .section-clear { width: 22px; height: 22px; border-width: 1px; font-size: 15px; box-shadow: 1px 2px 0 var(--shadow-soft); }
+.desk .template-list { margin-top: 6px; }
+.desk .template-list-pills { gap: 7px; }
+.desk .template-pick { padding: 6px 10px; border-width: 1px; font-size: 12px; }
+
+/* 训练模块卡 */
+.desk .module-card { margin: 8px 0; padding: 13px 15px 11px; border-radius: 22px; box-shadow: 5px 6px 0 var(--shadow); }
+.desk .module-card::after { top: 16px; right: 58px; bottom: 16px; width: 1px; }
+.desk .module-head { margin-right: 62px; }
+.desk .module-name { height: 27px; line-height: 27px; font-size: 17px; }
+.desk .delete-button {
+  flex: 0 0 31px; width: 31px !important; min-width: 31px !important; max-width: 31px;
+  height: 31px; right: -12px; border-radius: 50%;
+  box-shadow: 2px 3px 0 var(--shadow); font-size: 18px; line-height: 29px;
+}
+.desk .duration-row { margin: 20px 62px 0 0; }
+.desk .stepper { flex: 0 0 106px; height: 32px; border-width: 1px; }
+.desk .round-small { height: 30px; font-size: 17px; line-height: 30px; }
+.desk .minute-input { flex: 0 0 36px; width: 36px; height: 30px; border-left-width: 1px; border-right-width: 1px; font-size: 17px; }
+.desk .slider-wrap { margin: 8px 0 0 13px; }
+.desk .sketch-slider { height: 24px; margin-top: 2px; }
+.desk .sketch-track { height: 10px; border-width: 2px; border-radius: 8px 6px 9px 6px; box-shadow: 2px 3px 0 var(--shadow-soft); }
+.desk .sketch-fill { border-right-width: 1px; border-radius: 6px 5px 7px 5px; }
+.desk .sketch-fill::after { top: 1px; right: 2px; bottom: 1px; left: 2px; }
+.desk .sketch-knob { width: 20px; height: 20px; border-width: 2px; box-shadow: 2px 3px 0 var(--shadow); }
+.desk .sketch-knob::after { left: 4px; top: 3px; width: 6px; height: 7px; }
+.desk .module-foot { right: 11px; width: 43px; height: 54px; }
+.desk .drag-handle { font-size: 17px; }
+
+/* 加号行 */
+.desk .add-module-row { margin: 12px 0 4px; }
+.desk .add-module-plus { width: 46px; height: 46px; border-width: 1px; font-size: 20px; box-shadow: 2px 3px 0 var(--shadow); }
+
+/* 空状态 */
+.desk .home-module-empty { gap: 11px; padding: 17px 0 6px; }
+.desk .home-module-empty-logo { width: 90px; height: 90px; }
+.desk .home-module-add { width: 48px; height: 48px; margin-top: 11px; padding: 0; border-width: 1px; box-shadow: 2px 3px 0 var(--shadow-soft); }
+.desk .home-module-add-plus { font-size: 22px; }
+
+/* 首页功能位（待办 / 重要日子 / 打卡） */
+.desk .home-todo-card { min-height: 47px; padding: 9px 10px; gap: 6px; border-width: 1px; border-radius: 10px; }
+.desk .home-todo-dot { flex: 0 0 8px; width: 8px; height: 8px; border-width: 1px; }
+.desk .home-todo-text { font-size: 13px; }
+.desk .home-todo-time { font-size: 11px; }
+.desk .home-feature-title { font-size: 17px; letter-spacing: 1px; }
+.desk .home-feature-add { width: 63px; height: 63px; margin: 26px auto 11px; border-width: 1px; font-size: 25px; box-shadow: 2px 3px 0 var(--shadow); }
+.desk .home-feature-percent { font-size: 35px; }
+.desk .home-feature-bar { height: 9px; margin-top: 9px; border-width: 1px; }
+.desk .home-feature-streak { font-size: 12px; }
+
+/* ===== 桌面 / 大屏：主体内容按屏幕适度放大（控件不跟随）=====
+ * 首页「看的主体」= 目标时间卡 + 训练模块卡；步进器、删除键、加号、保存/清空等控件保持手机档。
+ */
+@media (min-width: 1400px) {
+  .desk .hero-card { min-height: 96px; padding: 14px 16px; }
+  .desk .eyebrow { font-size: 15px; }
+  .desk .total-target { font-size: 44px; }
+  .desk .total-target .unit { font-size: 17px; }
+  .desk .module-card { padding: 15px 17px 13px; border-radius: 24px; }
+  .desk .module-head { margin-right: 70px; }
+  .desk .module-name { height: 32px; line-height: 32px; font-size: 20px; }
+  .desk .module-card::after { right: 66px; }
+  .desk .duration-row { margin: 22px 70px 0 0; }
+  .desk .home-todo-text { font-size: 15px; }
+  .desk .home-todo-time { font-size: 13px; }
+}
+
+/* ===== 桌面 / 大屏：分析报告（主体）随屏幕适度放大；圆环按比例收放 ===== */
+@media (min-width: 1400px) {
+  .desk .report-page .rp3-summary { padding: 16px 18px 14px; }
+  .desk .rp3-kicker { font-size: 13px; }
+  .desk .rp3-sum-label { font-size: 13px; }
+  .desk .rp3-big { font-size: 44px; }
+  .desk .rp3-sum-sub { font-size: 12px; }
+  .desk .rp3-ring { flex: 0 0 112px; width: 112px; height: 112px; padding: 10px; }
+  .desk .rp3-ring-value { font-size: 26px; }
+  .desk .rp3-ring-label { font-size: 11px; }
+  .desk .rp4-frame { padding: 15px 16px 16px; border-radius: 20px; }
+  .desk .rp4-title { font-size: 18px; }
+  .desk .rp4-meta { font-size: 12px; }
+  .desk .rp4-diff-big { font-size: 30px; }
+  .desk .rp4-v { min-width: 78px; font-size: 14px; }
+  .desk .rp4-mod { padding: 12px 12px 14px; border-radius: 15px; }
+  .desk .rp4-mod-name { font-size: 16px; }
+  .desk .rp4-mv { font-size: 13px; }
+  .desk .rp4-mk { font-size: 11px; }
+  .desk .rp4-md { font-size: 12px; }
+}
+
+/* ===== 桌面 / 大屏：分析报告的纵向比例 =====
+ * 报告是阅读型内容：宽屏下把内容列收成 900px 一列居中，
+ * 卡片不再被拉成「又宽又扁」的横条，纵向高度回到接近手机的比例。
+ * 底部三个操作按钮属于控件，保持手机档尺寸、居中排列，不跟着屏幕放大。
+ */
+.desk .report-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding-bottom: calc(32px + env(safe-area-inset-bottom));
+}
+.desk .report-page .rp3-brand-card {
+  padding: 12px;
+  gap: 10px;
+  border-width: 1px;
+  border-radius: 16px 12px 17px 14px;
+}
+.desk .report-page .rp3-brand-card.rp4-fish { padding: 12px; margin-top: 15px; }
+.desk .report-page .rp3-brand-badge {
+  flex: 0 0 54px;
+  width: 54px;
+  height: 54px;
+  border-width: 1px;
+  border-radius: 13px 11px 14px 12px;
+}
+.desk .report-page .rp3-brand-logo { width: 42px; height: 42px; }
+.desk .report-page .rp3-brand-title { font-size: 11px; letter-spacing: 1px; }
+.desk .report-page .rp3-brand-text { margin-top: 3px; font-size: 13px; line-height: 1.5; }
+
+.desk .rp-actions { margin-top: 14px; }
+.desk .rp-action-row { justify-content: center; gap: 10px; }
+.desk .rp-btn {
+  flex: 0 0 210px;
+  min-height: 44px;
+  padding: 11px 8px;
+  border-width: 1px;
+  border-radius: 999px;
+  box-shadow: 2px 3px 0 var(--shadow);
+  font-size: 13px;
+  line-height: 1.2;
+}
+.desk .rp-btn-rerun { font-size: 12px; }
+
+/* ===== 桌面 / 大屏：报告卡片纵向撑开（修「又扁又空」）=====
+ * 之前只把字号放大一点点，卡片高度几乎没变，宽高比还是横条。
+ * 这里按屏幕档把每个报告块的纵向内距、行高、数字、圆环、滑杆一起垫起来，
+ * 让高度跟得上宽度；底部三个按钮属于控件，继续保持手机档大小。
+ */
+.desk .report-page .rp3-summary { padding: 22px 20px 18px; }
+.desk .rp3-sum-body { margin-top: 14px; gap: 16px; }
+.desk .rp3-kicker { font-size: 15px; }
+.desk .rp3-date { font-size: 12px; }
+.desk .rp3-mode { padding: 3px 9px; font-size: 12px; }
+.desk .rp3-sum-label { font-size: 15px; }
+.desk .rp3-big { margin-top: 5px; font-size: 56px; }
+.desk .rp3-sum-sub { margin-top: 5px; font-size: 13px; }
+.desk .rp3-ring { flex: 0 0 136px; width: 136px; height: 136px; padding: 12px; }
+.desk .rp3-ring-value { font-size: 30px; }
+.desk .rp3-ring-unit { font-size: 12px; }
+.desk .rp3-ring-label { margin-top: 4px; font-size: 12px; }
+.desk .report-page .rp3-stat-row { margin-top: 16px; gap: 8px; }
+.desk .report-page .rp3-stat-pill { padding: 10px 8px; gap: 5px; }
+.desk .report-page .rp3-stat-v { font-size: 18px; }
+.desk .report-page .rp3-stat-k { font-size: 11px; }
+.desk .report-page .rp3-section-head { margin: 22px 2px 10px; }
+.desk .report-page .rp3-section-title { font-size: 19px; }
+.desk .report-page .rp3-section-chip { font-size: 11px; padding: 3px 9px; }
+
+.desk .rp4-frame { margin-top: 16px; padding: 20px 20px 20px; border-radius: 22px; }
+.desk .rp4-head { gap: 10px; }
+.desk .rp4-title { font-size: 22px; }
+.desk .rp4-meta { font-size: 12px; }
+.desk .rp4-diff { padding: 3px 10px; font-size: 11px; }
+.desk .rp4-diff-big { margin: 14px 0 6px; font-size: 34px; line-height: 1.24; }
+.desk .rp4-v { min-width: 90px; font-size: 16px; }
+.desk .rp4-u { font-size: 11px; }
+.desk .rp4-mod { margin-top: 12px; padding: 16px 16px 18px; border-radius: 16px; }
+.desk .rp4-mod-head { gap: 8px; }
+.desk .rp4-mod-name { font-size: 20px; }
+.desk .rp4-tag { padding: 3px 9px; font-size: 11px; }
+.desk .rp4-mod-meta { margin-top: 8px; gap: 5px; }
+.desk .rp4-mk { font-size: 12px; }
+.desk .rp4-mv { font-size: 15px; }
+.desk .rp4-md { font-size: 13px; }
+.desk .rp4-gauge { margin-top: 12px; height: 30px; }
+.desk .rp4-gauge-track { height: 14px; border-radius: 10px 7px 11px 8px; }
+.desk .rp4-gauge-knob { width: 22px; height: 22px; }
+.desk .rp4-gauge-knob::after { left: 4px; top: 3px; width: 6px; height: 9px; }
+
+.desk .report-page .rp3-brand-card { padding: 18px; gap: 14px; }
+.desk .report-page .rp3-brand-card.rp4-fish { padding: 18px; margin-top: 20px; }
+.desk .report-page .rp3-brand-badge { flex: 0 0 66px; width: 66px; height: 66px; border-radius: 16px 13px 17px 14px; }
+.desk .report-page .rp3-brand-logo { width: 52px; height: 52px; }
+.desk .report-page .rp3-brand-title { font-size: 13px; }
+.desk .report-page .rp3-brand-text { margin-top: 5px; font-size: 16px; line-height: 1.55; }
+
+/* 底部三键：控件，不跟着放大 */
+.desk .rp-actions { margin-top: 18px; }
+.desk .rp-btn {
+  flex: 0 0 200px;
+  min-height: 42px;
+  padding: 10px 8px;
+  font-size: 13px;
+}
+
+/* ===== 桌面 / 大屏：首页激励图案（番茄 / 星星 / 小鱼 / 气泡）=====
+ * 硬规则：大屏下激励图案只做「手机档物理尺寸」，不跟着窗口放大。
+ * 原因：这些图形是 CSS 手绘的（本体 + 叶子/尾巴/眼睛 + 高光），
+ * 一旦只放大容器而内部部件没同步，就会出现错位、旋涡、重叠；
+ * 而且奖励区在 hero 卡右侧，放大后行数摆不下、顶部会被压。
+ * 这里把本体、叶子、高光、鱼身/鱼尾/鱼眼按 0.5 系数（≈手机档 1:1）重写，
+ * 并关掉所有弹出/擦亮/呼吸动画，静态显示。任何新增都不要再加 @media 放大。
+ */
+.desk .tomato-board { gap: 2px; }
+
+/* 行布局：按内容宽靠右紧凑排列，不铺满整行 */
+.desk .tomato-grid { display: flex; flex-direction: column; align-items: flex-end; width: 100%; }
+.desk .tomato-row { width: auto; justify-content: flex-start; gap: 0; column-gap: 4px; margin-bottom: 2px; }
+.desk .tomato-row.last { justify-content: flex-start; column-gap: 4px; }
+.desk .tomato-row.single { justify-content: flex-start; column-gap: 4px; }
+
+/* 番茄 / 气泡 / 小鱼（CSS 手绘） */
+.desk .tomato { width: 16px; height: 15px; border-width: 1px; box-shadow: 1px 2px 0 var(--shadow); }
+.desk .tomato::before { top: -4px; left: 4px; width: 7px; height: 4px; border-width: 1px; }
+.desk .tomato::after { left: 3px; top: 3px; width: 3px; height: 4px; }
+.desk .tomato.star,
+.desk .tomato.star.ghost { width: 16px; height: 16px; }
+.desk .tomato.bubble { width: 15px; height: 15px; margin: 1px; }
+.desk .tomato.bubble::before { top: 3px; left: 3px; width: 4px; height: 4px; }
+.desk .tomato.fish { width: 19px; height: 13px; }
+.desk .tomato.fish::before { top: 1px; right: -3px; border-width: 3px; border-left-width: 3px; }
+.desk .tomato.fish::after { left: 3px; top: 3px; width: 3px; height: 3px; }
+
+/* 星星（图片，不会被拉伸） / 小鱼（手绘部件） */
+.desk .incentive-art { width: 17px; height: 17px; }
+.desk .incentive-art.fish { width: 21px; height: 17px; }
+.desk .incentive-star-ghost { width: 16px; height: 16px; font-size: 15px; }
+.desk .incentive-art.fish .fish-body { left: 5px; top: 2px; width: 15px; height: 12px; border-width: 1px; box-shadow: 1px 2px 0 var(--shadow-soft); }
+.desk .incentive-art.fish .fish-body::before { left: 5px; top: -2px; width: 5px; height: 4px; border-width: 1px; }
+.desk .incentive-art.fish .fish-body::after { left: 2px; top: 4px; width: 3px; height: 4px; }
+.desk .incentive-art.fish .fish-tail { top: 3px; width: 7px; height: 10px; border-width: 1px; }
+.desk .incentive-art.fish .fish-eye { right: 3px; top: 3px; width: 3px; height: 3px; }
+
+/* ×N 计数徽章 / +1 角标 */
+.desk .tomato-count-badge {
+  min-width: 22px;
+  height: 15px;
+  padding: 0 4px;
+  border-width: 1px;
+  border-radius: 5px;
+  box-shadow: 1px 2px 0 var(--shadow);
+  font-size: 9px;
+}
+.desk .tomato-plus { top: -11px; right: 3px; font-size: 13px; }
+.desk .tomato-caption { font-size: 10px; }
+.desk .tomato-caption.count { font-size: 10px; }
+
+/* 首页奖章同样不放大 */
+.desk .hero-medal { width: 36px; height: 37px; }
+.desk .hero-medal .medal-ribbon { width: 7px; height: 20px; }
+.desk .hero-medal .medal-ribbon.left { left: 9px; }
+.desk .hero-medal .medal-ribbon.right { right: 9px; }
+.desk .hero-medal .medal-disc { width: 29px; height: 29px; border-width: 2px; box-shadow: 1px 2px 0 var(--shadow-soft); }
+.desk .hero-medal .medal-count { font-size: 12px; letter-spacing: 0; }
+.desk .hero-medal .medal-count.compact { font-size: 10px; letter-spacing: 0; }
+
+/* 静态：奖励区不再播放任何弹出 / 擦亮 / 星屑 / 呼吸动画 */
+.desk .tomato-board,
+.desk .tomato-board .tomato,
+.desk .tomato-board .tomato::before,
+.desk .tomato-board .tomato::after,
+.desk .tomato-board .incentive-art,
+.desk .tomato-board .incentive-art-img,
+.desk .tomato-board .incentive-art.fish .fish-body,
+.desk .tomato-board .incentive-art.fish .fish-body::before,
+.desk .tomato-board .incentive-art.fish .fish-body::after,
+.desk .tomato-board .incentive-art.fish .fish-tail,
+.desk .tomato-board .goal-medal,
+.desk .tomato-board .medal-disc,
+.desk .tomato-board .medal-disc::after,
+.desk .tomato-board .tomato-plus,
+.desk .tomato-board .tomato-count-badge,
+.desk .hero-card .hero-medal,
+.desk .hero-card .hero-medal::before,
+.desk .hero-card .hero-medal::after { animation: none !important; }
+
+/* 报告 v3 的鱼头像复用了同一套小鱼图形，尺寸固定，别让它被拉变形 */
+.desk .rp3-fish-avatar { flex: 0 0 48px; width: 48px; height: 42px; }
+.desk .rp3-fish-avatar .incentive-art.fish { transform: scale(2.15); }
+
+/* 桌面下空模块 logo 静态显示 */
+.desk .home-module-empty-logo { animation: none !important; }
+
+/* ===== 首页快捷计时 / 待办 / 重要日子：手机档基准 ===== */
+.quick-home-more {
+  flex: 0 0 auto;
+  padding: 8rpx 16rpx;
+  color: var(--text-mid);
+  background: var(--cream-1);
+  border: 2rpx solid var(--line);
+  border-radius: 999rpx;
+  font-size: 20rpx;
+  font-weight: 800;
+  line-height: 1.4;
+}
+.quick-home-stage.running { box-shadow: 6rpx 7rpx 0 var(--primary); }
+.quick-home-phase { color: var(--text-mid); font-size: 22rpx; font-weight: 800; line-height: 1.2; }
+.quick-preset-row { display: flex; flex-wrap: wrap; gap: 12rpx; margin-top: 18rpx; }
+.quick-preset {
+  padding: 14rpx 26rpx;
+  color: var(--ink);
+  background: var(--cream-1);
+  border: 2rpx solid var(--edge);
+  border-radius: 999rpx;
+  box-shadow: 3rpx 4rpx 0 var(--shadow-soft);
+  font-size: 24rpx;
+  font-weight: 800;
+  line-height: 1;
+}
+.quick-preset.on { color: var(--on-primary); background: var(--primary); box-shadow: 3rpx 4rpx 0 var(--shadow); }
+.quick-home-ctrl { display: flex; gap: 16rpx; margin-top: 22rpx; }
+.quick-home-btn {
+  flex: 1;
+  height: 96rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink);
+  background: var(--card);
+  border: 2rpx solid var(--edge);
+  border-radius: 999rpx;
+  box-shadow: 4rpx 5rpx 0 var(--shadow-soft);
+  font-size: 28rpx;
+  font-weight: 900;
+  line-height: 1;
+}
+.quick-home-btn.primary { color: var(--on-primary); background: var(--primary); box-shadow: 4rpx 5rpx 0 var(--shadow); }
+
+.home-todo-more { flex: 0 0 auto; padding: 0 4rpx; color: var(--text-3); font-size: 22rpx; font-weight: 900; line-height: 1; }
+.home-todo-add {
+  min-height: 84rpx;
+  margin-top: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10rpx;
+  color: var(--text-warm);
+  background: var(--cream-1);
+  border: 2rpx dashed var(--line-strong);
+  border-radius: 18rpx;
+  font-size: 24rpx;
+  font-weight: 800;
+}
+.home-todo-add:active { background: var(--cream-2); }
+.home-todo-add-plus { font-size: 30rpx; font-weight: 900; line-height: 1; }
+.home-todo-add-text { font-size: 24rpx; font-weight: 800; }
+
+.home-todo-day-row { display: flex; gap: 12rpx; margin-top: 18rpx; }
+.home-todo-day {
+  flex: 1;
+  padding: 12rpx 0;
+  text-align: center;
+  color: var(--ink);
+  background: var(--cream-1);
+  border: 2rpx solid var(--line);
+  border-radius: 999rpx;
+  font-size: 22rpx;
+  font-weight: 800;
+}
+.home-todo-day.on { color: var(--on-primary); background: var(--primary); border-color: var(--edge); }
+
+/* ===== 桌面 / 大屏：主体放大，控件锁手机档 ===== */
+.desk .quick-home { margin-top: 4px; }
+.desk .quick-home-head { padding: 9px 2px 11px; gap: 7px; }
+.desk .quick-home-mark { flex: 0 0 25px; width: 25px; height: 25px; border-width: 1px; box-shadow: 2px 2px 0 var(--shadow); }
+.desk .quick-home-play { margin-left: 2px; border-top-width: 5px; border-bottom-width: 5px; border-left-width: 8px; }
+.desk .quick-home-title { font-size: 17px; letter-spacing: 1px; }
+.desk .quick-home-more { padding: 4px 9px; border-width: 1px; font-size: 11px; }
+
+/* 时钟就是主体：随屏幕高度放大，宽度不拉开 */
+.desk .quick-home-stage { min-height: 168px; padding: 16px 18px; gap: 8px; border-width: 2px; border-radius: 20px; box-shadow: 4px 5px 0 var(--shadow); }
+.desk .quick-home-time { font-size: 72px; letter-spacing: 2px; }
+.desk .quick-home-phase { font-size: 12px; }
+
+/* 预设、开始/暂停/重置都是控件：固定手机档尺寸、居中排列 */
+.desk .quick-preset-row { gap: 8px; margin-top: 12px; }
+.desk .quick-preset { padding: 7px 14px; border-width: 1px; box-shadow: 2px 3px 0 var(--shadow-soft); font-size: 13px; }
+.desk .quick-home-ctrl { gap: 10px; margin-top: 14px; justify-content: center; }
+.desk .quick-home-btn { flex: 0 0 132px; width: 132px; height: 46px; border-width: 1px; box-shadow: 2px 3px 0 var(--shadow-soft); font-size: 15px; }
+.desk .quick-home-btn.primary { box-shadow: 2px 3px 0 var(--shadow); }
+
+.desk .home-todo-more { font-size: 13px; }
+.desk .home-todo-add { min-height: 47px; margin-top: 9px; gap: 6px; border-width: 1px; border-radius: 10px; }
+.desk .home-todo-add-plus { font-size: 17px; }
+.desk .home-todo-add-text { font-size: 13px; }
+.desk .home-todo-day-row { gap: 7px; margin-top: 10px; }
+.desk .home-todo-day { padding: 8px 0; border-width: 1px; font-size: 12px; }
+
+/* 打卡卡（主体）适度放大 */
+.desk .home-feature-stats { padding: 16px 14px; border-width: 2px; border-radius: 14px; box-shadow: 3px 4px 0 var(--shadow); }
+.desk .home-feature-percent { font-size: 40px; }
+
+/* 更宽的屏再放一档，只放大时钟，控件保持不动 */
+@media (min-width: 1400px) {
+  .desk .quick-home-stage { min-height: 200px; }
+  .desk .quick-home-time { font-size: 88px; }
+}
+@media (min-width: 1600px) {
+  .desk .quick-home-stage { min-height: 224px; }
+  .desk .quick-home-time { font-size: 96px; }
+}
+
+/* 首页待办 / 重要日子预览：大屏改单列通栏，行不摊成两张卡片 */
+.desk .home-feature .home-feature-list { grid-template-columns: minmax(0, 1fr); gap: 5px; }
+
+/* 首页固定面板：真实页面嵌进来的外壳 */
+.pinned-panel { width: 100%; margin: 0 0 18rpx; }
+.pinned-head { display: flex; align-items: center; justify-content: space-between; gap: 10rpx; margin: 0 0 10rpx; }
+.pinned-title { color: var(--ink); font-size: 28rpx; font-weight: 900; }
+.pinned-side { display: flex; align-items: center; gap: 6rpx; }
+.pinned-count { color: var(--text-2); font-size: 22rpx; font-weight: 800; }
+.pinned-more { color: var(--text-3); font-size: 28rpx; font-weight: 900; line-height: 1; }
+.pinned-board {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+  padding: 12rpx 14rpx;
+  background: var(--card);
+  border: 3rpx solid var(--edge);
+  border-radius: 22rpx;
+  box-shadow: 5rpx 6rpx 0 var(--shadow-soft);
+}
+.pinned-row { display: flex; align-items: center; gap: 10rpx; padding: 10rpx 6rpx; border-radius: 12rpx; }
+.pinned-row:active { background: var(--cream-2); }
+.pinned-check { flex: 0 0 26rpx; width: 26rpx; height: 26rpx; box-sizing: border-box; border: 2rpx solid var(--edge); border-radius: 50%; }
+.pinned-dot { flex: 0 0 12rpx; width: 12rpx; height: 12rpx; border-radius: 50%; background: var(--primary); }
+.pinned-row.past .pinned-dot { background: var(--text-3); }
+.pinned-row-text { flex: 1; min-width: 0; color: var(--ink); font-size: 24rpx; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pinned-row-meta { flex: 0 0 auto; color: var(--text-2); font-size: 20rpx; font-weight: 700; }
+.pinned-row.past .pinned-row-meta { color: var(--text-3); }
+.pinned-empty { color: var(--text-3); font-size: 22rpx; font-weight: 700; padding: 14rpx 6rpx; text-align: center; }
+.pinned-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6rpx; padding: 4rpx 0 8rpx; }
+.pinned-stat { display: flex; flex-direction: column; align-items: center; gap: 2rpx; }
+.pinned-stat-num { color: var(--ink); font-size: 34rpx; font-weight: 900; }
+.pinned-stat-label { color: var(--text-2); font-size: 18rpx; font-weight: 700; }
+.pinned-progress { height: 12rpx; box-sizing: border-box; background: var(--track); border: 2rpx solid var(--edge); border-radius: 999rpx; overflow: hidden; }
+.pinned-progress-fill { height: 100%; background: var(--primary); border-radius: 999rpx; transition: width .3s ease; }
+.desk .pinned-panel { margin-bottom: 10px; }
+.desk .pinned-head { margin-bottom: 6px; gap: 8px; }
+.desk .pinned-title { font-size: 15px; }
+.desk .pinned-count { font-size: 12px; }
+.desk .pinned-more { font-size: 15px; }
+.desk .pinned-board { padding: 8px 9px; border-width: 2px; border-radius: 12px; box-shadow: 3px 3px 0 var(--shadow-soft); }
+.desk .pinned-row { padding: 6px 4px; gap: 6px; }
+.desk .pinned-check { flex: 0 0 14px; width: 14px; height: 14px; border-width: 1px; }
+.desk .pinned-row-text { font-size: 13px; }
+.desk .pinned-row-meta { font-size: 11px; }
+.desk .pinned-empty { font-size: 12px; padding: 8px 4px; }
+.desk .pinned-stat-num { font-size: 18px; }
+.desk .pinned-stat-label { font-size: 10px; }
+.desk .pinned-progress { height: 7px; border-width: 1px; }

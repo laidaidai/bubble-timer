@@ -24,23 +24,6 @@
   --clk-ink: var(--primary-2);
   --clk-glow: var(--primary-2);
 }
-.clock-digital,
-.q-shell-digital {
-  --clk-panel: var(--panel);
-  --clk-panel-edge: var(--edge-deep);
-  --clk-ink: var(--on-panel);
-  --clk-glow: rgba(255, 255, 255, .18);
-}
-.clock-minimal,
-.q-shell-minimal {
-  --clk-ink: var(--ink);
-}
-.clock-neon,
-.q-shell-neon {
-  --clk-panel: var(--ink);
-  --clk-ink: #FFE9F4;
-  --clk-glow: #FF3CAC;
-}
 .clock-outline,
 .q-shell-outline {
   --clk-ink: var(--ink);
@@ -58,24 +41,6 @@
  * 选择器带页面根类（.timer-page / .quick-page / .settings-page），
  * 这样即使本文件在 wxss 顶部 @import，也能压过后面的页面级覆盖。
  */
-.timer-page .clock-digital .plain-num,
-.quick-page .q-shell-digital .q-plain-num,
-.settings-page .q-shell-digital .q-plain-num {
-  color: var(--clk-ink);
-  font-family: "Courier New", "Menlo", monospace;
-  font-weight: 900;
-  letter-spacing: 2rpx;
-  text-shadow: 0 0 10rpx rgba(255, 255, 255, .20);
-}
-.timer-page .clock-neon .plain-num,
-.quick-page .q-shell-neon .q-plain-num,
-.settings-page .q-shell-neon .q-plain-num {
-  color: var(--clk-ink);
-  font-family: "Courier New", "Menlo", monospace;
-  font-weight: 900;
-  letter-spacing: 3rpx;
-  text-shadow: 0 0 6rpx var(--clk-glow), 0 0 18rpx var(--clk-glow), 0 0 36rpx rgba(80, 220, 255, .75);
-}
 .timer-page .clock-outline .plain-num,
 .quick-page .q-shell-outline .q-plain-num,
 .settings-page .q-shell-outline .q-plain-num {
@@ -84,14 +49,6 @@
   font-weight: 900;
   letter-spacing: 3rpx;
   -webkit-text-stroke: 4rpx var(--clk-ink);
-}
-.timer-page .clock-minimal .plain-num,
-.quick-page .q-shell-minimal .q-plain-num,
-.settings-page .q-shell-minimal .q-plain-num {
-  color: var(--clk-ink);
-  font-family: "Arial Rounded MT Bold", "Yuanti SC", "YouYuan", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-  font-weight: 500;
-  letter-spacing: 2rpx;
 }
 .timer-page .clock-jelly .plain-num,
 .quick-page .q-shell-jelly .q-plain-num,
@@ -102,14 +59,8 @@
 }
 
 /* 毫秒读数：跟主数字同一族，只是小一号，颜色/发光/描边保持一致 */
-.quick-page .q-shell-digital .q-ms-inline,
-.quick-page .q-shell-digital .q-ms-dot { color: var(--clk-ink); }
-.quick-page .q-shell-neon .q-ms-inline,
-.quick-page .q-shell-neon .q-ms-dot { color: var(--clk-ink); text-shadow: 0 0 5rpx var(--clk-glow), 0 0 14rpx var(--clk-glow); }
 .quick-page .q-shell-outline .q-ms-inline { color: transparent; -webkit-text-stroke: 3rpx var(--clk-ink); }
 .quick-page .q-shell-outline .q-ms-dot { color: var(--clk-ink); }
-.quick-page .q-shell-minimal .q-ms-inline,
-.quick-page .q-shell-minimal .q-ms-dot { color: var(--clk-ink); font-family: "Arial Rounded MT Bold", "Yuanti SC", "YouYuan", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; font-weight: 500; }
 .quick-page .q-shell-jelly .q-ms-inline { color: var(--clk-fill, var(--primary)); -webkit-text-stroke: 2rpx var(--clk-ink); text-shadow: 3rpx 4rpx 0 var(--clk-glow), 5rpx 6rpx 0 var(--clk-ink); }
 .quick-page .q-shell-jelly .q-ms-dot { color: var(--clk-ink); }
 
@@ -158,4 +109,394 @@
   border-radius: 50%;
   background: var(--clk-glow);
   box-shadow: 0 0 6rpx var(--clk-glow), 0 0 13rpx var(--clk-glow);
+}
+
+
+/* ===== 贴纸数字：白字 + 深色描边 + 主色硬投影，浅底深底都清楚 ===== */
+.clock-sticker,
+.q-shell-sticker {
+  --clk-ink: var(--ink);
+  --clk-fill: var(--card);
+  --clk-glow: var(--primary);
+}
+.timer-page .clock-sticker .plain-num,
+.quick-page .q-shell-sticker .q-plain-num,
+.settings-page .q-shell-sticker .q-plain-num {
+  color: var(--clk-fill, var(--panel)) !important;
+  -webkit-text-stroke: 2px var(--clk-ink) !important;
+  font-family: "Arial Rounded MT Bold", "Yuanti SC", "PingFang SC", "Hiragino Sans GB", sans-serif !important;
+  font-weight: 900 !important;
+  letter-spacing: 0 !important;
+  text-shadow: 2px 3px 0 var(--clk-glow) !important;
+}
+.quick-page .q-shell-sticker .q-ms-inline,
+.quick-page .q-shell-sticker .q-ms-dot { color: var(--clk-ink); -webkit-text-stroke: 1px var(--clk-ink); }
+
+/* ==========================================================================
+ * FINAL：8 种时钟样式在三页的唯一定义（基准 = 设置页预览）
+ * 计时页 .timer-page.clock-<key> / 快捷计时 .q-clock-shell.q-shell-<key> /
+ * 设置预览 .clock-preview-card / .clock-style-sample
+ * 本段只覆盖「外观」：底色、边框、发光、字体、字重、字距、描边、投影。
+ * 各页的 font-size / padding / 宽高仍由自己的 wxss 决定，不受本段影响，
+ * 因此不会撑破计时页的等高槽，也不会改变设置预览的固定框。
+ * ========================================================================== */
+
+/* ---------- 1 翻页 flip：牌面统一由 components/flip-clock 负责，外壳一律透明 ---------- */
+.quick-page .q-clock-shell.q-shell-flip,
+.settings-page .clock-preview .clock-preview-card.q-shell-flip,
+.settings-page .clock-style-card .clock-style-sample.q-shell-flip {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+/* ---------- 2 积木 blocks：奶白牌 + 深墨描边 + 硬投影 + 等宽深字 ---------- */
+.timer-page .block-row .block-tile,
+.quick-page .q-block-tile,
+.settings-page .clock-block-tile {
+  background: var(--card) !important;
+  border: 2rpx solid var(--edge) !important;
+  border-radius: 10rpx !important;
+  box-shadow: 3rpx 3rpx 0 var(--shadow-soft) !important;
+}
+.timer-page .block-row .block-num,
+.timer-page .block-row .block-colon,
+.quick-page .q-block-num,
+.quick-page .q-block-colon,
+.settings-page .clock-block-num,
+.settings-page .clock-block-colon {
+  color: var(--ink) !important;
+  font-family: "Courier New", "Menlo", monospace !important;
+  font-weight: 900 !important;
+  text-shadow: none !important;
+}
+.timer-page.clock-blocks .plain-clock,
+.quick-page .q-clock-shell.q-shell-blocks,
+.settings-page .clock-preview .clock-preview-card.q-shell-blocks,
+.settings-page .clock-style-card .clock-style-sample.q-shell-blocks {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+/* ---------- 4 贴纸数字 sticker：奶白字 + 深墨描边 + 主色硬投影，外壳透明 ---------- */
+.timer-page.clock-sticker .plain-clock,
+.quick-page .q-clock-shell.q-shell-sticker,
+.settings-page .clock-preview .clock-preview-card.q-shell-sticker,
+.settings-page .clock-style-card .clock-style-sample.q-shell-sticker {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+.timer-page.clock-sticker .plain-num,
+.quick-page .q-clock-shell.q-shell-sticker .q-plain-num,
+.settings-page .clock-preview .clock-preview-card.q-shell-sticker .q-plain-num,
+.settings-page .clock-style-card .clock-style-sample.q-shell-sticker .q-plain-num {
+  color: var(--card) !important;
+  -webkit-text-fill-color: var(--card) !important;
+  -webkit-text-stroke: 2px var(--ink) !important;
+  background-image: none !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+  font-family: "Arial Rounded MT Bold", "Yuanti SC", "PingFang SC", "Hiragino Sans GB", sans-serif !important;
+  font-weight: 900 !important;
+  letter-spacing: 0 !important;
+  text-shadow: 2px 3px 0 var(--primary) !important;
+}
+
+/* ---------- 6 描边空心 outline：只画轮廓、中间留空，外壳一律无框 ---------- */
+.timer-page.clock-outline .plain-clock,
+.quick-page .q-clock-shell.q-shell-outline,
+.settings-page .clock-preview .clock-preview-card.q-shell-outline,
+.settings-page .clock-style-card .clock-style-sample.q-shell-outline {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+.timer-page.clock-outline .plain-num,
+.quick-page .q-clock-shell.q-shell-outline .q-plain-num,
+.settings-page .clock-preview .clock-preview-card.q-shell-outline .q-plain-num,
+.settings-page .clock-style-card .clock-style-sample.q-shell-outline .q-plain-num {
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+  -webkit-text-stroke: 2rpx var(--ink) !important;
+  font-family: "PingFang SC", "Hiragino Sans GB", "Helvetica Neue", sans-serif !important;
+  font-weight: 800 !important;
+  letter-spacing: 2rpx !important;
+  text-shadow: none !important;
+  background-image: none !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+}
+.quick-page .q-clock-shell.q-shell-outline .q-ms-inline {
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+  -webkit-text-stroke: 1.5rpx var(--ink) !important;
+  background-image: none !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+}
+.quick-page .q-clock-shell.q-shell-outline .q-ms-dot { color: var(--ink) !important; }
+
+/* 桌面：字距/描边按 px 收，别被 rpx 放大（描边过粗会把空心填死）
+ * 注意：计时页根节点不带 desk（它恒为 compact），所以计时页这批走媒体查询。 */
+@media (min-width: 700px) {
+  .timer-page.clock-outline .plain-num { -webkit-text-stroke-width: 1.5px !important; letter-spacing: 1px !important; }
+}
+.desk.quick-page .q-clock-shell.q-shell-outline .q-plain-num,
+.desk.settings-page .clock-preview .clock-preview-card.q-shell-outline .q-plain-num,
+.desk.settings-page .clock-style-card .clock-style-sample.q-shell-outline .q-plain-num { -webkit-text-stroke-width: 1.5px !important; letter-spacing: 1px !important; }
+.desk.quick-page .q-clock-shell.q-shell-outline .q-ms-inline { -webkit-text-stroke-width: 1px !important; }
+
+/* ---------- 8 果冻叠影 jelly：糖果色填充 + 深墨描边 + 双层错位投影 ---------- */
+.timer-page.clock-jelly .plain-clock,
+.quick-page .q-clock-shell.q-shell-jelly,
+.settings-page .clock-preview .clock-preview-card.q-shell-jelly,
+.settings-page .clock-style-card .clock-style-sample.q-shell-jelly {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+.timer-page.clock-jelly .plain-num,
+.quick-page .q-clock-shell.q-shell-jelly .q-plain-num,
+.settings-page .clock-preview .clock-preview-card.q-shell-jelly .q-plain-num,
+.settings-page .clock-style-card .clock-style-sample.q-shell-jelly .q-plain-num {
+  color: var(--primary) !important;
+  -webkit-text-fill-color: var(--primary) !important;
+  -webkit-text-stroke: 2rpx var(--edge) !important;
+  background-image: none !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+  font-family: "Arial Rounded MT Bold", "Yuanti SC", "PingFang SC", "Hiragino Sans GB", sans-serif !important;
+  font-weight: 900 !important;
+  letter-spacing: 2rpx !important;
+  text-shadow: 4rpx 5rpx 0 var(--primary-2), 7rpx 8rpx 0 var(--edge) !important;
+}
+.quick-page .q-clock-shell.q-shell-jelly .q-ms-inline {
+  color: var(--primary) !important;
+  -webkit-text-stroke: 2rpx var(--edge) !important;
+  text-shadow: 3rpx 4rpx 0 var(--primary-2), 5rpx 6rpx 0 var(--edge) !important;
+}
+.quick-page .q-clock-shell.q-shell-jelly .q-ms-dot { color: var(--ink) !important; }
+
+/* ===== 快捷计时毫秒读数：与主数字同一套外观，只是字号由页面收小 =====
+ * 数字、小数点、字体、字重、字距、描边、投影全部跟主数字一致，
+ * 避免「主时间带描边、毫秒却是纯色」这种两张皮。
+ */
+.quick-page .q-clock-shell.q-shell-sticker .q-ms-inline {
+  color: var(--card) !important;
+  -webkit-text-fill-color: var(--card) !important;
+  -webkit-text-stroke: 1.5px var(--ink) !important;
+  background-image: none !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+  font-family: "Arial Rounded MT Bold", "Yuanti SC", "PingFang SC", "Hiragino Sans GB", sans-serif !important;
+  font-weight: 900 !important;
+  letter-spacing: 0 !important;
+  text-shadow: 1.5px 2px 0 var(--primary) !important;
+}
+.quick-page .q-clock-shell.q-shell-sticker .q-ms-dot {
+  color: var(--ink) !important;
+  -webkit-text-stroke: 0 !important;
+  text-shadow: none !important;
+}
+/* ===== 桌面 / 大屏：果冻叠影的错位阴影改成 px =====
+ * 原来错位量是 rpx（4/5 与 7/8），1700px 窗口下 1rpx≈2.3px，
+ * 54px 的数字后面跟着 16px 的深色影子，看着像三份数字叠在一起。
+ * 描边同理（2rpx 在宽屏会变成 4px 粗）。这里按手机档比例还原成 1–4px。
+ */
+.desk.timer-page.clock-jelly .plain-num,
+.desk.quick-page .q-clock-shell.q-shell-jelly .q-plain-num,
+.desk.settings-page .clock-preview .clock-preview-card.q-shell-jelly .q-plain-num,
+.desk.settings-page .clock-style-card .clock-style-sample.q-shell-jelly .q-plain-num {
+  -webkit-text-stroke-width: 1px !important;
+  text-shadow: 2px 2px 0 var(--primary-2), 3px 4px 0 var(--edge) !important;
+}
+.desk.quick-page .q-clock-shell.q-shell-jelly .q-ms-inline {
+  -webkit-text-stroke-width: 1px !important;
+  text-shadow: 1px 1px 0 var(--primary-2), 2px 3px 0 var(--edge) !important;
+}
+
+/* ==========================================================================
+ * 新增三种手绘 / 果冻向皮肤（no frame：外壳一律透明无边框）
+ * ========================================================================== */
+
+/* ---------- 手绘涂鸦 doodle：墨色数字 + 彩色铅笔粗边 + 整排微微歪 ---------- */
+.timer-page.clock-doodle .plain-clock,
+.quick-page .q-clock-shell.q-shell-doodle,
+.settings-page .clock-preview .clock-preview-card.q-shell-doodle,
+.settings-page .clock-style-card .clock-style-sample.q-shell-doodle {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+.timer-page.clock-doodle .plain-num,
+.quick-page .q-clock-shell.q-shell-doodle .q-plain-num,
+.settings-page .clock-preview .clock-preview-card.q-shell-doodle .q-plain-num,
+.settings-page .clock-style-card .clock-style-sample.q-shell-doodle .q-plain-num {
+  color: var(--ink) !important;
+  -webkit-text-fill-color: var(--ink) !important;
+  -webkit-text-stroke: 2rpx var(--primary) !important;
+  background-image: none !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+  font-family: "Kaiti SC", "STKaiti", "KaiTi", "Yuanti SC", "PingFang SC", sans-serif !important;
+  font-weight: 800 !important;
+  letter-spacing: 3rpx !important;
+  text-shadow: 3rpx 3rpx 0 var(--primary-2), -2rpx 3rpx 0 var(--primary) !important;
+  display: inline-block !important;
+  transform: rotate(-1.6deg) !important;
+}
+.quick-page .q-clock-shell.q-shell-doodle .q-ms-inline {
+  color: var(--ink) !important;
+  -webkit-text-fill-color: var(--ink) !important;
+  -webkit-text-stroke: 1rpx var(--primary) !important;
+  text-shadow: 2rpx 2rpx 0 var(--primary-2) !important;
+  font-family: "Kaiti SC", "STKaiti", "KaiTi", "PingFang SC", sans-serif !important;
+  font-weight: 800 !important;
+  transform: rotate(-1.6deg) !important;
+  display: inline-block !important;
+}
+.quick-page .q-clock-shell.q-shell-doodle .q-ms-dot { color: var(--ink) !important; }
+
+/* ---------- 手绘印章 stamp：实心墨字 + 主色粗边 + 主色硬投影 + 反向小歪 ---------- */
+.timer-page.clock-stamp .plain-clock,
+.quick-page .q-clock-shell.q-shell-stamp,
+.settings-page .clock-preview .clock-preview-card.q-shell-stamp,
+.settings-page .clock-style-card .clock-style-sample.q-shell-stamp {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+.timer-page.clock-stamp .plain-num,
+.quick-page .q-clock-shell.q-shell-stamp .q-plain-num,
+.settings-page .clock-preview .clock-preview-card.q-shell-stamp .q-plain-num,
+.settings-page .clock-style-card .clock-style-sample.q-shell-stamp .q-plain-num {
+  color: var(--ink) !important;
+  -webkit-text-fill-color: var(--ink) !important;
+  -webkit-text-stroke: 4rpx var(--primary-2) !important;
+  background-image: none !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+  font-family: "Arial Rounded MT Bold", "Yuanti SC", "PingFang SC", "Hiragino Sans GB", sans-serif !important;
+  font-weight: 900 !important;
+  letter-spacing: 3rpx !important;
+  text-shadow: 6rpx 7rpx 0 var(--primary) !important;
+  display: inline-block !important;
+  transform: rotate(2.2deg) !important;
+}
+.quick-page .q-clock-shell.q-shell-stamp .q-ms-inline {
+  color: var(--ink) !important;
+  -webkit-text-fill-color: var(--ink) !important;
+  -webkit-text-stroke: 2rpx var(--primary-2) !important;
+  text-shadow: 3rpx 4rpx 0 var(--primary) !important;
+  font-family: "Arial Rounded MT Bold", "Yuanti SC", "PingFang SC", sans-serif !important;
+  font-weight: 900 !important;
+  transform: rotate(2.2deg) !important;
+  display: inline-block !important;
+}
+.quick-page .q-clock-shell.q-shell-stamp .q-ms-dot { color: var(--ink) !important; }
+
+/* ---------- 果冻弹跳 jellypop：主色果冻 + 奶白高光带 + 描边 + 轻微弹动 ---------- */
+.timer-page.clock-jellypop .plain-clock,
+.quick-page .q-clock-shell.q-shell-jellypop,
+.settings-page .clock-preview .clock-preview-card.q-shell-jellypop,
+.settings-page .clock-style-card .clock-style-sample.q-shell-jellypop {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+.timer-page.clock-jellypop .plain-num,
+.quick-page .q-clock-shell.q-shell-jellypop .q-plain-num,
+.settings-page .clock-preview .clock-preview-card.q-shell-jellypop .q-plain-num,
+.settings-page .clock-style-card .clock-style-sample.q-shell-jellypop .q-plain-num {
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+  background-image: linear-gradient(168deg, var(--primary) 0%, var(--primary) 36%, rgba(255, 255, 255, .92) 47%, var(--primary) 60%, var(--primary-2) 100%) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-stroke: 2rpx var(--edge) !important;
+  font-family: "Arial Rounded MT Bold", "Yuanti SC", "PingFang SC", "Hiragino Sans GB", sans-serif !important;
+  font-weight: 800 !important;
+  letter-spacing: 1rpx !important;
+  text-shadow: none !important;
+  display: inline-block !important;
+  transform-origin: 50% 100% !important;
+  animation: clk-jellypop 2.8s ease-in-out infinite !important;
+}
+.quick-page .q-clock-shell.q-shell-jellypop .q-ms-inline {
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+  background-image: linear-gradient(168deg, var(--primary) 0%, var(--primary) 36%, rgba(255, 255, 255, .92) 47%, var(--primary) 60%, var(--primary-2) 100%) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-stroke: 1rpx var(--edge) !important;
+  font-family: "Arial Rounded MT Bold", "Yuanti SC", "PingFang SC", sans-serif !important;
+  font-weight: 800 !important;
+  display: inline-block !important;
+  transform-origin: 50% 100% !important;
+  animation: clk-jellypop 2.8s ease-in-out infinite !important;
+}
+.quick-page .q-clock-shell.q-shell-jellypop .q-ms-dot { color: var(--ink) !important; }
+
+@keyframes clk-jellypop {
+  0%, 100% { transform: scale(1, 1); }
+  42% { transform: scale(1.035, .945); }
+  68% { transform: scale(.992, 1.018); }
+}
+
+
+/* ---------- 设置页深色预览卡（--panel 底）里换成浅色墨，否则深字压在深底上看不见 ---------- */
+.settings-page .clock-preview .clock-preview-card.q-shell-doodle .q-plain-num {
+  color: var(--on-panel) !important;
+  -webkit-text-fill-color: var(--on-panel) !important;
+  -webkit-text-stroke: 2rpx var(--on-panel-warm) !important;
+  text-shadow: 3rpx 3rpx 0 var(--primary), -2rpx 3rpx 0 var(--on-panel-warm) !important;
+}
+.settings-page .clock-preview .clock-preview-card.q-shell-stamp .q-plain-num {
+  color: var(--on-panel) !important;
+  -webkit-text-fill-color: var(--on-panel) !important;
+  -webkit-text-stroke: 4rpx var(--on-panel-warm) !important;
+  text-shadow: 6rpx 7rpx 0 var(--primary) !important;
+}
+.settings-page .clock-preview .clock-preview-card.q-shell-jellypop .q-plain-num {
+  -webkit-text-stroke: 2rpx var(--on-panel) !important;
+  background-image: linear-gradient(168deg, var(--on-panel-warm) 0%, var(--on-panel-warm) 36%, rgba(255, 255, 255, .96) 47%, var(--on-panel-warm) 60%, var(--primary-2) 100%) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+}
+
+/* 桌面 / 宽窗口：描边与投影改成 px，别被 rpx 放大成粗黑边 */
+@media (min-width: 700px) {
+  .timer-page.clock-doodle .plain-num {
+    -webkit-text-stroke-width: 1px !important;
+    text-shadow: 2px 2px 0 var(--primary-2), -1px 2px 0 var(--primary) !important;
+  }
+  .timer-page.clock-stamp .plain-num {
+    -webkit-text-stroke-width: 2px !important;
+    text-shadow: 3px 4px 0 var(--primary) !important;
+  }
+  .timer-page.clock-jellypop .plain-num { -webkit-text-stroke-width: 1px !important; }
+}
+.desk.quick-page .q-clock-shell.q-shell-doodle .q-plain-num,
+.desk.settings-page .clock-preview .clock-preview-card.q-shell-doodle .q-plain-num,
+.desk.settings-page .clock-style-card .clock-style-sample.q-shell-doodle .q-plain-num {
+  -webkit-text-stroke-width: 1px !important;
+  text-shadow: 2px 2px 0 var(--primary-2), -1px 2px 0 var(--primary) !important;
+}
+.desk.quick-page .q-clock-shell.q-shell-stamp .q-plain-num,
+.desk.settings-page .clock-preview .clock-preview-card.q-shell-stamp .q-plain-num,
+.desk.settings-page .clock-style-card .clock-style-sample.q-shell-stamp .q-plain-num {
+  -webkit-text-stroke-width: 2px !important;
+  text-shadow: 3px 4px 0 var(--primary) !important;
+}
+.desk.quick-page .q-clock-shell.q-shell-jellypop .q-plain-num,
+.desk.settings-page .clock-preview .clock-preview-card.q-shell-jellypop .q-plain-num,
+.desk.settings-page .clock-style-card .clock-style-sample.q-shell-jellypop .q-plain-num {
+  -webkit-text-stroke-width: 1px !important;
 }

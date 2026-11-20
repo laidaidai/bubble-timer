@@ -12,22 +12,32 @@ Component({
     list: TABS,
     activeColor: '#1F1F1F',
     inactiveColor: '#A6A6AC',
-    tabStyle: ''
+    tabStyle: '',
+    desk: false
   },
 
   lifetimes: {
     attached() {
+      this.syncDesk()
       this.sync()
     }
   },
 
   pageLifetimes: {
     show() {
+      this.syncDesk()
       this.sync()
     }
   },
 
   methods: {
+    // 桌面 / 大屏：底栏尺寸锁在手机档，不跟着窗口一起放大
+    syncDesk() {
+      const app = getApp()
+      const desk = !!(app && app.globalData && app.globalData.isDesktop)
+      if (desk !== this.data.desk) this.setData({ desk })
+    },
+
     sync() {
       const theme = app.getTheme ? app.getTheme() : null
       const swatch = (theme && theme.swatch) || ['#FBF3DF', '#FFC94D', '#4B3A2A']

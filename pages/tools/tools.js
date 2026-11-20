@@ -1,5 +1,5 @@
 const app = getApp()
-const { pad, dateKey } = require('../../utils/format')
+const { pad, dateKey, bindKeyboardHeight } = require('../../utils/format')
 
 const WEEK_LABELS = ['一', '二', '三', '四', '五', '六', '日']
 
@@ -11,8 +11,11 @@ function importantDateText(key) {
 
 Page({
   data: {
-    theme: 'sky',
-    themeStyle: '',
+    // 首帧就按当前设备与主题渲染，避免桌面上先闪一下手机版顶栏 / 默认配色
+    isDesktop: !!(getApp() && getApp().globalData && getApp().globalData.isDesktop),
+    kbVars: '',
+    theme: (getApp() && getApp().getTheme && getApp().getTheme().key) || 'sky',
+    themeStyle: (getApp() && getApp().getThemeStyle && getApp().getThemeStyle()) || '',
     todayPercent: 0,
     todoTodayPending: 0,
     todoPreview: [],
@@ -32,6 +35,9 @@ Page({
   },
 
   onLoad() {
+    // 兜底：万一 utils/format 的灰度/缓存版本没带上这个导出，页面也不该整个挂掉
+    this.unbindKeyboard = typeof bindKeyboardHeight === 'function' ? bindKeyboardHeight(this) : null
+    this.setData({ isDesktop: !!(getApp().globalData && getApp().globalData.isDesktop) })
     const theme = app.getTheme ? app.getTheme() : { key: 'rose' }
     this.setData({ theme: theme.key, themeStyle: theme.style || '' })
     if (app.applyNavBar) app.applyNavBar()
@@ -63,6 +69,10 @@ Page({
   },
 
   onUnload() {
+    if (this.unbindKeyboard) {
+      this.unbindKeyboard()
+      this.unbindKeyboard = null
+    }
     clearTimeout(this.revealTimer)
   },
 
@@ -306,12 +316,62 @@ Page({
     wx.navigateTo({ url: '/pages/stats/stats?tab=overview' })
   },
 
+  // 「训练」直接进计时训练页：首页可以固定成秒表/待办等任意视图，不能再靠首页当入口。
+  // 这里按当前模板里的模块起一局计时，然后走 blank 中转进横屏计时页（和首页开始计时同一链路）。
   openHome() {
-    const settings = app.getSettings ? app.getSettings() : {}
-    if ((settings.homePrimary || 'timer') !== 'timer') {
-      wx.setStorageSync('exam-timer-home-timer', true)
+    const raw = wx.getStorageSync(app.globalData.templateKey)
+    let modules = []
+    try {
+      let currentName = ''
+      let list = []
+      if (raw && Array.isArray(raw.templates)) {
+        list = raw.templates
+        currentName = raw.currentName || ''
+      } else if (Array.isArray(raw)) {
+        list = raw.length && raw[0] && Array.isArray(raw[0].modules) ? raw : [{ name: '常规', modules: raw }]
+      } else if (raw && Array.isArray(raw.modules)) {
+        list = [{ name: raw.name || '常规', modules: raw.modules }]
+      }
+      const chosen = list.find(item => item && item.name === currentName) || list[0]
+      modules = (chosen && chosen.modules) || []
+    } catch (error) {
+      modules = []
     }
-    wx.switchTab({ url: '/pages/index/index' })
+    modules = modules
+      .map(item => ({ ...item, targetMinutes: Number(item.targetMinutes) || 0 }))
+      .filter(item => item.targetMinutes > 0)
+    if (!modules.length) {
+      wx.showToast({ title: '先到首页添加训练模块', icon: 'none' })
+      return
+    }
+    const runtimeModules = modules.map(item => ({
+      ...item,
+      elapsedSeconds: 0,
+      status: item.targetMinutes === 0 ? 'done' : 'pending'
+    }))
+    const firstIndex = runtimeModules.findIndex(item => item.status !== 'done')
+    if (firstIndex === -1) {
+      wx.showToast({ title: '请设置有效的模块时长', icon: 'none' })
+      return
+    }
+    runtimeModules[firstIndex].status = 'current'
+    const settings = app.getSettings ? app.getSettings() : {}
+    const mode = wx.getStorageSync(app.globalData.modeKey) || 'countup'
+    wx.setStorageSync(app.globalData.storageKey, {
+      modules: runtimeModules,
+      startedAt: Date.now(),
+      currentIndex: firstIndex,
+      globalSeconds: 0,
+      moduleSeconds: 0,
+      isPaused: false,
+      mode,
+      totalTargetSeconds: runtimeModules.reduce((sum, item) => sum + (item.targetMinutes || 0) * 60, 0),
+      tickSound: settings.tickSound === true
+    })
+    wx.navigateTo({
+      url: '/pages/blank/blank?mode=enter',
+      fail: () => wx.showToast({ title: '打不开计时页，请重试', icon: 'none' })
+    })
   },
 
   openSettings() {

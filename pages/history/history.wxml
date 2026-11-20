@@ -1,5 +1,5 @@
-<view class="history-page theme-{{theme}} {{historyReveal ? 'reveal' : ''}}" style="{{themeStyle}}">
-  <view class="topbar">
+<view class="history-page theme-{{theme}} {{isDesktop ? 'desk' : ''}} {{historyReveal ? 'reveal' : ''}}" style="{{themeStyle}}">
+  <view class="topbar" wx:if="{{!isDesktop}}">
     <view class="back-icon" bindtap="handleBack" aria-label="返回">‹</view>
     <view class="topbar-title">记录</view>
     <view class="topbar-spacer"></view>

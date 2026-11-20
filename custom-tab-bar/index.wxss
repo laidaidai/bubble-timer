@@ -64,3 +64,21 @@
 .tab-label { font-size: 20rpx; line-height: 1.2; font-weight: 800; }
 
 @keyframes dock-bounce { 0% { transform: scale(.82); } 55% { transform: scale(1.12); } 100% { transform: scale(1); } }
+
+/* ===== 桌面 / 大屏：底栏回到手机尺寸，只占总内容上方一小条 ===== */
+.tabbar.desk-bar { border-top-width: 1px; box-shadow: 0 -2px 8px rgba(31, 31, 31, .05); }
+.tabbar.desk-bar .tabbar-inner { height: 52px; }
+.tabbar.desk-bar .tab-item { gap: 3px; }
+.tabbar.desk-bar .tab-icon-wrap { height: 20px; }
+.tabbar.desk-bar .tab-label { font-size: 11px; }
+.tabbar.desk-bar .icon-home { width: 19px; height: 18px; }
+.tabbar.desk-bar .home-roof { top: 1px; width: 13px; height: 13px; border-left-width: 2px; border-top-width: 2px; border-radius: 2px 0 0 0; }
+.tabbar.desk-bar .home-body { width: 17px; height: 13px; border-width: 2px; border-top-width: 0; border-radius: 0 0 3px 3px; }
+.tabbar.desk-bar .home-door { width: 5px; height: 7px; border-radius: 2px 2px 0 0; }
+.tabbar.desk-bar .icon-tools { width: 18px; height: 18px; gap: 2px; }
+.tabbar.desk-bar .tool-sq { width: 8px; height: 8px; border-width: 1px; border-radius: 2px; }
+.tabbar.desk-bar .icon-records { width: 17px; height: 15px; gap: 2px; }
+.tabbar.desk-bar .rec-line { height: 1px; border-radius: 1px; }
+.tabbar.desk-bar .rec-line.long { width: 17px; }
+.tabbar.desk-bar .rec-line.mid { width: 13px; }
+.tabbar.desk-bar .rec-line.short { width: 9px; }

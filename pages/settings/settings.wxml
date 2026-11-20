@@ -1,5 +1,5 @@
-<view class="settings-page theme-{{theme}}" style="{{themeStyle}}">
-  <view class="topbar">
+<view class="settings-page theme-{{theme}} {{isDesktop ? 'desk' : ''}}" style="{{themeStyle}}">
+  <view class="topbar" wx:if="{{!isDesktop}}">
     <view class="back-icon" bindtap="handleBack" aria-label="返回">‹</view>
     <view class="topbar-title">设置</view>
     <view class="topbar-spacer"></view>
@@ -14,19 +14,12 @@
       </view>
     </scroll-view>
 
-    <view class="pane" wx:if="{{section === 'home'}}">
-      <view class="home-primary-list">
-        <view class="home-primary-item {{homePrimary === item.key ? 'on' : ''}}" wx:for="{{homePrimaryOptions}}" wx:key="key" data-key="{{item.key}}" bindtap="selectHomePrimary">
-          <view class="home-primary-radio"><view class="home-primary-dot"></view></view>
-          <text class="home-primary-name">{{item.name}}</text>
-        </view>
-      </view>
+    <view class="pane {{paneClosing ? 'closing' : ''}}" wx:if="{{section === 'theme' && (sectionOpen || paneClosing)}}">
+      <view class="pane-sub">激励图案</view>
       <view class="opt-grid">
         <view class="opt {{incentiveType === item.key ? 'active' : ''}}" wx:for="{{incentiveOptions}}" wx:key="key" data-key="{{item.key}}" bindtap="setIncentive">{{item.name}}</view>
       </view>
-    </view>
-
-    <view class="pane" wx:if="{{section === 'theme'}}">
+      <view class="pane-sub">主题配色</view>
       <view class="theme-grid">
         <view class="theme-card {{item.active ? 'active' : ''}}" wx:for="{{themes}}" wx:key="key" data-key="{{item.key}}" bindtap="selectTheme" bindlongpress="manageTheme">
           <view class="theme-swatch">
@@ -55,7 +48,7 @@
       </view>
     </view>
 
-    <view class="pane" wx:if="{{section === 'clock'}}">
+    <view class="pane {{paneClosing ? 'closing' : ''}}" wx:if="{{section === 'clock' && (sectionOpen || paneClosing)}}">
       <view class="clock-preview">
         <view class="clock-preview-card q-shell-{{clockStyle}} {{clockPreviewText.length > 5 ? 'q-clock-long' : ''}}">
           <view class="clock-flip-row" wx:if="{{clockStyle === 'flip'}}">
@@ -81,7 +74,7 @@
               <view class="clock-block-tile" wx:else><text class="clock-block-num">{{item.text}}</text></view>
             </block>
           </view>
-          <text class="q-plain-num glow" wx:else>{{clockPreviewText}}</text>
+          <text class="q-plain-num" wx:else>{{clockPreviewText}}</text>
         </view>
       </view>
       <view class="clock-style-list">
@@ -103,7 +96,7 @@
                 <view class="clock-block-tile clock-block-tile-sample" wx:else><text class="clock-block-num">{{digit.text}}</text></view>
               </block>
             </view>
-            <text class="q-plain-num glow" wx:else>{{clockPreviewText}}</text>
+            <text class="q-plain-num" wx:else>{{clockPreviewText}}</text>
           </view>
           <view class="clock-style-text">
             <text class="clock-style-name">{{item.name}}</text>
@@ -113,7 +106,7 @@
       </view>
     </view>
 
-    <view class="pane" wx:if="{{section === 'remind'}}">
+    <view class="pane {{paneClosing ? 'closing' : ''}}" wx:if="{{section === 'remind' && (sectionOpen || paneClosing)}}">
       <view class="row" data-key="tickSound" bindtap="toggleSwitch">
         <view class="row-main">
           <view class="row-name">计时滴答声</view>
@@ -134,7 +127,7 @@
       </view>
     </view>
 
-    <view class="pane" wx:if="{{section === 'guard'}}">
+    <view class="pane {{paneClosing ? 'closing' : ''}}" wx:if="{{section === 'guard' && (sectionOpen || paneClosing)}}">
       <view class="row" data-key="keepScreenOn" bindtap="toggleSwitch">
         <view class="row-main">
           <view class="row-name">保持屏幕常亮</view>
@@ -155,7 +148,7 @@
       </view>
     </view>
 
-    <view class="pane" wx:if="{{section === 'habit'}}">
+    <view class="pane {{paneClosing ? 'closing' : ''}}" wx:if="{{section === 'habit' && (sectionOpen || paneClosing)}}">
       <view class="pane-sub">已启用 {{selectedCount}}/{{presetLimit}}</view>
       <view class="habit-grid">
         <view class="habit-tile {{item.checked ? 'checked' : ''}}" wx:for="{{presetView}}" wx:key="key" data-key="{{item.key}}" bindtap="togglePreset">
@@ -166,7 +159,7 @@
       <view class="pane-more" wx:if="{{habitPresets.length > 4}}" bindtap="toggleExpand">{{presetExpanded ? '收起' : '全部 ' + habitPresets.length + ' 个'}}</view>
     </view>
 
-    <view class="pane" wx:if="{{section === 'privacy'}}">
+    <view class="pane {{paneClosing ? 'closing' : ''}}" wx:if="{{section === 'privacy' && (sectionOpen || paneClosing)}}">
       <view class="row" data-key="privacyAlbum" bindtap="toggleSwitch">
         <view class="row-main">
           <view class="row-name">保存图片到相册</view>

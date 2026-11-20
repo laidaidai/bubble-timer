@@ -109,3 +109,83 @@ page { background: var(--bg); }
 .poster-panel { position: relative; overflow: hidden; border-radius: 26rpx; }
 .poster-panel::after { content: ""; position: absolute; top: -20%; bottom: -20%; left: -30%; width: 22%; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .30), transparent); transform: rotate(14deg); animation: stats-poster-shine 1.2s .3s ease-out both; pointer-events: none; }
 @keyframes stats-poster-shine { from { transform: translateX(0) rotate(14deg); } to { transform: translateX(700%) rotate(14deg); } }
+
+/* ===== 桌面 / 大屏：打卡页整页 px 化 =====
+   页面原本只有 rpx，1700px 窗口下 1rpx≈2.3px：标题、卡片、间距全被放大成巨块，
+   而成绩趋势画布只按 300×150 的逻辑坐标绘制，于是出现「大卡片里一个迷你图表」。
+   这里把文字/卡片/间距收到手机档物理尺寸，画布交给 JS 按实际尺寸等比缩放。 */
+.desk.stats-page .stats-body { padding: 16px 24px 72px; }
+
+.desk.stats-page .panel {
+  max-width: 1040px;
+  margin: 16px auto 0;
+  padding: 18px 22px;
+  border-width: 1px;
+  border-radius: 16px;
+  box-shadow: 3px 4px 0 var(--shadow-soft);
+}
+
+.desk.stats-page .panel-head { gap: 10px; }
+.desk.stats-page .panel-title { font-size: 20px; }
+
+/* 打卡海报：不按 1040 铺满，定一个舒服的宽度居中 */
+.desk.stats-page .poster-panel { padding: 14px; }
+.desk.stats-page .poster-image {
+  max-width: 560px;
+  margin: 0 auto;
+  border-width: 1px;
+  border-radius: 16px;
+  box-shadow: 3px 4px 0 var(--shadow-soft);
+}
+.desk.stats-page .poster-loading { height: 420px; }
+.desk.stats-page .poster-loading-ring { width: 54px; height: 54px; }
+.desk.stats-page .poster-loading-core { width: 16px; height: 16px; }
+
+/* 弱项追踪 */
+.desk.stats-page .weak-list { margin-top: 10px; }
+.desk.stats-page .weak-row { gap: 8px; padding: 6px 0; }
+.desk.stats-page .weak-rank {
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  margin-top: 2px;
+  border-width: 1px;
+  font-size: 12px;
+}
+.desk.stats-page .weak-top { gap: 8px; }
+.desk.stats-page .weak-name { font-size: 13px; }
+.desk.stats-page .weak-pct { font-size: 13px; }
+.desk.stats-page .weak-track {
+  margin-top: 7px;
+  height: 14px;
+  border-width: 1px;
+  border-radius: 8px 6px 9px 6px;
+  box-shadow: 2px 3px 0 var(--shadow-soft);
+}
+.desk.stats-page .weak-fill { border-right-width: 1px; border-radius: 6px 4px 8px 5px; }
+.desk.stats-page .weak-fill::after {
+  background-image: repeating-linear-gradient(112deg, rgba(255, 255, 255, .24) 0, rgba(255, 255, 255, .24) 2px, rgba(255, 255, 255, 0) 2px, rgba(255, 255, 255, 0) 6px);
+}
+.desk.stats-page .weak-knob {
+  width: 18px;
+  height: 18px;
+  border-width: 1px;
+  box-shadow: 2px 3px 0 var(--shadow-soft);
+}
+.desk.stats-page .weak-knob::after { top: 3px; left: 4px; width: 5px; height: 5px; }
+.desk.stats-page .weak-sub { margin-top: 4px; font-size: 11px; }
+
+/* 成绩趋势：画布跟着卡片宽度走（2:1），JS 会按量到的实际尺寸等比缩放居中 */
+.desk.stats-page .trend-legend { margin: 8px 0 2px; gap: 6px 14px; }
+.desk.stats-page .trend-key { gap: 6px; }
+.desk.stats-page .trend-dot { width: 11px; height: 11px; border-width: 1px; }
+.desk.stats-page .trend-name { font-size: 12px; }
+.desk.stats-page .trend-last { font-size: 12px; }
+.desk.stats-page .trend-canvas {
+  width: 100%;
+  height: 380px;
+  aspect-ratio: 2 / 1;
+  margin-top: 6px;
+}
+
+.desk.stats-page .stats-tip { max-width: 1040px; margin: 16px auto 0; font-size: 11px; }

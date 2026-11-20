@@ -24,9 +24,12 @@ const buildPreviewCells = (text, previous = '') => {
 }
 
 // 设置页预览显示真实本地时间，不再做假倒计时
+// 预览文本与计时页保持同格式：时:分:秒 三段，避免「预览两段、实际三段」的观感差异
 const nowClockText = () => {
   const now = new Date()
-  return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+  return [now.getHours(), now.getMinutes(), now.getSeconds()]
+    .map(n => String(n).padStart(2, '0'))
+    .join(':')
 }
 
 const buildGroups = (conf) => {
@@ -40,9 +43,11 @@ const buildGroups = (conf) => {
 
 Page({
   data: {
-    theme: 'sky',
+    // 首帧就按当前设备与主题渲染，避免桌面上先闪一下手机版顶栏 / 默认配色
+    isDesktop: !!(getApp() && getApp().globalData && getApp().globalData.isDesktop),
+    theme: (getApp() && getApp().getTheme && getApp().getTheme().key) || 'sky',
     themeName: '晴空苏打',
-    themeStyle: '',
+    themeStyle: (getApp() && getApp().getThemeStyle && getApp().getThemeStyle()) || '',
     themes: [],
     rings: [],
     soundModes: SOUND_MODES,
@@ -54,16 +59,6 @@ Page({
     privacyAlbum: true,
     privacyCalendar: true,
     tickSound: false,
-    homePrimary: 'timer',
-    homePrimaryOptions: [
-      { key: 'timer', name: '训练计时' },
-      { key: 'quick-stopwatch', name: '秒表' },
-      { key: 'quick-countdown', name: '计时器' },
-      { key: 'quick-pomodoro', name: '番茄钟' },
-      { key: 'todo', name: '待办' },
-      { key: 'important', name: '重要日子' },
-      { key: 'stats', name: '打卡' }
-    ],
     incentiveType: 'tomato',
     incentiveOptions: [
       { key: 'tomato', name: '番茄' },
@@ -78,9 +73,10 @@ Page({
     selectedKeys: [],
     selectedCount: 0,
     section: 'theme',
+    sectionOpen: true,
+    paneClosing: false,
     sections: [
       { key: 'theme', name: '主题' },
-      { key: 'home', name: '首页' },
       { key: 'clock', name: '时钟' },
       { key: 'remind', name: '提醒' },
       { key: 'guard', name: '专注' },
@@ -104,6 +100,7 @@ Page({
   },
 
   onLoad() {
+    this.setData({ isDesktop: !!(getApp().globalData && getApp().globalData.isDesktop) })
     this.refresh()
     this.loadHabit()
     if (app.applyNavBar) app.applyNavBar()
@@ -115,6 +112,7 @@ Page({
   },
 
   onUnload() {
+    clearTimeout(this.paneTimer)
     if (this.clockPreviewTimer) clearInterval(this.clockPreviewTimer)
   },
 
@@ -167,7 +165,6 @@ Page({
       tickSound: settings.tickSound === true,
       privacyAlbum: settings.privacyAlbum !== false,
       privacyCalendar: settings.privacyCalendar !== false,
-      homePrimary: settings.homePrimary === 'quick' ? 'quick-stopwatch' : (settings.homePrimary || 'timer'),
       incentiveType: settings.incentiveType || 'tomato',
       hasCustomRing: (app.getRings ? app.getRings() : []).some(item => String(item.key).indexOf('cr-') === 0 || item.key === 'custom')
     }
@@ -501,15 +498,6 @@ Page({
     })
   },
 
-  selectHomePrimary(event) {
-    const key = event.currentTarget.dataset.key
-    if (!key) return
-    app.saveSettings({ homePrimary: key })
-    this.refresh()
-    if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
-    wx.showToast({ title: '已设为首页', icon: 'none', duration: 1000 })
-  },
-
   setIncentive(event) {
     const key = event.currentTarget.dataset.key
     if (!key) return
@@ -521,7 +509,20 @@ Page({
   selectSection(event) {
     const key = event.currentTarget.dataset.key
     if (!key) return
-    this.setData({ section: key })
+    clearTimeout(this.paneTimer)
+    // 点当前这一项：二级菜单收起来；已经是收起的，就再展开
+    if (key === this.data.section) {
+      if (this.data.sectionOpen) {
+        this.setData({ paneClosing: true })
+        this.paneTimer = setTimeout(() => this.setData({ sectionOpen: false, paneClosing: false }), 210)
+      } else {
+        this.setData({ sectionOpen: true, paneClosing: false })
+      }
+      if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
+      return
+    }
+    // 换到别的分区：先落位再播展开动画
+    this.setData({ section: key, sectionOpen: true, paneClosing: false })
     if (key === 'clock') this.updateClockPreview(true)
     if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
   },

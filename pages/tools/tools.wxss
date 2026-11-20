@@ -9,7 +9,7 @@
 .quick-feature-copy { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8rpx; }
 .quick-feature-title { color: var(--ink); font-size: 31rpx; font-weight: 900; line-height: 1.15; }
 .quick-feature-modes { display: flex; flex-wrap: wrap; gap: 6rpx; }
-.quick-feature-modes text { display: inline-flex; align-items: center; padding: 3rpx 10rpx; color: var(--text-warm); background: var(--cream-2); border: 1rpx solid var(--line-strong); border-radius: 999rpx; font-size: 17rpx; font-weight: 800; line-height: 1.2; }
+.quick-feature-modes .qf-mode { display: inline-flex; align-items: center; padding: 3rpx 10rpx; color: var(--text-warm); background: var(--cream-2); border: 1rpx solid var(--line-strong); border-radius: 999rpx; font-size: 17rpx; font-weight: 800; line-height: 1.2; }
 .quick-feature-arrow { flex: 0 0 auto; color: var(--ink); font-size: 36rpx; font-weight: 900; line-height: 1; }
 
 .tool-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10rpx; margin-bottom: 10rpx; }
@@ -269,3 +269,127 @@
   margin: 0;
   z-index: 40;
 }
+
+/* ===== 桌面 / 大屏：工具页按手机档物理尺寸渲染，避免 rpx 被窗口等比放大 ===== */
+/* 底部内距要避开左下角悬浮球（它落在这块内容区上方），否则最后一张卡被压住 */
+.desk .tools-body .page-content { padding: 9px 11px 72px; }
+.desk .quick-feature {
+  margin: 2px 0 8px;
+  padding: 11px 11px 11px 10px;
+  gap: 9px;
+  border-width: 1px;
+  border-radius: 15px;
+  box-shadow: 3px 4px 0 var(--shadow);
+}
+.desk .quick-feature-icon { flex: 0 0 49px; width: 49px; height: 49px; border-width: 1px; border-radius: 12px; box-shadow: 2px 2px 0 var(--shadow-soft); }
+.desk .quick-feature-copy { gap: 4px; }
+.desk .quick-feature-title { font-size: 17px; }
+.desk .quick-feature-modes .qf-mode { padding: 2px 6px; border-width: 1px; font-size: 10px; }
+.desk .quick-feature-arrow { font-size: 20px; }
+
+.desk .tool-tile {
+  min-height: 63px;
+  padding: 9px 9px 9px 8px;
+  gap: 6px;
+  border-width: 1px;
+  border-radius: 11px;
+  box-shadow: 2px 3px 0 var(--shadow-soft);
+}
+.desk .tool-tile-icon { flex: 0 0 29px; width: 29px; height: 29px; }
+.desk .tool-tile-label { font-size: 13px; }
+.desk .tool-tile-badge { top: -5px; right: -4px; min-width: 13px; height: 13px; padding: 0 4px; border-width: 1px; font-size: 9px; }
+
+.desk .settings-entry { width: 54px; height: 54px; margin: 9px 0 0 auto; border-width: 1px; box-shadow: 2px 3px 0 var(--shadow-soft); }
+/* 桌面下 28rpx / 126rpx 会被窗口放大成 63px / 286px，齿轮浮在半空、离底栏很远；
+ * 这里钉成 px：贴屏幕右边 24px、浮在自定义底栏（52px + 安全区）上方 14px，
+ * 与左下角悬浮球的基线齐平，内容列限宽时也不会被挤到列内。 */
+.desk.tools-page .settings-entry {
+  right: 24px;
+  bottom: calc(52px + env(safe-area-inset-bottom) + 14px);
+  margin: 0;
+}
+.desk .settings-entry-icon { width: 29px; height: 29px; }
+
+/* 图标按手机档重绘 */
+.desk .glyph-clock { width: 24px; height: 24px; border-width: 1px; }
+.desk .glyph-clock::before { left: 10px; top: 5px; width: 1px; height: 7px; border-radius: 1px; }
+.desk .glyph-clock::after { left: 11px; top: 11px; width: 6px; height: 1px; border-radius: 1px; transform-origin: left center; transform: rotate(32deg); }
+.desk .glyph-stopwatch { width: 24px; height: 24px; margin-top: 2px; border-width: 1px; }
+.desk .stopwatch-crown { top: -5px; width: 10px; height: 3px; border-width: 1px; border-bottom: 0; border-radius: 2px 2px 0 0; }
+.desk .stopwatch-hand { top: 5px; width: 1px; height: 7px; border-radius: 1px; transform-origin: bottom center; transform: translateX(-50%) rotate(38deg); }
+.desk .glyph-todo { width: 21px; height: 24px; border-width: 1px; border-radius: 6px; }
+.desk .todo-check { left: 3px; top: 8px; width: 5px; height: 6px; border-right-width: 2px; border-bottom-width: 2px; transform: rotate(45deg); }
+.desk .todo-line { left: 12px; width: 7px; height: 1px; border-radius: 1px; }
+.desk .todo-line.l1 { top: 6px; }
+.desk .todo-line.l2 { top: 11px; }
+.desk .todo-line.l3 { top: 16px; }
+.desk .glyph-calendar { width: 22px; height: 21px; margin-top: 2px; border-width: 1px; border-radius: 5px; }
+.desk .cal-top { top: 5px; height: 1px; }
+.desk .cal-ring { top: -2px; width: 2px; height: 4px; border-radius: 1px; }
+.desk .glyph-chart { width: 22px; height: 22px; padding: 0 1px; gap: 3px; }
+.desk .chart-bar { border-radius: 2px 2px 0 0; }
+.desk .chart-bar.b1 { height: 11px; }
+.desk .chart-bar.b2 { height: 17px; }
+.desk .chart-bar.b3 { height: 21px; }
+.desk .gear-entry { flex: 0 0 39px; width: 39px; height: 33px; }
+.desk .di-gear { width: 22px; height: 22px; }
+.desk .di-gear .gear-ring { width: 15px; height: 15px; margin: -7.5px 0 0 -7.5px; border-width: 3px; }
+.desk .di-gear .gear-tooth { width: 4px; height: 5px; margin: -2.5px 0 0 -2px; border-radius: 1px; }
+.desk .di-gear .t1 { transform: rotate(0deg) translateY(-8px); }
+.desk .di-gear .t2 { transform: rotate(45deg) translateY(-8px); }
+.desk .di-gear .t3 { transform: rotate(90deg) translateY(-8px); }
+.desk .di-gear .t4 { transform: rotate(135deg) translateY(-8px); }
+.desk .di-gear .t5 { transform: rotate(180deg) translateY(-8px); }
+.desk .di-gear .t6 { transform: rotate(225deg) translateY(-8px); }
+.desk .di-gear .t7 { transform: rotate(270deg) translateY(-8px); }
+.desk .di-gear .t8 { transform: rotate(315deg) translateY(-8px); }
+
+/* 待办 / 数据卡 */
+.desk .todo-summary { margin-top: 8px; gap: 6px; }
+.desk .todo-sum-item { flex: 0 0 59px; padding: 6px 7px; gap: 1px; border-radius: 8px; }
+.desk .todo-sum-num { font-size: 18px; }
+.desk .todo-sum-label { font-size: 10px; }
+.desk .todo-next { padding: 6px 7px; gap: 2px; border-width: 1px; border-radius: 8px; }
+.desk .todo-next-label { font-size: 10px; }
+.desk .todo-next-text { font-size: 11px; }
+.desk .todo-next-time { font-size: 10px; }
+.desk .todo-preview { margin-top: 8px; gap: 5px; }
+.desk .todo-preview-text { font-size: 13px; }
+.desk .todo-preview-time { font-size: 11px; }
+/* 重要日子预览卡 + 日历弹窗 */
+.desk .important-grid { margin-top: 8px; gap: 6px; }
+.desk .important-tool-item { min-height: 47px; padding: 8px 9px; gap: 6px; border-width: 1px; border-radius: 8px; }
+.desk .important-grid.count-3 .important-tool-item { padding: 7px 6px; }
+.desk .important-tool-line { gap: 4px; }
+.desk .important-tool-dot { flex: 0 0 8px; width: 8px; height: 8px; border-width: 1px; }
+.desk .important-tool-name { font-size: 13px; }
+.desk .important-grid.count-3 .important-tool-name { font-size: 12px; }
+.desk .important-tool-num { font-size: 11px; }
+.desk .important-grid.count-3 .important-tool-num { font-size: 10px; }
+.desk .important-tool-unit { font-size: 10px; }
+.desk .important-grid.count-3 .important-tool-unit { font-size: 9px; }
+.desk .important-tool-yearly { padding: 1px 3px; font-size: 10px; }
+.desk .important-tool-date { font-size: 10px; }
+.desk .important-tool-count { gap: 2px; }
+.desk .important-tool-empty { margin-top: 8px; padding: 10px; gap: 2px; border-width: 1px; border-radius: 9px; }
+.desk .important-tool-empty-main { font-size: 12px; }
+.desk .important-tool-empty-sub { font-size: 10px; }
+
+.desk .important-modal { max-height: 76vh; }
+.desk .important-form-row { margin-top: 8px; gap: 6px; }
+.desk .important-date-btn { padding: 7px 10px; border-width: 1px; border-radius: 9px; }
+.desk .important-date-label { font-size: 10px; }
+.desk .important-date-value { margin-top: 2px; font-size: 13px; }
+.desk .important-yearly { flex: 0 0 84px; padding: 0 6px; border-width: 1px; border-radius: 9px; font-size: 11px; }
+.desk .important-calendar { margin-top: 7px; padding: 7px; border-width: 1px; border-radius: 10px; }
+.desk .important-cal-nav { width: 29px; font-size: 16px; }
+.desk .important-cal-title { font-size: 12px; }
+.desk .important-cal-weekdays { margin-top: 4px; gap: 3px; }
+.desk .important-cal-weekday { font-size: 10px; }
+.desk .important-cal-row { margin-top: 3px; gap: 3px; }
+.desk .important-cal-cell { height: 27px; border-width: 1px; border-radius: 6px; font-size: 11px; }
+
+/* 待办预览行 */
+.desk .todo-preview-row { min-height: 47px; padding: 8px 9px; gap: 6px; border-width: 1px; border-radius: 8px; }
+.desk .todo-preview.count-3 .todo-preview-row { padding: 7px 6px; }
+.desk .todo-preview-dot { flex: 0 0 8px; width: 8px; height: 8px; border-width: 1px; }

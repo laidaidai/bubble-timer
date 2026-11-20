@@ -9,14 +9,6 @@
 .seg.on { color: var(--on-primary); background: var(--primary); box-shadow: 5rpx 5rpx 0 var(--shadow); }
 
 .pane { margin-top: 26rpx; }
-.home-primary-list { display: flex; flex-direction: column; gap: 14rpx; }
-.home-primary-item { display: flex; align-items: center; gap: 16rpx; padding: 24rpx; background: var(--card); border: 2rpx solid var(--edge); border-radius: 22rpx; box-shadow: 4rpx 5rpx 0 var(--shadow-soft); }
-.home-primary-item.on { background: var(--cream-2); border-width: 3rpx; }
-.home-primary-radio { flex: 0 0 36rpx; width: 36rpx; height: 36rpx; display: flex; align-items: center; justify-content: center; background: var(--cream-1); border: 2rpx solid var(--line-strong); border-radius: 50%; }
-.home-primary-dot { width: 20rpx; height: 20rpx; background: var(--primary); border-radius: 50%; transform: scale(0); transition: transform .15s ease; }
-.home-primary-item.on .home-primary-radio { border-color: var(--edge); }
-.home-primary-item.on .home-primary-dot { transform: scale(1); }
-.home-primary-name { color: var(--ink); font-size: 27rpx; font-weight: 900; }
 .pane-tip, .pane-sub { margin-bottom: 16rpx; color: var(--text-warm); font-size: 22rpx; font-weight: 700; }
 .pane-more { margin-top: 20rpx; padding: 18rpx; color: var(--text-mid); text-align: center; background: var(--cream-1); border: 2rpx solid var(--edge); border-radius: 999rpx; font-size: 22rpx; font-weight: 800; }
 
@@ -85,7 +77,20 @@
 
 /* 时钟样式：预览 + 列表 */
 .clock-preview { display: flex; flex-direction: column; align-items: center; gap: 16rpx; padding: 34rpx 24rpx; background: var(--card); border: 2rpx solid var(--edge); border-radius: 26rpx; box-shadow: 5rpx 5rpx 0 var(--shadow-soft); }
-.clock-preview-card { padding: 12rpx 30rpx; background: var(--panel); border: 2rpx solid var(--edge-deep); border-radius: 22rpx; box-shadow: 5rpx 6rpx 0 var(--shadow-soft); }
+/* 预览卡高度固定：翻页牌 116rpx、积木 60rpx、数字 97rpx，各不相同；
+   不固定的话在设置页换皮肤时整块面板会跟着上下跳 */
+.clock-preview-card {
+  box-sizing: border-box;
+  min-height: 152rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12rpx 30rpx;
+  background: var(--panel);
+  border: 2rpx solid var(--edge-deep);
+  border-radius: 22rpx;
+  box-shadow: 5rpx 6rpx 0 var(--shadow-soft);
+}
 .clock-preview-card .q-plain-num { font-family: "Courier New", Menlo, monospace; font-size: 88rpx; font-weight: 900; line-height: 1.1; letter-spacing: 2rpx; color: var(--on-panel-warm); text-shadow: 0 0 14rpx rgba(255, 209, 102, .55); }
 .clock-preview-hint { color: var(--text-mid); font-size: 22rpx; font-weight: 800; }
 .clock-style-list { margin-top: 18rpx; display: grid; grid-template-columns: 1fr 1fr; gap: 14rpx; }
@@ -98,15 +103,12 @@
 .clock-style-desc { color: var(--text-2); font-size: 20rpx; font-weight: 700; }
 .clock-style-radio { position: absolute; top: 10rpx; right: 10rpx; width: 32rpx; height: 32rpx; color: var(--on-primary); background: var(--primary); border: 2rpx solid var(--edge); border-radius: 50%; font-size: 18rpx; font-weight: 900; line-height: 32rpx; text-align: center; }
 
-/* 时钟样式预览：霓虹 / 描边 / 极简 */
-.q-shell-neon { background: var(--ink); border-color: transparent; box-shadow: 0 0 22rpx rgba(255, 60, 172, .35), inset 0 0 26rpx rgba(80, 220, 255, .16); }
-.q-shell-neon .q-plain-num { color: #FFE9F4; text-shadow: 0 0 6rpx #FF3CAC, 0 0 18rpx #FF3CAC, 0 0 36rpx rgba(80, 220, 255, .75); letter-spacing: 3rpx; }
-.q-shell-outline { background: transparent; border: 4rpx solid var(--ink); box-shadow: none; }
-.q-shell-outline .q-plain-num { color: transparent; -webkit-text-stroke: 3rpx var(--ink); text-shadow: none; letter-spacing: 3rpx; }
+/* 时钟样式预览：荧光划线 / 描边空心 / 细体留白 —— 一律无框，外观取自 styles/clocks.wxss */
+.q-shell-neon,
+.q-shell-outline,
 .q-shell-minimal { background: transparent; border: 0; box-shadow: none; }
-.q-shell-minimal .q-plain-num { font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif; font-weight: 200; color: var(--ink); text-shadow: none; letter-spacing: 4rpx; }
-.q-shell-digital { background: transparent; border: 0; box-shadow: none; }
-.q-shell-digital .q-plain-num { background: transparent; color: var(--accent-text); text-shadow: none; }
+.q-shell-gradient { background: transparent; border: 0; box-shadow: none; }
+.q-shell-gradient .q-plain-num { background: transparent; color: var(--accent-text); text-shadow: none; }
 .q-shell-flip { background: var(--cream-2); }
 .q-shell-flip .q-plain-num { color: var(--ink); text-shadow: none; background: var(--panel); padding: 4rpx 12rpx; border-radius: 8rpx; box-shadow: 3rpx 3rpx 0 var(--shadow-soft); }
 
@@ -154,7 +156,7 @@
 
 /* 动效：分区切换与卡片轻量浮现 */
 .seg.on { animation: app-pop-in .26s ease-out both; }
-.theme-card, .clock-style-card, .home-primary-item, .opt, .ring-pill, .habit-tile { animation: app-rise-in .32s cubic-bezier(.2, .8, .3, 1) backwards; }
+.theme-card, .clock-style-card, .opt, .ring-pill, .habit-tile { animation: app-rise-in .32s cubic-bezier(.2, .8, .3, 1) backwards; }
 
 /* 积木方块 / LED：与计时页、快捷计时共用同一套样式目录 */
 .q-shell-blocks { background: var(--cream-2); }
@@ -206,8 +208,8 @@
 .ring-note { margin-right: 4rpx; font-size: 18rpx; }
 
 /* 数字时钟：样式列表卡片内用深色字，主预览在深色底上用白色字 */
-.clock-style-sample.q-shell-digital .q-plain-num { color: var(--ink); text-shadow: none; }
-.clock-preview-card.q-shell-digital .q-plain-num { color: var(--on-panel); text-shadow: 0 0 10rpx rgba(255,255,255,.18); }
+.clock-style-sample.q-shell-gradient .q-plain-num { color: var(--ink); text-shadow: none; }
+.clock-preview-card.q-shell-gradient .q-plain-num { color: var(--on-panel); text-shadow: 0 0 10rpx rgba(255,255,255,.18); }
 
 /* ===== 时钟样式调整：翻页/积木去背景，数字/极简加框，极简手写，新增果冻 ===== */
 /* 翻页：去掉数字卡片背景、描边、阴影和分页线 */
@@ -250,46 +252,25 @@
 }
 
 /* 数字时钟：加框，深色面板 + 清楚轮廓 */
-.q-shell-digital {
+.q-shell-gradient {
   background: transparent;
   border: 3rpx solid var(--edge);
   border-radius: 16rpx;
   box-shadow: none;
 }
-.clock-preview-card.q-shell-digital {
+.clock-preview-card.q-shell-gradient {
   background: var(--panel);
   border: 3rpx solid var(--edge-deep);
 }
-.clock-style-sample.q-shell-digital {
+.clock-style-sample.q-shell-gradient {
   background: var(--card);
   border: 3rpx solid var(--edge-deep);
 }
-.clock-style-sample.q-shell-digital .q-plain-num { color: var(--ink); }
-.clock-preview-card.q-shell-digital .q-plain-num { color: var(--on-panel); }
+.clock-style-sample.q-shell-gradient .q-plain-num { color: var(--ink); }
+.clock-preview-card.q-shell-gradient .q-plain-num { color: var(--on-panel); }
 
-/* 极简：手写体 + 细框 */
-.q-shell-minimal {
-  background: transparent;
-  border: 3rpx solid var(--ink);
-  border-radius: 16rpx;
-  box-shadow: none;
-  padding: 8rpx 18rpx;
-}
-.q-shell-minimal .q-plain-num {
-  font-family: "Arial Rounded MT Bold", "Yuanti SC", "YouYuan", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-  font-weight: 500;
-  color: var(--ink);
-  letter-spacing: 2rpx;
-  text-shadow: none;
-}
-.clock-preview-card.q-shell-minimal {
-  background: var(--card);
-  border: 3rpx solid var(--ink);
-}
-.clock-style-sample.q-shell-minimal {
-  background: var(--card);
-  border: 3rpx solid var(--ink);
-}
+/* 细体留白：无框，只留内边距 */
+.q-shell-minimal { padding: 8rpx 18rpx; }
 
 /* 新增果冻叠影：糖果色填充 + 深色描边 + 错位投影 */
 .q-shell-jelly { background: transparent; border: 0; box-shadow: none; }
@@ -309,19 +290,19 @@
 }
 
 /* 数字时钟预览与计时页保持一致：深色面板 + 白字 + 外框 */
-.clock-preview-card.q-shell-digital {
+.clock-preview-card.q-shell-gradient {
   background: var(--panel, #1E3A52);
   border: 3rpx solid var(--edge-deep, #132838);
 }
-.clock-preview-card.q-shell-digital .q-plain-num {
+.clock-preview-card.q-shell-gradient .q-plain-num {
   color: var(--on-panel, #F2FAFF);
   text-shadow: 0 0 10rpx rgba(255, 255, 255, .18);
 }
-.clock-style-sample.q-shell-digital {
+.clock-style-sample.q-shell-gradient {
   background: var(--panel, #1E3A52);
   border: 3rpx solid var(--edge-deep, #132838);
 }
-.clock-style-sample.q-shell-digital .q-plain-num {
+.clock-style-sample.q-shell-gradient .q-plain-num {
   color: var(--on-panel, #F2FAFF);
   text-shadow: 0 0 10rpx rgba(255, 255, 255, .18);
 }
@@ -443,13 +424,253 @@
 .q-shell-flip .q-flip-flap,
 .q-shell-flip .q-flip-flap-face { background: var(--clk-face); }
 .q-shell-flip .q-flip-split { background: var(--clk-line); }
-.q-shell-digital .q-plain-num { color: var(--clk-ink); }
+.q-shell-gradient .q-plain-num { color: var(--clk-ink); }
 .q-shell-neon .q-plain-num { color: var(--clk-ink); }
 .q-shell-outline .q-plain-num { -webkit-text-stroke-color: var(--clk-ink); }
 .q-shell-minimal .q-plain-num { color: var(--clk-ink); }
 .q-shell-blocks .q-plain-num { color: var(--clk-ink); }
 .q-shell-led .q-plain-num { color: var(--clk-ink); }
 .q-shell-jelly .q-plain-num { color: var(--clk-ink); }
-.clock-style-sample.q-shell-digital .q-plain-num,
+.clock-style-sample.q-shell-gradient .q-plain-num,
 .clock-style-sample.q-shell-neon .q-plain-num,
 .clock-style-sample.q-shell-minimal .q-plain-num { color: var(--clk-ink); }
+
+/* ===== 8 张样式预览卡与计时页对齐：补回各样式真实的面板 / 边框 / 底色 ===== */
+.clock-style-sample.q-shell-neon {
+  background: var(--ink) !important;
+  border: 2rpx solid var(--ink) !important;
+  box-shadow: 0 0 18rpx rgba(255, 60, 172, .35) !important;
+}
+.clock-style-sample.q-shell-outline {
+  background: transparent !important;
+  border: 4rpx solid var(--ink) !important;
+  box-shadow: none !important;
+}
+.clock-style-sample.q-shell-minimal {
+  background: transparent !important;
+  border: 3rpx solid var(--ink) !important;
+  box-shadow: none !important;
+}
+.clock-style-sample.q-shell-flip,
+.clock-style-sample.q-shell-blocks,
+.clock-style-sample.q-shell-gradient,
+.clock-style-sample.q-shell-sticker,
+.clock-style-sample.q-shell-jelly {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+/* 预览改成三段 00:00:00 后，翻页/积木的小牌收窄一档，保证 8 格塞得进卡片不溢出 */
+.clock-flip-card-sample { width: 32rpx; flex-basis: 32rpx; height: 58rpx; }
+.clock-flip-card-sample .clock-flip-num { font-size: 26rpx; line-height: 58rpx; }
+.clock-flip-colon-sample { font-size: 20rpx; padding: 0; }
+.clock-flip-row-sample { gap: 2rpx; }
+.clock-block-tile-sample { width: 32rpx; height: 58rpx; }
+.clock-block-tile-sample .clock-block-num { font-size: 22rpx; }
+.clock-block-colon-sample { font-size: 20rpx; }
+.clock-style-sample .q-plain-num { font-size: 46rpx; letter-spacing: 0; }
+
+/* ===== 预览框固定尺寸：不随选中样式变高变宽，内容统一缩放并裁在框内 ===== */
+.clock-preview-card {
+  width: 100% !important;
+  height: 220rpx !important;
+  box-sizing: border-box !important;
+  padding: 0 26rpx !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+}
+.clock-preview-card .q-plain-num { font-size: 96rpx !important; letter-spacing: 0 !important; white-space: nowrap !important; }
+.clock-style-sample {
+  width: 100% !important;
+  height: 124rpx !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+.clock-style-sample .q-plain-num { font-size: 46rpx !important; letter-spacing: 0 !important; white-space: nowrap !important; }
+
+/* 顶部大预览与列表小卡用同一套底色/边框规则，避免同一个样式两处长得不一样 */
+.clock-preview-card.q-shell-neon {
+  background: var(--ink) !important;
+  border: 2rpx solid var(--ink) !important;
+  box-shadow: 0 0 22rpx rgba(255, 60, 172, .35) !important;
+}
+.clock-preview-card.q-shell-outline {
+  background: transparent !important;
+  border: 4rpx solid var(--ink) !important;
+  box-shadow: none !important;
+}
+.clock-preview-card.q-shell-minimal {
+  background: transparent !important;
+  border: 3rpx solid var(--ink) !important;
+  box-shadow: none !important;
+}
+.clock-preview-card.q-shell-flip,
+.clock-preview-card.q-shell-blocks,
+.clock-preview-card.q-shell-gradient,
+.clock-preview-card.q-shell-sticker,
+.clock-preview-card.q-shell-jelly {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+/* ===== 分区二级菜单：点击展开 / 再点收起的动画 ===== */
+.pane { animation: pane-drop .3s cubic-bezier(.22, .78, .26, 1) both; }
+.pane.closing { animation: pane-rise .2s ease both; }
+@keyframes pane-drop {
+  from { opacity: 0; transform: translateY(-18rpx); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pane-rise {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-14rpx); }
+}
+
+/* ===== 桌面 / 大屏：设置页 =====
+ * 主体（时钟预览、8 张样式小卡、主题色卡）按屏幕适度放大；
+ * 分段胶囊、开关、选项、铃声胶囊、色点、输入框、底部按钮这些控件保持手机档，只做边距与列数调整。
+ */
+/* 底部内距避开左下角悬浮球 */
+.desk .settings-body { max-width: 960px; margin: 0 auto; padding: 20px 24px 72px; }
+
+/* 分段切换（控件，不放大） */
+.desk .seg-bar { gap: 6px; padding-bottom: 4px; }
+.desk .seg { padding: 10px 18px; border-width: 1px; border-radius: 999px; box-shadow: 2px 2px 0 var(--shadow); font-size: 14px; }
+.desk .seg.on { box-shadow: 3px 3px 0 var(--shadow); }
+
+.desk .pane { margin-top: 16px; }
+
+/* 首页显示方式（单选行） */
+.desk .pane-sub { margin-bottom: 9px; font-size: 12px; }
+.desk .pane-more { margin-top: 11px; padding: 10px; border-width: 1px; font-size: 12px; }
+
+/* 主题：宽屏三列，色块跟着放大一点 */
+.desk .theme-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
+.desk .theme-card { padding: 13px; border-width: 1px; border-radius: 14px; box-shadow: 3px 3px 0 var(--shadow); }
+.desk .theme-card.active { border-width: 2px; box-shadow: 3px 4px 0 var(--shadow); }
+.desk .theme-swatch { gap: 5px; margin-bottom: 8px; }
+.desk .swatch-dot { width: 22px; height: 22px; border-width: 1px; border-radius: 6px; }
+.desk .theme-name { font-size: 14px; }
+.desk .theme-check { top: 8px; right: 9px; width: 19px; height: 19px; border-width: 1px; font-size: 12px; line-height: 19px; }
+
+/* 选项 / 铃声（控件，保持手机档） */
+.desk .opt-grid { margin-top: 9px; gap: 8px; }
+.desk .opt { padding: 11px; border-width: 1px; border-radius: 11px; box-shadow: 2px 2px 0 var(--shadow-soft); font-size: 13px; }
+.desk .opt.active { box-shadow: 3px 3px 0 var(--shadow); }
+.desk .ring-grid { margin-top: 9px; gap: 5px; }
+.desk .ring-pill { padding: 8px 4px; border-width: 1px; font-size: 12px; }
+.desk .ring-note { margin-right: 3px; font-size: 11px; }
+.desk .ring-actions { margin-top: 9px; gap: 7px; }
+.desk .ring-action { padding: 9px 15px; border-width: 1px; font-size: 12px; }
+
+/* 开关行：文字放大一档，开关本体不放大 */
+.desk .row { gap: 11px; padding: 12px 13px; margin-bottom: 8px; border-width: 1px; border-radius: 12px; box-shadow: 2px 3px 0 var(--shadow-soft); }
+.desk .row-name { font-size: 14px; }
+.desk .row-desc { margin-top: 3px; font-size: 12px; }
+.desk .switch { flex: 0 0 54px; width: 54px; height: 29px; border-width: 1px; }
+.desk .knob { top: 2px; left: 2px; width: 22px; height: 22px; border-width: 1px; }
+.desk .switch.on .knob { left: 27px; }
+
+/* 习惯模板 */
+.desk .habit-grid { gap: 8px; }
+.desk .habit-tile { padding: 11px; border-width: 1px; border-radius: 11px; box-shadow: 2px 2px 0 var(--shadow-soft); }
+.desk .habit-tile.checked { box-shadow: 3px 3px 0 var(--shadow); }
+.desk .habit-tile-name { font-size: 14px; }
+.desk .habit-tile-desc { margin-top: 3px; font-size: 11px; }
+
+/* 自定义配色：色点与输入框都是控件，保持手机档 */
+.desk .custom-box { margin-top: 10px; padding: 13px 14px; border-width: 1px; border-radius: 14px; box-shadow: 3px 3px 0 var(--shadow); }
+.desk .custom-head { margin-bottom: 8px; font-size: 14px; }
+.desk .custom-name { height: 52px; min-height: 52px; margin-bottom: 9px; padding: 0 11px; border-width: 1px; border-radius: 9px; font-size: 14px; line-height: 52px; }
+.desk .custom-actions { margin-top: 9px; gap: 8px; }
+.desk .custom-btn { padding: 9px 5px; border-width: 1px; font-size: 12px; }
+.desk .color-row { gap: 9px; margin-bottom: 8px; }
+.desk .color-label { flex: 0 0 32px; font-size: 12px; }
+.desk .color-list { gap: 7px; }
+.desk .color-dot { width: 29px; height: 29px; border-width: 1px; }
+.desk .color-dot.on { box-shadow: 0 0 0 3px var(--primary); border-width: 2px; }
+
+/* 时钟预览（主体：跟着屏幕放大） */
+.desk .clock-preview { gap: 9px; padding: 19px 13px; border-width: 1px; border-radius: 15px; box-shadow: 3px 3px 0 var(--shadow-soft); }
+.desk .clock-preview-card {
+  width: 100% !important;
+  height: 150px !important;
+  padding: 0 14px !important;
+  border-width: 1px;
+  border-radius: 12px;
+  min-height: 88px;
+}
+.desk .clock-preview-card .q-plain-num { font-size: 54px !important; letter-spacing: 0 !important; }
+.desk .clock-flip-card { flex-basis: 38px; width: 38px; height: 64px; border-width: 1px; border-radius: 6px; box-shadow: 2px 3px 0 var(--shadow); }
+.desk .clock-flip-card .clock-flip-num { font-size: 26px; line-height: 64px; }
+.desk .clock-flip-colon { font-size: 20px; }
+.desk .clock-block-row { gap: 4px; }
+.desk .clock-block-tile { width: 26px; height: 34px; border-width: 1px; border-radius: 5px; box-shadow: 2px 2px 0 var(--shadow-soft); }
+.desk .clock-block-num { font-size: 18px; }
+.desk .clock-block-colon { font-size: 15px; }
+
+/* 8 张样式卡：宽屏四列两行 */
+.desk .clock-style-list { margin-top: 11px; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.desk .clock-style-card { gap: 6px; padding: 8px; border-width: 1px; border-radius: 12px; box-shadow: 2px 3px 0 var(--shadow-soft); }
+.desk .clock-style-card.on { border-width: 2px; box-shadow: 3px 3px 0 var(--shadow); }
+.desk .clock-style-sample { height: 62px !important; border-width: 1px !important; border-radius: 9px !important; }
+.desk .clock-style-sample .q-plain-num { font-size: 26px !important; letter-spacing: 0 !important; }
+.desk .clock-style-name { font-size: 13px; }
+.desk .clock-style-radio { top: 6px; right: 6px; width: 18px; height: 18px; border-width: 1px; font-size: 10px; line-height: 18px; }
+.desk .clock-flip-card-sample { width: 18px; flex-basis: 18px; height: 33px; border-width: 1px; border-radius: 3px; }
+.desk .clock-flip-card-sample .clock-flip-num { font-size: 15px; line-height: 33px; }
+.desk .clock-flip-colon-sample { font-size: 11px; }
+.desk .clock-flip-row-sample { gap: 1px; }
+.desk .clock-block-tile-sample { width: 18px; height: 33px; border-width: 1px; border-radius: 3px; }
+.desk .clock-block-tile-sample .clock-block-num { font-size: 13px; }
+.desk .clock-block-colon-sample { font-size: 11px; }
+.desk .clock-block-row-sample { gap: 2px; }
+
+/* 本地数据 */
+.desk .data-zone { margin-top: 24px; padding: 15px; border-width: 1px; border-radius: 14px; box-shadow: 3px 3px 0 var(--shadow-soft); }
+.desk .data-title { font-size: 14px; }
+.desk .data-desc { margin-top: 4px; font-size: 12px; }
+.desk .privacy-btn { margin-top: 10px; padding: 9px 6px; border-width: 1px; font-size: 12px; }
+.desk .data-clear-btn { margin-top: 11px; padding: 10px 6px; border-width: 1px; font-size: 13px; }
+
+/* 分区切换：桌面只做淡入淡出，避免 rpx 位移在宽屏被放大成几十像素的跳动 */
+.desk .pane { animation: pane-fade-desk .24s ease both; }
+.desk .pane.closing { animation: pane-fade-out-desk .18s ease both; }
+@keyframes pane-fade-desk { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pane-fade-out-desk { from { opacity: 1; } to { opacity: 0; } }
+.desk .theme-card, .desk .clock-style-card,
+.desk .opt, .desk .ring-pill, .desk .habit-tile {
+  animation: rise-in-desk .28s cubic-bezier(.2, .8, .3, 1) backwards;
+}
+@keyframes rise-in-desk { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* 超宽屏再上一档 */
+@media (min-width: 1400px) {
+  .desk .settings-body { max-width: 1040px; padding: 22px 28px 76px; }
+  .desk .clock-preview-card { height: 172px !important; }
+  .desk .clock-preview-card .q-plain-num { font-size: 62px !important; }
+  .desk .clock-flip-card { flex-basis: 44px; width: 44px; height: 74px; }
+  .desk .clock-flip-card .clock-flip-num { font-size: 30px; line-height: 74px; }
+  .desk .clock-flip-colon { font-size: 23px; }
+  .desk .clock-style-sample { height: 72px !important; }
+  .desk .clock-style-sample .q-plain-num { font-size: 30px !important; }
+  .desk .clock-flip-card-sample { width: 21px; flex-basis: 21px; height: 39px; }
+  .desk .clock-flip-card-sample .clock-flip-num { font-size: 17px; line-height: 39px; }
+  .desk .clock-block-tile-sample { width: 21px; height: 39px; }
+  .desk .clock-block-tile-sample .clock-block-num { font-size: 15px; }
+  .desk .clock-block-tile { width: 30px; height: 39px; }
+  .desk .clock-block-num { font-size: 20px; }
+  .desk .swatch-dot { width: 26px; height: 26px; }
+  .desk .theme-name { font-size: 15px; }
+  .desk .habit-tile-name { font-size: 15px; }
+}
+
+/* 桌面卡片的错峰入场（简写动画会把基础段的 delay 清掉，这里补回来） */
+.desk .theme-card:nth-child(2), .desk .clock-style-card:nth-child(2) { animation-delay: .04s; }
+.desk .theme-card:nth-child(3), .desk .clock-style-card:nth-child(3) { animation-delay: .08s; }
+.desk .theme-card:nth-child(4), .desk .clock-style-card:nth-child(4) { animation-delay: .12s; }
+.desk .theme-card:nth-child(5), .desk .clock-style-card:nth-child(5) { animation-delay: .16s; }
+.desk .theme-card:nth-child(6), .desk .clock-style-card:nth-child(6) { animation-delay: .20s; }

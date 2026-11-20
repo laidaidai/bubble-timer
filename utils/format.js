@@ -57,13 +57,13 @@ const fold = (list, expanded, limit) => {
 // 时钟样式目录（timer / quick / settings 共用，改一处即全局生效）
 const CLOCK_STYLES = [
   { key: 'flip', name: '翻页时钟', desc: '机械翻页，复古有质感' },
-  { key: 'digital', name: '数字时钟', desc: '等宽数字，清晰克制' },
   { key: 'blocks', name: '积木方块', desc: '立体方块，块面感强' },
-  { key: 'led', name: 'LED 灯', desc: '七段数码管，夜间醒目' },
-  { key: 'neon', name: '霓虹发光', desc: '霓虹光晕，夜间醒目' },
-  { key: 'outline', name: '描边空心', desc: '空心描边，轻盈现代' },
-  { key: 'minimal', name: '圆体极简', desc: '圆润数字，软萌安静' },
-  { key: 'jelly', name: '果冻叠影', desc: '糖果描边，圆润轻快' }
+  { key: 'sticker', name: '贴纸数字', desc: '白色描边，清楚可爱' },
+  { key: 'outline', name: '描边空心', desc: '只画轮廓，中间留空' },
+  { key: 'jelly', name: '果冻叠影', desc: '糖果描边，圆润轻快' },
+  { key: 'doodle', name: '手绘涂鸦', desc: '墨色数字 + 彩色铅笔边，整排微微歪着' },
+  { key: 'stamp', name: '手绘印章', desc: '像盖上去的章，粗描边 + 硬投影' },
+  { key: 'jellypop', name: '果冻弹跳', desc: '主色果冻 + 一道奶白高光，会轻轻弹' }
 ]
 
 // 七段数码管段码（LED 灯共用：计时页与快捷计时同一张表）
@@ -82,7 +82,30 @@ const LED_PATTERNS = {
 
 const DEFAULT_CLOCK_STYLE = 'flip'
 
-const resolveClockStyle = key => CLOCK_STYLES.find(item => item.key === key) || CLOCK_STYLES[0]
+// 已下线样式的历史存档：自动迁移到替代样式，避免用户的选择被重置
+const LEGACY_CLOCK_STYLE = { digital: 'doodle', gradient: 'jellypop', neon: 'doodle', minimal: 'outline', led: 'sticker' }
+const resolveClockStyle = key => {
+  const mapped = LEGACY_CLOCK_STYLE[key] || key
+  return CLOCK_STYLES.find(item => item.key === mapped) || CLOCK_STYLES[0]
+}
+
+
+// 软键盘高度 → 页面 CSS 变量（--kb）
+// 弹层是 position: fixed，键盘弹起时不会跟着页面上推，所以把高度写到页面根节点上，
+// WXSS 里用 padding-bottom: var(--kb) 给弹层让位。
+function bindKeyboardHeight(page) {
+  if (!page || !wx.onKeyboardHeightChange) return () => { }
+  const handler = (res) => {
+    const height = Math.max(0, Math.round((res && res.height) || 0))
+    if (height === page.__keyboardHeight) return
+    page.__keyboardHeight = height
+    page.setData({ kbVars: height ? `--kb: ${height}px;` : '--kb: 0px;' })
+  }
+  wx.onKeyboardHeightChange(handler)
+  return () => {
+    if (wx.offKeyboardHeightChange) wx.offKeyboardHeightChange(handler)
+  }
+}
 
 module.exports = {
   pad,
@@ -98,5 +121,6 @@ module.exports = {
   CLOCK_STYLES,
   LED_PATTERNS,
   DEFAULT_CLOCK_STYLE,
-  resolveClockStyle
+  resolveClockStyle,
+  bindKeyboardHeight
 }

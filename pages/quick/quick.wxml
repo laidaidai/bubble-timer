@@ -1,5 +1,5 @@
 <template name="quickClock">
-  <view class="q-clock-shell q-shell-{{clockStyle}} {{long ? 'q-clock-long' : ''}}">
+  <view class="q-clock-shell q-shell-{{clockStyle}} {{long ? 'q-clock-long' : ''}} {{msShow ? 'q-with-ms' : ''}}">
     <block wx:if="{{clockStyle === 'flip'}}">
       <flip-clock cells="{{flipCells}}" ms-cells="{{msCells}}" ms-show="{{msShow}}" flip-phase="{{flipPhase}}"/>
     </block>
@@ -60,8 +60,8 @@
   </view>
 </template>
 
-<view class="quick-page theme-{{theme}}" style="{{themeStyle}}">
-  <view class="topbar">
+<view class="quick-page theme-{{theme}} {{isDesktop ? 'desk' : ''}}" style="{{themeStyle}}">
+  <view class="topbar" wx:if="{{!isDesktop}}">
     <view class="back-icon" bindtap="goBack" aria-label="返回">‹</view>
     <view class="topbar-title">快捷计时</view>
     <view class="topbar-spacer"></view>
@@ -82,7 +82,7 @@
       </view>
 
       <view class="time-picker-wrap" wx:if="{{tab === 'countdown' && !countdownStarted}}">
-        <picker-view class="time-picker" indicator-style="height: 88rpx;" value="{{pickerValue}}" bindchange="onTimeChange">
+        <picker-view class="time-picker" indicator-style="{{indicatorStyle}}" value="{{pickerValue}}" bindchange="onTimeChange">
           <picker-view-column>
             <view class="picker-item" wx:for="{{hourOptions}}" wx:key="key">{{item.label}}</view>
           </picker-view-column>
@@ -94,14 +94,17 @@
           </picker-view-column>
         </picker-view>
         <view class="picker-units">
-          <text>时</text><text>分</text><text>秒</text>
+          <text class="picker-unit">时</text><text class="picker-unit">分</text><text class="picker-unit">秒</text>
         </view>
       </view>
 
       <view class="quick-clock-stage" wx:else bindtap="cycleClockStyle">
-        <view class="clock-display">
-          <template is="quickClock" data="{{...clockData}}"/>
+        <view class="q-clock-slot" style="height: {{clockSlotH}}px;">
+          <view class="clock-display" style="{{clockFitVars}}">
+            <template is="quickClock" data="{{...clockData}}"/>
+          </view>
         </view>
+        <view class="clock-style-hint {{clockHintShow ? 'show' : ''}}">{{clockHintText}}</view>
       </view>
 
       <scroll-view class="lap-list" wx:if="{{tab === 'stopwatch' && laps.length}}" scroll-y="true" enhanced="true" show-scrollbar="false">
@@ -126,10 +129,11 @@
       </view>
     </view>
 
-    <view class="quick-actions">
-      <button class="quick-primary" bindtap="toggleRun">{{running ? '暂停' : (sessionStarted ? '继续' : '开始')}}</button>
-      <button class="quick-lap" wx:if="{{tab === 'stopwatch' && sessionStarted}}" bindtap="recordLap">计次</button>
-      <button class="quick-reset" bindtap="reset">重置</button>
-    </view>
+  </view>
+
+  <view class="quick-actions">
+    <button class="quick-primary" bindtap="toggleRun">{{running ? '暂停' : (sessionStarted ? '继续' : '开始')}}</button>
+    <button class="quick-lap" wx:if="{{tab === 'stopwatch' && sessionStarted}}" bindtap="recordLap">计次</button>
+    <button class="quick-reset" bindtap="reset">重置</button>
   </view>
 </view>

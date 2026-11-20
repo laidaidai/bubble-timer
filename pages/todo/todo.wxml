@@ -1,5 +1,5 @@
-<view class="todo-page theme-{{theme}}" style="{{themeStyle}}">
-  <view class="topbar">
+<view class="todo-page theme-{{theme}} {{isDesktop ? 'desk' : ''}}" style="{{themeStyle}}">
+  <view class="topbar" wx:if="{{!isDesktop}}">
     <view class="back-icon" bindtap="handleBack" aria-label="返回">‹</view>
     <view class="topbar-title">待办清单</view>
     <view class="topbar-spacer"></view>
@@ -23,7 +23,7 @@
         <view class="sched-title">{{schedTitle}}</view>
         <view class="sched-nav" data-step="1" bindtap="shiftScheduleMonth">›</view>
       </view>
-      <view class="sched-week"><text wx:for="{{schedLabels}}" wx:key="*this">{{item}}</text></view>
+      <view class="sched-week"><text class="sched-week-cell" wx:for="{{schedLabels}}" wx:key="*this">{{item}}</text></view>
       <view class="sched-row" wx:for="{{schedRows}}" wx:key="key">
         <view class="sched-cell {{cell.empty ? 'empty' : ''}} {{cell.count ? 'has-todo' : ''}} {{cell.today ? 'today' : ''}} {{cell.selected ? 'selected' : ''}}" wx:for="{{item.cells}}" wx:for-item="cell" wx:key="key" data-key="{{cell.key}}" bindtap="selectScheduleDate">
           <text class="sched-day num" wx:if="{{!cell.empty}}">{{cell.day}}</text>

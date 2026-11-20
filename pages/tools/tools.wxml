@@ -1,5 +1,5 @@
-<view class="tools-page theme-{{theme}} {{toolsReveal ? 'reveal' : ''}}" style="{{themeStyle}}">
-  <view class="topbar">
+<view class="tools-page theme-{{theme}} {{isDesktop ? 'desk' : ''}} {{toolsReveal ? 'reveal' : ''}}" style="{{themeStyle}} {{kbVars}}">
+  <view class="topbar" wx:if="{{!isDesktop}}">
     <view class="back-icon" bindtap="handleBack" aria-label="返回">‹</view>
     <view class="topbar-title">工具</view>
     <view class="topbar-spacer"></view>
@@ -20,9 +20,9 @@
         <view class="quick-feature-copy">
           <text class="quick-feature-title">快捷计时</text>
           <view class="quick-feature-modes">
-            <text>秒表</text>
-            <text>计时器</text>
-            <text>番茄钟</text>
+            <text class="qf-mode">秒表</text>
+            <text class="qf-mode">计时器</text>
+            <text class="qf-mode">番茄钟</text>
           </view>
         </view>
         <text class="quick-feature-arrow">›</text>

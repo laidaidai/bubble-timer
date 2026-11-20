@@ -1,5 +1,5 @@
 const app = getApp()
-const { pad, dateKey } = require('../../utils/format')
+const { pad, dateKey, bindKeyboardHeight } = require('../../utils/format')
 
 const WEEK_LABELS = ['一', '二', '三', '四', '五', '六', '日']
 
@@ -11,8 +11,11 @@ function importantDateText(key) {
 
 Page({
   data: {
-    theme: 'sky',
-    themeStyle: '',
+    // 首帧就按当前设备与主题渲染，避免桌面上先闪一下手机版顶栏 / 默认配色
+    isDesktop: !!(getApp() && getApp().globalData && getApp().globalData.isDesktop),
+    kbVars: '',
+    theme: (getApp() && getApp().getTheme && getApp().getTheme().key) || 'sky',
+    themeStyle: (getApp() && getApp().getThemeStyle && getApp().getThemeStyle()) || '',
     list: [],
     burstingId: '',
     modalOpen: false,
@@ -28,6 +31,9 @@ Page({
   },
 
   onLoad() {
+    // 兜底：万一 utils/format 的灰度/缓存版本没带上这个导出，页面也不该整个挂掉
+    this.unbindKeyboard = typeof bindKeyboardHeight === 'function' ? bindKeyboardHeight(this) : null
+    this.setData({ isDesktop: !!(getApp().globalData && getApp().globalData.isDesktop) })
     this.syncTheme()
     this.loadList()
   },
@@ -38,6 +44,10 @@ Page({
   },
 
   onUnload() {
+    if (this.unbindKeyboard) {
+      this.unbindKeyboard()
+      this.unbindKeyboard = null
+    }
     clearTimeout(this.burstTimer)
   },
 

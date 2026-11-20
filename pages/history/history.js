@@ -2,6 +2,8 @@ const app = getApp()
 
 Page({
   data: {
+    // 首帧就按当前设备与主题渲染，避免桌面上先闪一下手机版顶栏 / 默认配色
+    isDesktop: !!(getApp() && getApp().globalData && getApp().globalData.isDesktop),
     theme: 'sky', themeStyle: '',
     records: [],
     timerLaunching: false,
@@ -18,6 +20,7 @@ Page({
   },
 
   onLoad() {
+    this.setData({ isDesktop: !!(getApp().globalData && getApp().globalData.isDesktop) })
     this.syncTheme()
     this.loadRecords()
   },

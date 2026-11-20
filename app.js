@@ -14,12 +14,14 @@ const THEMES = PALETTE.map(theme => ({
   canvas: theme.canvas
 }))
 
+// 五款轻快常用的提示音：叮咚 / 钟琴 / 风铃 / 木琴 / 轻铃
+// key 沿用旧值，已保存的铃声选择不会失效，只是换成新音源与新名字
 const RINGS = [
-  { key: 'chime', name: '轻风铃', src: '/assets/audio/ring-chime.m4a' },
-  { key: 'bell', name: '小铜铃', src: '/assets/audio/ring-bell.m4a' },
-  { key: 'drop', name: '水滴音', src: '/assets/audio/ring-drop.m4a' },
-  { key: 'marimba', name: '木琴', src: '/assets/audio/ring-marimba.m4a' },
-  { key: 'clear', name: '清铃', src: '/assets/audio/ring-clear.m4a' }
+  { key: 'chime', name: '叮咚', src: '/assets/audio/ring-dingdong.m4a' },
+  { key: 'bell', name: '钟琴', src: '/assets/audio/ring-glocken.m4a' },
+  { key: 'drop', name: '风铃', src: '/assets/audio/ring-windbell.m4a' },
+  { key: 'marimba', name: '木琴', src: '/assets/audio/ring-xylophone.m4a' },
+  { key: 'clear', name: '轻铃', src: '/assets/audio/ring-softbell.m4a' }
 ]
 
 
@@ -144,10 +146,21 @@ const DEFAULT_SETTINGS = {
   overtimeAlert: true,
   tickSound: false,
   tickDefaultOff: true,
-  homePrimary: 'timer',
   incentiveType: 'tomato',
+  // 首页固定显示哪一项：timer = 训练计时，quick-* = 秒表/计时器/番茄钟
+  pinnedFeature: 'timer',
   privacyAlbum: true,
   privacyCalendar: true
+}
+
+const detectDesktop = () => {
+  try {
+    const info = (wx.getDeviceInfo ? wx.getDeviceInfo() : wx.getSystemInfoSync()) || {}
+    const platform = String(info.platform || '').toLowerCase()
+    return platform === 'windows' || platform === 'mac'
+  } catch (e) {
+    return false
+  }
 }
 
 App({
@@ -170,6 +183,9 @@ App({
     dailyTargetSeconds: 180 * 60
   },
   onLaunch() {
+    // 微信桌面版（Windows / Mac）：自定义导航栏外还有一条系统标题栏（带返回箭头），
+    // 页面自己画的 topbar 会和它重复，所以桌面端隐藏自绘 topbar，只留系统那条。
+    this.globalData.isDesktop = detectDesktop()
     this.normalizeTemplates()
     // 历史版本里 tickSound 默认是开，第一次升级时统一关掉，之后按用户选择走
     const saved = wx.getStorageSync(this.globalData.settingsKey)
@@ -196,6 +212,8 @@ App({
       saved.skyDefaultApplied = true
       wx.setStorageSync(this.globalData.settingsKey, saved)
     }
+    // 首帧之前就把系统窗口色对齐当前主题，避免先露出 app.json 里的静态配色再看它变过去
+    this.applyNavBar()
   },
 
   // 模板存储只保留一种结构：{ currentName, templates: [{ name, modules }] }
@@ -337,18 +355,27 @@ App({
   applyNavBar() {
     const theme = this.getTheme()
     if (wx.setNavigationBarColor) {
-      wx.setNavigationBarColor({
-        frontColor: theme.front,
-        backgroundColor: theme.nav,
-        animation: { duration: 200, timingFunc: 'easeIn' }
-      })
+      // frontColor 只认 #ffffff / #000000，统一小写规范化；颜色切换不做渐变动画，
+      // 否则从页面静态配色过渡过来的那 200ms 会被看成「顶栏闪一下」
+      const front = String(theme.front || '#000000').toLowerCase() === '#ffffff' ? '#ffffff' : '#000000'
+      try {
+        wx.setNavigationBarColor({
+          frontColor: front,
+          backgroundColor: theme.nav || '#FFFFFF',
+          animation: { duration: 0, timingFunc: 'linear' }
+        })
+      } catch (error) { /* 部分端不支持，忽略 */ }
     }
     if (wx.setBackgroundColor) {
-      wx.setBackgroundColor({
-        backgroundColor: theme.swatch[0],
-        backgroundColorTop: theme.swatch[0],
-        backgroundColorBottom: theme.swatch[0]
-      })
+      // 窗口底色要跟主题的页面底色一致，用 swatch 会把边缘染成主色
+      const bg = (theme.css && theme.css.bg) || theme.swatch[0]
+      try {
+        wx.setBackgroundColor({
+          backgroundColor: bg,
+          backgroundColorTop: bg,
+          backgroundColorBottom: bg
+        })
+      } catch (error) { /* 部分端不支持，忽略 */ }
     }
   },
 

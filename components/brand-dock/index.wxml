@@ -1,4 +1,4 @@
-<view class="brand-dock {{aboveTabbar ? 'above-tab' : ''}} {{expanded ? 'open' : ''}} {{dim ? 'soft' : ''}} {{celebrate ? 'celebrate' : ''}}" style="{{themeStyle}}">
+<view class="brand-dock {{aboveTabbar ? 'above-tab' : ''}} {{expanded ? 'open' : ''}} {{dim ? 'soft' : ''}} {{celebrate ? 'celebrate' : ''}}" style="{{themeStyle}} {{dockStyle}}">
   <view class="dock-mask" wx:if="{{expanded}}" bindtap="close" catchtouchmove="noop"></view>
 
   <view class="dock-panel" wx:if="{{expanded}}">
@@ -6,6 +6,13 @@
       <text class="dock-summary-kicker">今日</text>
       <text class="dock-summary-main">{{todayMinutes}} 分钟</text>
       <text class="dock-summary-rate">{{progress}}%</text>
+    </view>
+
+    <view class="dock-switch">
+      <text class="dock-switch-title">首页显示</text>
+      <view class="dock-switch-grid">
+        <view class="dock-switch-chip {{pinnedFeature === item.key ? 'on' : ''}} {{item.soon ? 'soon' : ''}}" wx:for="{{featureOptions}}" wx:key="key" data-key="{{item.key}}" bindtap="switchFeature">{{item.name}}</view>
+      </view>
     </view>
 
     <view class="dock-actions">
@@ -34,7 +41,6 @@
       </view>
     </view>
 
-    <view class="dock-tip">长按 logo 开始 / 暂停计时</view>
   </view>
 
   <view class="dock-logo" bindtap="onTap" bindlongpress="longPress" hover-class="dock-logo-hover" aria-label="打开快捷菜单，长按开始或暂停计时">

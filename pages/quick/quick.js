@@ -1,5 +1,6 @@
 const app = getApp()
 const { pad, CLOCK_STYLES, LED_PATTERNS, resolveClockStyle } = require('../../utils/format')
+const { computeQuickSlot, fitScale } = require('../../utils/clock-layout')
 
 const PRESETS = [
   { minutes: 10, label: '10 分钟' },
@@ -21,9 +22,11 @@ const buildPickerOptions = count => Array.from({ length: count * PICKER_COPIES }
 const HOUR_OPTIONS = buildPickerOptions(24)
 const MINUTE_OPTIONS = buildPickerOptions(60)
 const SECOND_OPTIONS = buildPickerOptions(60)
-const POMODORO_FOCUS = 25 * 60
-const POMODORO_REST = 5 * 60
-const POMODORO_LONG_REST = 15 * 60
+// 番茄钟整条链路统一用毫秒：页面里 formatTimerParts / 首页共享状态 / stopwatch 都是毫秒，
+// 之前这里写的是秒，导致恢复后把 1500（秒）当 1500ms 显示成 00:01.50。
+const POMODORO_FOCUS = 25 * 60 * 1000
+const POMODORO_REST = 5 * 60 * 1000
+const POMODORO_LONG_REST = 15 * 60 * 1000
 const POMODORO_LONG_EVERY = 4
 
 
@@ -70,8 +73,10 @@ function formatTimerParts(ms) {
 
 Page({
   data: {
-    theme: 'sky',
-    themeStyle: '',
+    // 首帧就按当前设备与主题渲染，避免桌面上先闪一下手机版顶栏 / 默认配色
+    isDesktop: !!(getApp() && getApp().globalData && getApp().globalData.isDesktop),
+    theme: (getApp() && getApp().getTheme && getApp().getTheme().key) || 'sky',
+    themeStyle: (getApp() && getApp().getThemeStyle && getApp().getThemeStyle()) || '',
     tab: 'stopwatch',
     running: false,
     countdownStarted: false,
@@ -91,18 +96,40 @@ Page({
     pomodoroPhaseTotal: POMODORO_FOCUS,
     clockStyle: 'flip',
     clockStyleName: '翻页时钟',
+    clockHintShow: false,
+    clockHintText: '轻点时钟切换样式',
     clockStyles: CLOCK_STYLES,
     clockData: {},
+    clockBoxStyle: '',
+    clockSlotH: 0,
+    clockFitVars: '',
+    indicatorStyle: 'height: 88rpx',
     laps: [],
     finishBurst: false,
     finishBubbles: []
   },
 
   onLoad(options = {}) {
+    // 宽窗口（PC 微信 / 开发者工具宽窗口）rpx 会被放大成"整套巨大"，
+    // 这里补一层按窗口宽度的判断：即使平台探测失败也走桌面档 px
+    let winW = 0
+    try { winW = (wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync()).windowWidth || 0 } catch (e) { winW = 0 }
+    const isDesktop = !!(getApp().globalData && getApp().globalData.isDesktop) || winW > 600
+    this.setData({
+      isDesktop,
+      // picker-view 的指示框只能内联给，桌面下按 px 给，避免 rpx 被窗口放大
+      indicatorStyle: isDesktop ? 'height: 76px' : 'height: 88rpx'
+    })
     this.autoStartRequested = !!(options && options.autostart === '1')
     this.dockToggleRequested = !!(options && options.docktoggle === '1')
     this.dockPauseRequested = !!(options && options.dockpause === '1')
     this.syncTheme()
+    // 每个页面生命周期只提示一次，3.2s 后自动收走，不常驻
+    if (!this.clockHintShown) {
+      this.clockHintShown = true
+      clearTimeout(this.hintIntroTimer)
+      this.hintIntroTimer = setTimeout(() => this.showClockHint('轻点时钟切换样式', 3200), 900)
+    }
     const savedStyle = wx.getStorageSync(app.globalData.clockStyleKey)
     const style = resolveClockStyle(savedStyle)
     this.setData({ clockStyle: style.key, clockStyleName: style.name })
@@ -134,6 +161,7 @@ Page({
       }, 40)
     }
     this.syncTheme()
+    this.syncClockBox()
     this.loadPresetRecommendation()
     if (this.data.running) this.startTicker()
     if (this.dockPauseRequested) {
@@ -157,6 +185,11 @@ Page({
   onHide() {
     this.saveQuickState()
     this.stopTicker()
+  },
+
+  // PC 上拖窗口：重算时钟的放大系数
+  onResize() {
+    this.syncClockBox()
   },
 
   onUnload() {
@@ -230,9 +263,15 @@ Page({
     this.countdownEndAt = tab === 'countdown' && running ? (Number(saved.countdownEndAt) || 0) : 0
     this.pomodoroPhase = saved.pomodoroPhase === 'rest' ? 'rest' : 'focus'
     this.pomodoroCycle = Math.max(1, Number(saved.pomodoroCycle) || 1)
-    this.pomodoroPhaseTotal = Math.max(1, Number(saved.pomodoroPhaseTotal) || POMODORO_FOCUS)
-    const savedPomodoroRemaining = Number(saved.pomodoroRemaining)
-    this.pomodoroRemaining = Number.isFinite(savedPomodoroRemaining) ? Math.max(0, savedPomodoroRemaining) : this.pomodoroPhaseTotal
+    let phaseTotal = Math.max(1, Number(saved.pomodoroPhaseTotal) || POMODORO_FOCUS)
+    let savedRemaining = Number(saved.pomodoroRemaining)
+    // 旧版本把番茄钟按“秒”存（1500 / 300 / 900），这里换算成毫秒，避免读出来变成 00:01.50
+    if (phaseTotal < 60000) {
+      phaseTotal *= 1000
+      if (Number.isFinite(savedRemaining)) savedRemaining *= 1000
+    }
+    this.pomodoroPhaseTotal = phaseTotal
+    this.pomodoroRemaining = Number.isFinite(savedRemaining) ? Math.max(0, savedRemaining) : this.pomodoroPhaseTotal
     this.pomodoroEndAt = tab === 'pomodoro' && running ? (Number(saved.pomodoroEndAt) || 0) : 0
     this.lapNo = Math.max(0, Number(saved.lapNo) || 0)
     this.lastLapMs = Math.max(0, Number(saved.lastLapMs) || 0)
@@ -322,6 +361,44 @@ Page({
       running: false,
       sessionStarted: !!saved.sessionStarted,
       ...this.buildClockPayload(formatTimerParts(remaining).main, undefined, formatTimerParts(remaining).ms)
+    })
+  },
+
+  // 桌面 / 大屏：时钟是「看的主体」，按目标字号反算缩放系数。
+  // 8 种皮肤内部都是 rpx，直接跟着窗口膨胀会失控；目标字号跟着窗口宽 / 高一起走
+  // （约屏宽 11.5%、屏高 20%，夹在 64–260px），既不会小得只剩一点，也不会顶满屏。
+  syncClockBox() {
+    let winW = 375
+    let winH = 667
+    try {
+      const info = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync()
+      winW = info.windowWidth || 375
+      winH = info.windowHeight || 667
+    } catch (e) {}
+    const desk = !!(getApp().globalData && getApp().globalData.isDesktop)
+    const slot = computeQuickSlot(winW, winH, desk)
+    const run = () => this.fitQuickClock(slot.h, desk)
+    if (slot.h !== this.data.clockSlotH) this.setData({ clockSlotH: slot.h }, run)
+    else run()
+  },
+
+  // 时钟统一缩进「固定高度的容器」：换皮肤时容器不变，卡片/按钮不会跟着跳
+  fitQuickClock(slotH, desk) {
+    const query = wx.createSelectorQuery().in(this)
+    query.select('.q-clock-slot').boundingClientRect()
+    query.select('.q-clock-shell').boundingClientRect()
+    query.exec((res) => {
+      const slot = res[0]
+      const shell = res[1]
+      if (!slot || !slot.width || !shell || !shell.width || !shell.height) return
+      const current = this.clockFit || 1
+      const naturalW = shell.width / current
+      const naturalH = shell.height / current
+      const fit = fitScale(slot.width, slotH || slot.height, naturalW, naturalH, { max: desk ? 2.6 : 1.6 })
+      if (Math.abs(fit - current) < 0.02) return
+      this.clockFit = fit
+      const vars = Math.abs(fit - 1) < 0.02 ? '' : `--q-fit: ${fit};`
+      if (vars !== this.data.clockFitVars) this.setData({ clockFitVars: vars })
     })
   },
 
@@ -476,9 +553,15 @@ Page({
     }
     this.pomodoroPhase = saved.pomodoroPhase === 'rest' ? 'rest' : 'focus'
     this.pomodoroCycle = Math.max(1, Number(saved.pomodoroCycle) || 1)
-    this.pomodoroPhaseTotal = Math.max(1, Number(saved.pomodoroPhaseTotal) || POMODORO_FOCUS)
-    const savedPomodoroRemaining = Number(saved.pomodoroRemaining)
-    this.pomodoroRemaining = Number.isFinite(savedPomodoroRemaining) ? Math.max(0, savedPomodoroRemaining) : this.pomodoroPhaseTotal
+    let phaseTotal = Math.max(1, Number(saved.pomodoroPhaseTotal) || POMODORO_FOCUS)
+    let savedRemaining = Number(saved.pomodoroRemaining)
+    // 旧版本把番茄钟按“秒”存（1500 / 300 / 900），这里换算成毫秒，避免读出来变成 00:01.50
+    if (phaseTotal < 60000) {
+      phaseTotal *= 1000
+      if (Number.isFinite(savedRemaining)) savedRemaining *= 1000
+    }
+    this.pomodoroPhaseTotal = phaseTotal
+    this.pomodoroRemaining = Number.isFinite(savedRemaining) ? Math.max(0, savedRemaining) : this.pomodoroPhaseTotal
     if (saved.running && saved.pomodoroEndAt) {
       const remaining = Math.max(0, Number(saved.pomodoroEndAt) - Date.now())
       const finished = remaining <= 0
@@ -618,7 +701,7 @@ Page({
       return
     }
     if (this.data.tab === 'pomodoro') {
-      this.pomodoroEndAt = Date.now() + this.pomodoroRemaining * 1000
+      this.pomodoroEndAt = Date.now() + Math.max(0, this.pomodoroRemaining || 0)
       this.setData({ running: true, sessionStarted: true })
       this.startTicker()
       return
@@ -728,7 +811,7 @@ Page({
     this.pomodoroPhaseTotal = POMODORO_FOCUS
     this.pomodoroRemaining = POMODORO_FOCUS
     this.pomodoroEndAt = 0
-    const parts = formatTimerParts(POMODORO_FOCUS * 1000)
+    const parts = formatTimerParts(POMODORO_FOCUS)
     this.setData({
       pomodoroPhase: 'focus',
       pomodoroCycle: 1,
@@ -746,7 +829,7 @@ Page({
       this.advancePomodoro()
       return
     }
-    this.pomodoroRemaining = Math.ceil(remaining / 1000)
+    this.pomodoroRemaining = Math.max(0, remaining)
     const parts = formatTimerParts(remaining)
     this.setData({
       mainSeconds: parts.totalSeconds,
@@ -770,10 +853,10 @@ Page({
       wx.showToast({ title: '番茄专注开始', icon: 'none', duration: 1600 })
     }
     this.pomodoroRemaining = this.pomodoroPhaseTotal
-    this.pomodoroEndAt = Date.now() + this.pomodoroPhaseTotal * 1000
+    this.pomodoroEndAt = Date.now() + this.pomodoroPhaseTotal
     if (app.vibrate) app.vibrate('heavy')
     if (app.playRing) app.playRing()
-    const parts = formatTimerParts(this.pomodoroPhaseTotal * 1000)
+    const parts = formatTimerParts(this.pomodoroPhaseTotal)
     this.setData({
       pomodoroPhase: this.pomodoroPhase,
       pomodoroCycle: this.pomodoroCycle,
@@ -854,7 +937,8 @@ Page({
     const raw = e && e.currentTarget ? e.currentTarget.dataset.key : e
     const next = resolveClockStyle(raw)
     const payload = this.buildClockPayload(this.data.mainText, next.key, this.data.msText || '00')
-    this.setData({ clockStyle: next.key, clockStyleName: next.name, ...payload })
+    this.setData({ clockStyle: next.key, clockStyleName: next.name, ...payload }, () => this.syncClockBox())
+    this.showClockHint(`已切换 · ${next.name}`, 1500)
     wx.setStorageSync(app.globalData.clockStyleKey, next.key)
     if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
   },
@@ -862,6 +946,13 @@ Page({
   cycleClockStyle() {
     const index = CLOCK_STYLES.findIndex(item => item.key === this.data.clockStyle)
     this.setClockStyle(CLOCK_STYLES[(index + 1) % CLOCK_STYLES.length].key)
+  },
+
+  // 主题色小提示：进页面露一次「轻点时钟切换样式」，切换后改成「已切换 · xx」，都会自己消失
+  showClockHint(text, duration = 1800) {
+    clearTimeout(this.hintTimer)
+    this.setData({ clockHintText: text, clockHintShow: true })
+    this.hintTimer = setTimeout(() => this.setData({ clockHintShow: false }), duration)
   },
 
   recordLap() {

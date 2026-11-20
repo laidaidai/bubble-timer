@@ -1,7 +1,7 @@
 @import "../../styles/clocks.wxss";
 page { height: 100%; overflow: hidden; background:var(--bg); }
 .timer-page { height: 100%; min-height: 0; background: var(--bg); display: flex; overflow: hidden; padding: 8rpx 18rpx; box-sizing: border-box; color:var(--ink); }
-.timer-main { flex: 1; min-width: 0; height: 100%; padding: 0 14rpx 34rpx 0; align-items: center; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; border-right:2rpx solid var(--line); }
+.timer-main { flex: 1; min-width: 0; height: 100%; padding: 0 18rpx 28rpx; align-items: center; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; }
 .clock-stage { position: relative; top: 18rpx; width: 100%; padding: 22rpx 0 6rpx; display: flex; flex-direction: column; align-items: center; gap: 6rpx; border-radius: 28rpx; }
 
 /* 翻页时钟：每个数字独立，上半页绕中轴向下翻，盖住下半页 */
@@ -77,7 +77,7 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
 /* 数字时钟 */
 .plain-clock { display: flex; align-items: center; justify-content: center; }
 .plain-num { font-family: "Courier New", "Menlo", monospace; font-weight: 900; line-height: 1; }
-.clock-digital .plain-num { padding: 10rpx 28rpx; color:var(--on-panel); background:var(--panel); border-radius: 18rpx; box-shadow:5rpx 6rpx 0 var(--shadow-soft), inset 0 0 30rpx rgba(255, 209, 102, .16); font-size: 66rpx; letter-spacing: 2rpx; text-shadow: 0 0 10rpx rgba(255,255,255,.20); }
+.clock-gradient .plain-num { padding: 10rpx 28rpx; color:var(--on-panel); background:var(--panel); border-radius: 18rpx; box-shadow:5rpx 6rpx 0 var(--shadow-soft), inset 0 0 30rpx rgba(255, 209, 102, .16); font-size: 66rpx; letter-spacing: 2rpx; text-shadow: 0 0 10rpx rgba(255,255,255,.20); }
 
 /* 极简线条 */
 .clock-minimal .plain-num { color:var(--ink); font-size: 62rpx; font-weight: 300; letter-spacing: 5rpx; }
@@ -89,7 +89,7 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
 .stage-progress { width: 100%; max-width: none; height: 8rpx; box-sizing: border-box; margin-top: 2rpx; overflow: hidden; background:var(--track); border:2rpx solid var(--edge); border-radius: 999rpx; }
 .stage-progress-fill { height: 100%; background:var(--primary-2); }
 .overtime-fill { background:var(--danger); }
-.stage-target { width: 100%; max-width: none; box-sizing: border-box; display: flex; justify-content: space-between; color:var(--text-2); font-size: 18rpx; font-weight: 900; }
+.stage-target { width: 100%; max-width: none; margin: 6rpx auto 0; box-sizing: border-box; display: flex; justify-content: space-between; color:var(--text-2); font-size: 18rpx; font-weight: 900; }
 .on-track { color:var(--success-text); }
 .overtime { color:var(--danger-text); }
 
@@ -102,15 +102,14 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
   from { background:var(--cream-1); }
   to { background:var(--primary); }
 }
-.complete-button text { position: absolute; right: 7rpx; bottom: 9rpx; font-size: 18rpx; font-weight: 900; }
 
 .module-side { width: 24%; height: 100%; min-height: 0; padding-left: 12rpx; box-sizing: border-box; }
 .module-list { min-height: 0; margin: 4rpx 0 6rpx; padding: 10rpx 8rpx; display: flex; align-items: center; color:var(--text-4); }
 .module-list.selected { color:var(--ink); background:var(--card); border:3rpx solid var(--edge); border-radius: 20rpx; box-shadow:5rpx 6rpx 0 var(--shadow); }
 .module-index { flex: 0 0 26rpx; width: 26rpx; font-size: 20rpx; font-weight: 900; }
 .module-info { min-width: 0; display: flex; flex-direction: column; gap: 2rpx; font-size: 20rpx; font-weight: 800; }
-.module-info text:first-child { max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.module-info text:last-child { color:var(--text-2); font-size: 18rpx; font-weight: 900; }
+.module-info .mi-name { max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.module-info .mi-num { color:var(--text-2); font-size: 18rpx; font-weight: 900; }
 
 .next-button { flex: 0 0 auto; width: auto !important; min-width: 0; max-width: none; justify-content: center; height: 58rpx; min-height: 58rpx; margin: 0; padding: 0 16rpx 0 18rpx; display: flex; align-items: center; gap: 6rpx; color: var(--ink); background: var(--cream-1); border: 3rpx solid var(--edge); border-radius: 999rpx; box-shadow: 3rpx 4rpx 0 var(--shadow); font-size: 19rpx; font-weight: 900; line-height: 1; white-space: nowrap; }
 .next-arrow { color: var(--primary-2); font-size: 18rpx; }
@@ -130,26 +129,25 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
 
 /* 真实手机横屏：窗口高度不足时压缩竖向尺寸，避免按钮被裁掉 */
 .timer-page.compact { padding: 8px 14px 20px; }
-.timer-page.compact .timer-main { padding-right: 10px; padding-bottom: 16px; }
+.timer-page.compact .timer-main { padding: 0 10px 16px; }
 .timer-page.compact .mode-chip { align-self: flex-end; margin: 1px 0 0; padding: 3px 10px; gap: 5px; font-size: 12px; line-height: 1.3; }
 .timer-page.compact .mode-phase { font-size: 13px; }
-.timer-page.compact .clock-stage { top: 10px; padding: 6px 0 0; gap: 4px; }
+.timer-page.compact .clock-stage { top: 20px; padding: 12px 0 0; gap: 7px; }
 .timer-page.compact .ms-line { margin-bottom: 3px; font-size: 13px; letter-spacing: 0; }
-.timer-page.compact .style-hint { top: 0; padding: 3px 10px; font-size: 12px; }
 .timer-page.compact .flip-row { gap: 4px; }
 .timer-page.compact .flip-colon { padding: 0 2px; font-size: 26px; line-height: 1; }
-.timer-page.compact .flip-card { width: 58px; height: 96px; border-width: 2px; border-radius: 10px; box-shadow: 3px 4px 0 var(--shadow-soft); }
+.timer-page.compact .flip-card { width: 62px; height: 101px; border-width: 2px; border-radius: 10px; box-shadow: 3px 4px 0 var(--shadow-soft); }
 .timer-page.compact .flip-card::before { border-radius: 10px 10px 0 0; }
 .timer-page.compact .flip-face-top, .timer-page.compact .flip-flap-top { border-radius: 10px 10px 0 0; }
 .timer-page.compact .flip-face-bottom, .timer-page.compact .flip-flap-bottom, .timer-page.compact .flip-flap-face-bottom { border-radius: 0 0 10px 10px; }
-.timer-page.compact .flip-num { font-size: 40px; line-height: 96px; }
+.timer-page.compact .flip-num { font-size: 43px; line-height: 101px; }
 .timer-page.compact .block-row { gap: 6px; }
 .timer-page.compact .block-colon { font-size: 22px; }
-.timer-page.compact .block-tile { width: 60px; height: 96px; border-width: 2px; border-radius: 9px; box-shadow: 3px 3px 0 var(--shadow); }
-.timer-page.compact .block-num { font-size: 36px; }
-.timer-page.compact .plain-num { font-size: 64px; }
-.timer-page.compact .clock-digital .plain-num { padding: 8px 26px; font-size: 62px; }
-.timer-page.compact .clock-minimal .plain-num { font-size: 58px; }
+.timer-page.compact .block-tile { width: 64px; height: 101px; border-width: 2px; border-radius: 9px; box-shadow: 3px 3px 0 var(--shadow); }
+.timer-page.compact .block-num { font-size: 38px; }
+.timer-page.compact .plain-num { font-size: 68px; }
+.timer-page.compact .clock-gradient .plain-num { padding: 8px 26px; font-size: 66px; }
+.timer-page.compact .clock-minimal .plain-num { font-size: 62px; }
 .timer-page.compact .stage-meta { gap: 14px; font-size: 14px; }
 .timer-page.compact .meta-total { margin-left: 6px; font-size: 14px; }
 .timer-page.compact .stage-progress { width: 100%; max-width: 100%; height: 7px; margin-top: 2px; border-width: 2px; }
@@ -164,7 +162,7 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
 .timer-page.compact .next-arrow { font-size: 14px; }
 
 .timer-page.compact .led-clock { gap: 4px; padding: 2px 13px; }
-.timer-page.compact .led-digit { flex-basis: 50px; width: 50px; height: 92px; }
+.timer-page.compact .led-digit { flex-basis: 54px; width: 54px; height: 98px; }
 .timer-page.compact .led-colon { flex-basis: 7px; width: 7px; height: 52px; gap: 14px; }
 .timer-page.compact .led-dot { width: 6px; height: 6px; }
 
@@ -269,31 +267,12 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
   100% { opacity: 0; transform: scale(1.22); }
 }
 
-/* 霓虹 / 描边：与快捷计时、设置共用同一套样式目录 */
-.clock-neon .plain-clock {
-  padding: 16rpx 34rpx;
-  background: var(--ink);
-  border-radius: 22rpx;
-  box-shadow: 0 0 22rpx rgba(255, 60, 172, .35), inset 0 0 26rpx rgba(80, 220, 255, .16);
-}
-.clock-neon .plain-num {
-  color: #FFE9F4;
-  font-size: 66rpx;
-  letter-spacing: 3rpx;
-  text-shadow: 0 0 6rpx #FF3CAC, 0 0 18rpx #FF3CAC, 0 0 36rpx rgba(80, 220, 255, .75);
-}
-.clock-outline .plain-clock {
-  padding: 12rpx 30rpx;
-  background: transparent;
-  border: 4rpx solid var(--ink);
-  border-radius: 20rpx;
-}
-.clock-outline .plain-num {
-  color: transparent;
-  font-size: 66rpx;
-  letter-spacing: 3rpx;
-  -webkit-text-stroke: 4rpx var(--ink);
-}
+/* 荧光划线 / 描边空心 / 细体留白：外观（无框、描边、配色）统一在 styles/clocks.wxss，
+ * 这里只留计时页自己的字号与留白。 */
+.clock-neon .plain-clock { padding: 14rpx 30rpx; }
+.clock-neon .plain-num { font-size: 66rpx; }
+.clock-outline .plain-clock { padding: 12rpx 30rpx; }
+.clock-outline .plain-num { font-size: 66rpx; }
 .timer-page.compact .clock-neon .plain-clock, .timer-page.compact .clock-outline .plain-clock { padding: 10px 28px; }
 .timer-page.compact .clock-neon .plain-num, .timer-page.compact .clock-outline .plain-num { font-size: 62px; }
 
@@ -333,7 +312,7 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
 .timer-page.immersive .module-toggle { display: none; }
 
 /* 模块信息行里的毫秒，不再单独悬浮一行 */
-.meta-ms { color: var(--text-3); font-size: 17rpx; font-weight: 700; letter-spacing: .5rpx; }
+.meta-ms { color: var(--text-3); font-size: 17rpx; font-weight: 700; letter-spacing: .5rpx; min-width: 4.2ch; text-align: right; font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
 .timer-page.compact .meta-ms { font-size: 13px; }
 
 /* 计时页入场：模式标签、时钟、控制栏、模块栏依次出现 */
@@ -404,7 +383,7 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
   0%, 100% { transform: translateY(0) scale(1); }
   50% { transform: translateY(-4rpx) scale(1.05); }
 }
-.timer-page.compact .progress-rail { max-width: 100%; padding-bottom: 27px; }
+.timer-page.compact .progress-rail { max-width: 100%; padding-bottom: 22px; }
 .timer-page.compact .progress-rail .stage-progress { height: 9px; }
 .timer-page.compact .progress-logo { top: -6px; width: 22px; height: 22px; margin-left: -11px; }
 .timer-page.compact .progress-logo-img { width: 22px; height: 22px; }
@@ -428,7 +407,7 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
 .timer-page.compact .stage-meta { gap: 12px; font-size: 19px; }
 .timer-page.compact .meta-module { font-size: 19px; }
 .timer-page.compact .meta-total { margin-left: 8px; padding: 2px 10px; border-width: 2px; font-size: 21px; line-height: 1.2; }
-.timer-page.compact .meta-ms { margin-left: 7px; font-size: 12px; }
+.timer-page.compact .meta-ms { margin-left: 7px; font-size: 12px; min-width: 4.2ch; text-align: right; }
 
 /* 控制按钮进场：从下方冲上来 → 轻微撞到上方元素 → 回弹 → 稳定 */
 @keyframes timer-controls-spring {
@@ -450,7 +429,7 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
 
 /* 模块信息行在总时间上方，和主时钟拉开一点距离 */
 .stage-meta { margin: 10rpx 0 2rpx; }
-.timer-page.compact .stage-meta { margin: 6px 0 2px; }
+.timer-page.compact .stage-meta { margin: 2px 0 10px; }
 
 /* 完成结算：改成轻量横向小卡片，不再铺一块大蓝色背景 */
 .celebrate-mask { background: transparent; pointer-events: none; }
@@ -749,21 +728,12 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
 .block-colon { color: var(--ink); }
 
 /* 数字时钟：保留面板，但加一圈清楚的轮廓 */
-.clock-digital .plain-num { border: 3rpx solid var(--edge); }
-.timer-page.compact .clock-digital .plain-num { border-width: 2px; }
+.clock-gradient .plain-num { border: 3rpx solid var(--edge); }
+.timer-page.compact .clock-gradient .plain-num { border-width: 2px; }
 
-/* 极简：改成手写体，并加一圈细框 */
-.clock-minimal .plain-clock {
-  padding: 10rpx 30rpx;
-  border: 3rpx solid var(--ink);
-  border-radius: 18rpx;
-}
-.clock-minimal .plain-num {
-  font-family: "Arial Rounded MT Bold", "Yuanti SC", "YouYuan", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-  font-weight: 500;
-  letter-spacing: 2rpx;
-}
-.timer-page.compact .clock-minimal .plain-clock { padding: 8px 24px; border-width: 2px; }
+/* 细体留白：无框，字号与字重统一在 styles/clocks.wxss */
+.clock-minimal .plain-clock { padding: 10rpx 30rpx; }
+.timer-page.compact .clock-minimal .plain-clock { padding: 8px 24px; }
 
 /* 新增果冻叠影：糖果色填充 + 深色描边 + 错位投影 */
 .clock-jelly .plain-num {
@@ -1120,7 +1090,7 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
 .timer-page.compact .block-colon { font-size: 28px; }
 
 .timer-page.compact .plain-num { font-size: 96px; }
-.timer-page.compact .clock-digital .plain-num { font-size: 96px; padding: 0 32px; }
+.timer-page.compact .clock-gradient .plain-num { font-size: 96px; padding: 0 32px; }
 .timer-page.compact .clock-minimal .plain-num { font-size: 96px; }
 .timer-page.compact .clock-neon .plain-num,
 .timer-page.compact .clock-outline .plain-num { font-size: 96px; }
@@ -1141,7 +1111,7 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
 .block-num { font-size: 40rpx; }
 .block-colon { font-size: 30rpx; }
 .plain-num { font-size: 88rpx; }
-.clock-digital .plain-num { font-size: 84rpx; }
+.clock-gradient .plain-num { font-size: 84rpx; }
 .clock-minimal .plain-num { font-size: 80rpx; }
 .clock-neon .plain-num, .clock-outline .plain-num { font-size: 84rpx; }
 .clock-jelly .plain-num { font-size: 84rpx; }
@@ -1156,7 +1126,7 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
 .timer-page.clock-flip { --immersive-clock-scale: 1.28; }
 .timer-page.clock-blocks { --immersive-clock-scale: 1.32; }
 .timer-page.clock-led { --immersive-clock-scale: 1.12; }
-.timer-page.clock-digital { --immersive-clock-scale: 1.25; }
+.timer-page.clock-gradient { --immersive-clock-scale: 1.25; }
 .timer-page.clock-minimal { --immersive-clock-scale: 1.23; }
 .timer-page.clock-neon,
 .timer-page.clock-outline,
@@ -1166,7 +1136,6 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
   transform-origin: center center;
   transition: transform .44s cubic-bezier(.22, .78, .26, 1);
 }
-.timer-page.immersive .clock-body { transform: scale(var(--immersive-clock-scale)); }
 
 /* 形变起步的那一帧先关掉过渡与布局过渡，等下一帧再放开，避免起点被二次补间 */
 .timer-page.clock-morphing .clock-body { transition: none; }
@@ -1179,7 +1148,7 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
 .block-colon { color: var(--clk-ink); }
 .clock-led .led-seg.on,
 .clock-led .led-dot { background: var(--clk-glow); box-shadow: 0 0 6px var(--clk-glow), 0 0 14px var(--clk-glow); }
-.clock-digital .plain-num { color: var(--clk-ink); }
+.clock-gradient .plain-num { color: var(--clk-ink); }
 .clock-minimal .plain-num { color: var(--clk-ink); }
 .clock-neon .plain-num { color: var(--clk-ink); }
 .clock-outline .plain-num { -webkit-text-stroke-color: var(--clk-ink); }
@@ -1189,33 +1158,451 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
 .timer-page.immersive .immersive-toggle { transition: transform .26s cubic-bezier(.2, .9, .3, 1), opacity .26s ease, background-color .18s ease, box-shadow .18s ease; }
 .timer-page.immersive.chrome-idle .immersive-toggle { opacity: 0; transform: scale(.86); pointer-events: none; }
 
-/* 大时钟尺寸锁定：8 种样式统一占据同一块高度，切换样式时下方组件不再被顶动 */
-.timer-page.compact .clock-stage flip-clock,
-.timer-page.compact .clock-stage .block-row,
-.timer-page.compact .clock-stage .led-clock,
-.timer-page.compact .clock-stage .plain-clock {
-  height: 100px;
+/* 时钟尺寸不再靠“先写死高度再 transform 放大”，统一交给 .clock-slot + --clk-fit（见文件末尾） */
+
+/* TARGET / ON TRACK 下移一档并左右向中间收拢；两级下方各挂一个胶囊 */
+.stage-target { padding: 0 12%; }
+.timer-page.compact .stage-target { padding: 0 12%; }
+
+/* ==================== 竖屏一套（窗口高>宽时启用，独立样式，横屏规则一条不改） ==================== */
+.timer-page.portrait {
+  flex-direction: column;
+  padding: 8rpx 18rpx calc(8rpx + env(safe-area-inset-bottom));
+}
+.timer-page.portrait .portrait-main {
+  position: relative;
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.timer-page.portrait .portrait-stage {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 0 0 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+/* 顶部：模块名 + 模块时间 */
+.timer-page.portrait .stage-meta { margin: 0; gap: 10px; }
+/* 正计时 / 倒计时标签：竖屏右上角悬浮，不占布局高度 */
+.timer-page.portrait .portrait-corner {
+  position: absolute;
+  z-index: 22;
+  top: calc(env(safe-area-inset-top) + 46px);
+  right: 6px;
+  display: flex;
+  justify-content: flex-end;
+}
+.timer-page.portrait .portrait-corner .mode-chip { position: static; align-self: flex-end; margin: 0; }
+/* 嘀嗒开关：进度条正下方一行，居中 */
+.timer-page.portrait .tick-pill { margin: 6px 0 0; align-self: center; }
+/* 第三行：固定大小的大时钟（8 种样式同一尺寸，整排缩放到 375 宽不出界） */
+.timer-page.portrait .clock-stage {
+  position: relative;
+  top: 0;
+  width: 100%;
+  height: auto;
+  padding: 0;
+  gap: 0;
+}
+/* 容器尺寸由窗口算出（JS 写 --slot-w / --slot-h），与皮肤无关 */
+.timer-page .clock-slot {
+  position: relative;
+  width: var(--slot-w, 100%);
+  height: var(--slot-h, 150px);
   flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: visible;
 }
-
-/* TARGET / ON TRACK 下移一档并左右向中间收拢；两级下方各挂一个胶囊 */
-.stage-target { padding: 0 12%; }
-.stage-sub {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 0 12%;
-  margin-top: 4rpx;
-  display: flex;
-  align-items: flex-start;
+/* 竖屏时钟的大小不再写死 0.7，统一交给 JS 实测后写出的 --clk-fit 决定（见文件末尾） */
+.timer-page.portrait .clock-slot .clock-body {
+  flex: 0 0 auto;
+}
+/* 第四行：进度条 */
+.timer-page.portrait .progress-rail {
+  width: 92%;
+  margin: 0 auto;
+  padding-bottom: 14px;
+}
+.timer-page.portrait .stage-progress { max-width: 100%; }
+/* 第五行：两个英文标签 */
+.timer-page.portrait .stage-target {
+  width: 92%;
+  margin: 0 auto;
+  padding: 0;
+}
+/* 第六行：四个按键 */
+.timer-page.portrait .controls {
+  width: 92%;
+  margin: 14px auto 0;
+  padding: 0;
+  gap: 0;
   justify-content: space-between;
 }
-.stage-sub-left { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; }
-.stage-sub-right { display: flex; flex-direction: column; align-items: flex-end; min-width: 0; }
-.stage-sub-left .mode-chip { position: static; align-self: flex-start; margin: 0; }
-.stage-sub-right .tick-pill { margin-top: 0; }
-.timer-page.compact .stage-sub { margin-top: 3px; }
-.timer-page.compact .stage-target { padding: 0 12%; }
-.timer-page.immersive .stage-sub { display: none; }
+.timer-page.portrait .prev-button,
+.timer-page.portrait .pause-button,
+.timer-page.portrait .complete-button {
+  flex: 0 0 56px;
+  width: 56px;
+  min-width: 56px;
+  max-width: 56px;
+  height: 56px;
+  min-height: 56px;
+  max-height: 56px;
+  border-width: 3px;
+  font-size: 24px;
+}
+.timer-page.portrait .prev-button { font-size: 20px; }
+.timer-page.portrait .complete-button { font-size: 26px; }
+.timer-page.portrait .next-button {
+  flex: 0 0 auto;
+  width: auto !important;
+  min-width: 0;
+  max-width: none;
+  height: 56px;
+  min-height: 56px;
+  padding: 0 16px;
+  gap: 6px;
+  border-width: 3px;
+  font-size: 15px;
+}
+.timer-page.portrait .next-arrow { font-size: 14px; }
+/* 第七行：可收纳的模块分栏 */
+.timer-page.portrait .module-side {
+  width: 100%;
+  height: 24vh;
+  flex: 0 0 24vh;
+  max-height: 24vh;
+  padding: 8px 0 0;
+  border-top: 2px solid var(--line);
+}
+.timer-page.portrait .module-list { border-radius: 16rpx; margin: 4rpx 0; }
+.timer-page.portrait .module-toggle {
+  top: auto;
+  bottom: 24vh;
+  right: 10px;
+  transform: none;
+  width: 26px;
+  height: 26px;
+  z-index: 41;
+  background: var(--cream-1);
+  border: 2px solid var(--line-strong);
+  border-radius: 999px;
+  opacity: .92;
+}
+.timer-page.portrait.module-collapsed .module-toggle { right: 10px; bottom: 10px; }
+.timer-page.portrait.module-collapsed .module-side { display: none; }
+
+/* 竖屏全屏：只留大时钟（三优先级压过 .compact / .immersive 的两段规则） */
+.timer-page.portrait.immersive { padding: 0; }
+.timer-page.portrait.immersive .portrait-corner,
+.timer-page.portrait.immersive .tick-pill,
+.timer-page.portrait.immersive .stage-meta,
+.timer-page.portrait.immersive .stage-target,
+.timer-page.portrait.immersive .progress-rail,
+.timer-page.portrait.immersive .controls,
+.timer-page.portrait.immersive .module-side,
+.timer-page.portrait.immersive .module-toggle { display: none; }
+.timer-page.portrait.immersive .portrait-stage { padding-top: 0; gap: 0; justify-content: center; }
+.timer-page.portrait.immersive .clock-stage { height: auto; flex: 0 0 auto; justify-content: center; }
+.timer-page.portrait.immersive .clock-slot { height: 100%; }
+
+/* 右上角悬浮：正计时 / 倒计时标签 + 嘀嗒开关，纵向排列，不占布局高度 */
+.corner-chips {
+  position: absolute;
+  z-index: 22;
+  top: calc(env(safe-area-inset-top) + 44px);
+  right: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+.timer-main .corner-chips .mode-chip { position: static; align-self: flex-end; margin: 0; }
+.timer-main .corner-chips .tick-pill { margin-top: 0; }
+
+/* ================= 选择模块：logo 悬浮球 + 弹出面板（横竖屏共用） ================= */
+.module-fab {
+  position: absolute;
+  z-index: 40;
+  right: 16px;
+  bottom: calc(env(safe-area-inset-bottom) + 18px);
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--card);
+  border: 2px solid var(--edge);
+  box-shadow: 4px 5px 0 var(--shadow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform .26s cubic-bezier(.2, .9, .3, 1), box-shadow .26s ease;
+}
+.module-fab:active { transform: translate(2px, 2px); box-shadow: 2px 3px 0 var(--shadow); }
+.module-fab.open { transform: scale(.9) rotate(-8deg); box-shadow: 2px 3px 0 var(--shadow); }
+.module-fab-logo { width: 32px; height: 32px; }
+
+.module-mask {
+  position: absolute;
+  z-index: 38;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: rgba(15, 40, 60, .14);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .24s ease;
+}
+.module-mask.show { opacity: 1; pointer-events: auto; }
+
+.module-panel {
+  position: absolute;
+  z-index: 39;
+  right: 16px;
+  bottom: calc(env(safe-area-inset-bottom) + 82px);
+  width: 316px;
+  max-width: 82vw;
+  max-height: 54vh;
+  box-sizing: border-box;
+  padding: 10px 8px 6px;
+  display: flex;
+  flex-direction: column;
+  background: var(--card);
+  border: 2px solid var(--edge);
+  border-radius: 20px;
+  box-shadow: 6px 8px 0 var(--shadow);
+  opacity: 0;
+  transform: translateY(12px) scale(.94);
+  transform-origin: bottom right;
+  pointer-events: none;
+  transition: opacity .22s ease, transform .26s cubic-bezier(.2, .9, .3, 1);
+}
+.module-panel.open { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+.module-panel-head { display: flex; align-items: center; justify-content: space-between; padding: 0 10px 8px; }
+.module-panel-title { font-size: 15px; font-weight: 900; color: var(--ink); }
+.module-panel-count { font-size: 13px; font-weight: 900; color: var(--text-3); }
+.module-panel-body { flex: 1 1 auto; min-height: 0; max-height: calc(54vh - 46px); }
+.module-panel-body::-webkit-scrollbar { width: 0 !important; height: 0 !important; display: none !important; }
+
+/* 竖屏：球与面板贴右下，面板更宽一些，方便单手点 */
+.timer-page.portrait .module-fab { right: 14px; bottom: calc(env(safe-area-inset-bottom) + 20px); }
+.timer-page.portrait .module-panel { right: 14px; width: 86%; max-width: 340px; max-height: 48vh; }
+.timer-page.portrait .module-panel-body { max-height: calc(48vh - 46px); }
+
+/* 全屏时球和面板一起收起 */
+.timer-page.immersive .module-fab,
+.timer-page.immersive .module-mask,
+.timer-page.immersive .module-panel { display: none; }
+
+.timer-page.reveal .module-fab { animation: timer-chip-in .4s .16s cubic-bezier(.2, .9, .3, 1) backwards; }
+
+/* 面板里的模块列表：比原分栏字号更大，便于点选 */
+.module-panel .module-list {
+  padding: 10px 10px;
+  margin: 4px 0;
+  border-radius: 14px;
+  font-size: 15px;
+}
+.module-panel .module-list.selected { transform: none; box-shadow: 3px 4px 0 var(--shadow); border-width: 2px; }
+.module-panel .module-index { flex: 0 0 20px; width: 20px; font-size: 15px; }
+.module-panel .module-info { font-size: 15px; gap: 2px; }
+.module-panel .module-info .mi-num { font-size: 13px; }
+
+/* 横屏嘀嗒开关：进度条正下方一行，居中 */
+.timer-page.compact .clock-stage .tick-pill { margin: 4px 0 0; align-self: center; }
+.timer-page.landscape .clock-stage .tick-pill { margin: 4px 0 0; align-self: center; }
+
+/* 全屏沉浸：给时钟一个固定大小、看不见的框（98vw × 90vh），时钟缩放到框里居中，
+   倍率 --ic 由 timer.js 按「当前皮肤实测原始尺寸 × 倍率 ≈ 94vw / 86vh」算出来，
+   框本身无底色无边框，只负责把内容限制在屏幕内 */
+.timer-page.immersive .timer-main .clock-stage,
+.timer-page.immersive .portrait-main .clock-stage {
+  position: relative;
+  top: 0;
+  width: 98vw;
+  height: 90vh;
+  padding: 0;
+  gap: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: scale(var(--ic, 1));
+  transform-origin: center center;
+  transition: transform .44s cubic-bezier(.22, .78, .26, 1);
+  overflow: visible;
+}
+.timer-page.clock-morphing .clock-stage { transition: none; }
+
+/* 全屏时把子层的零散缩放全部清零（紧凑档 1.15 / 竖屏 0.70），避免与上面的倍率互相削弱 */
+.timer-page.immersive .clock-stage .clock-flip-host,
+.timer-page.immersive .clock-stage .block-row,
+.timer-page.immersive .clock-stage .led-clock,
+.timer-page.immersive .clock-stage .plain-clock,
+.timer-page.immersive .clock-stage .clock-slot,
+.timer-page.immersive .clock-stage .clock-slot .clock-flip-host,
+.timer-page.immersive .clock-stage .clock-slot .block-row,
+.timer-page.immersive .clock-stage .clock-slot .led-clock,
+.timer-page.immersive .clock-stage .clock-slot .plain-clock {
+  transform: none;
+}
+
+/* 横竖屏切换：时钟从旧位置平滑滑到新位置（起点由 timer.js 量出来，过渡结束后清空内联样式） */
+.timer-page.orient-anim .clock-stage { transition: transform .46s cubic-bezier(.22, .78, .26, 1); }
+.timer-page.orient-anim .clock-stage .clock-slot { transition: transform .46s cubic-bezier(.22, .78, .26, 1); }
+
+/* ===== 大窗口横屏（电脑 / 平板）：组件各归其位、靠向屏幕四周，
+ * 与边缘固定留白，只做小幅放大，不再全部挤在屏幕中间 ===== */
+.timer-page.wide .timer-main { padding: 0 26px 20px; }
+.timer-page.wide .immersive-toggle { left: calc(env(safe-area-inset-left) + 22px); }
+.timer-page.wide .corner-chips { top: calc(env(safe-area-inset-top) + 14px); right: 26px; }
+.timer-page.wide .clock-stage { top: 6px; }
+.timer-page.wide .progress-rail { width: 100%; max-width: 760px; margin: 0 auto; }
+.timer-page.wide .stage-target { width: 100%; max-width: 760px; margin: 0 auto; padding: 0 10px; }
+.timer-page.wide .controls { width: 100%; max-width: var(--slot-w, 100%); margin: 8px auto 0; padding: 0 2px; justify-content: space-between; gap: 0; }
+
+/* 时钟：只比紧凑档放大一档，约 8% */
+.timer-page.wide .clock-stage .clock-flip-host,
+.timer-page.wide .clock-stage .block-row,
+.timer-page.wide .clock-stage .led-clock,
+.timer-page.wide .clock-stage .plain-clock { height: 140px; }
+.timer-page.wide .stage-meta { margin: 2px 0 18px; gap: 18px; }
+.timer-page.wide .flip-card { width: 62px; height: 102px; }
+.timer-page.wide .flip-num { font-size: 43px; line-height: 102px; }
+.timer-page.wide .flip-colon { font-size: 28px; }
+.timer-page.wide .block-tile { width: 64px; height: 102px; }
+.timer-page.wide .block-num { font-size: 39px; }
+.timer-page.wide .plain-num { font-size: 68px; }
+.timer-page.wide .led-digit { flex-basis: 54px; width: 54px; height: 98px; }
+
+/* ===== 大窗口（电脑 / 平板横屏）：时钟长宽高等比放大 =====
+ * 原来只改了高度（甚至比手机档还窄），这里统一用 --ts 倍率乘原始尺寸，
+ * 宽高同步放大、比例不变；外围组件用更温和的 --cs，避免按钮变成巨块。
+ * 沉浸模式有自己的 --ic 倍率，用 :not(.immersive) 排除。
+ */
+/* ===== 大窗口：时钟不再按皮肤各写一套倍数
+ * 之前用 --ts 把翻页牌、积木、LED、数字分别放大，翻页组件再套一层 transform: scale，
+ * transform 不改布局 → 牌面视觉溢出容器，直接压住下面的进度条。
+ * 现在所有皮肤只按自身原始宽高渲染，由 .clock-slot 的 --clk-fit（zoom）统一等比塞进容器。
+ */
+/* 外围组件：模块名 / 目标 / 进度 / 控制按钮 / 状态胶囊，温和跟随 */
+.timer-page.wide:not(.immersive) .stage-meta {
+  font-size: calc(15px * var(--cs, 1));
+  gap: calc(18px * var(--cs, 1));
+  margin: 2px 0 calc(16px * var(--cs, 1));
+}
+.timer-page.wide:not(.immersive) .stage-target {
+  max-width: var(--slot-w, 100%);
+  margin: calc(6px * var(--cs, 1)) auto 0;
+  font-size: calc(11px * var(--cs, 1));
+  padding: 0 calc(12px * var(--cs, 1));
+}
+.timer-page.wide:not(.immersive) .progress-rail {
+  max-width: var(--slot-w, 100%);
+  padding-bottom: calc(10px * var(--cs, 1));
+}
+.timer-page.wide:not(.immersive) .progress-rail .stage-progress { height: calc(7px * var(--cs, 1)); }
+.timer-page.wide:not(.immersive) .controls { max-width: var(--slot-w, 100%); gap: 0; }
+.timer-page.wide:not(.immersive) .pause-button,
+.timer-page.wide:not(.immersive) .prev-button,
+.timer-page.wide:not(.immersive) .complete-button {
+  flex: 0 0 calc(58px * var(--cs, 1));
+  width: calc(58px * var(--cs, 1));
+  min-width: calc(58px * var(--cs, 1));
+  max-width: calc(58px * var(--cs, 1));
+  height: calc(58px * var(--cs, 1));
+  min-height: calc(58px * var(--cs, 1));
+  max-height: calc(58px * var(--cs, 1));
+  font-size: calc(24px * var(--cs, 1));
+}
+.timer-page.wide:not(.immersive) .next-button {
+  height: calc(58px * var(--cs, 1));
+  min-height: calc(58px * var(--cs, 1));
+  padding: 0 calc(16px * var(--cs, 1)) 0 calc(18px * var(--cs, 1));
+  font-size: calc(19px * var(--cs, 1));
+}
+.timer-page.wide:not(.immersive) .tick-pill {
+  margin-top: calc(10px * var(--cs, 1));
+  padding: calc(4px * var(--cs, 1)) calc(12px * var(--cs, 1));
+  font-size: calc(13px * var(--cs, 1));
+}
+.timer-page.wide:not(.immersive) .mode-chip {
+  padding: calc(4px * var(--cs, 1)) calc(11px * var(--cs, 1));
+  font-size: calc(13px * var(--cs, 1));
+}
+
+/* ===== 切换时钟样式的提示：短暂浮现，颜色跟主题走 ===== */
+.style-hint {
+  position: fixed;
+  z-index: 40;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom) + 104px);
+  padding: calc(7px * var(--cs, 1)) calc(14px * var(--cs, 1));
+  transform: translate(-50%, 8px);
+  opacity: 0;
+  pointer-events: none;
+  color: var(--on-primary);
+  background: var(--primary);
+  border: 2px solid var(--edge);
+  border-radius: 999px;
+  box-shadow: 3px 4px 0 var(--shadow);
+  font-size: calc(14px * var(--cs, 1));
+  font-weight: 900;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  transition: opacity .18s ease, transform .18s ease;
+}
+.style-hint.show { transform: translate(-50%, 0); opacity: 1; }
+
+/* ===== 时钟自适应：任何样式、任何窗口都不许越界 =====
+ * JS（timer.js fitClock）按实测宽高把 --clk-fit 写成 0.55~1，
+ * 这里用 zoom 应用：zoom 会真的改变布局尺寸，时钟缩小时
+ * 模块名 / 进度条 / 按钮会一起往中间收，不会「视觉小了但还占着原来那么宽」。
+ * 全屏（immersive）由沉浸布局自己的倍率负责，这里必须关掉，避免叠加缩小。
+ */
+.timer-page .clock-body { zoom: var(--clk-fit, 1); transform: scale(var(--clk-scale, 1)); transform-origin: center center; }
+.timer-page.immersive .clock-body { zoom: 1; }
+.timer-page.immersive .clock-slot { width: 100%; height: 100%; }
+
+/* 模块名 + 模块时间：宁可省略模块名，也不许把时间顶出屏幕 */
+.timer-page .stage-meta { max-width: 100%; box-sizing: border-box; padding: 0 6px; }
+.timer-page .stage-meta .meta-module {
+  max-width: 58%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.timer-page .stage-meta .meta-total { flex: 0 0 auto; white-space: nowrap; }
+.timer-page .stage-target { box-sizing: border-box; padding: 0 6px; }
+
+/* 矮窗口（手机横屏、分屏小窗）：上下间距一口气收紧，
+ * 把省出来的高度全给时钟，模块名 / 进度 / 按钮依然完整可见 */
+@media (max-height: 430px) {
+  .timer-page.compact { padding: 4px 12px 10px; }
+  .timer-page.compact .timer-main { padding: 0 8px 8px; }
+  .timer-page.compact .clock-stage { top: 0; padding: 4px 0 0; gap: 5px; }
+  .timer-page.compact .stage-meta { font-size: 13px; gap: 10px; margin: 0 0 2px; }
+  .timer-page.compact .meta-total { margin-left: 4px; font-size: 13px; }
+  .timer-page.compact .stage-target { font-size: 12px; }
+  .timer-page.compact .ms-line { margin-bottom: 1px; font-size: 12px; }
+  .timer-page.compact .tick-pill { margin-top: 0; padding: 2px 9px; font-size: 12px; }
+  .timer-page.compact .tick-icon { font-size: 13px; }
+  .timer-page.compact .controls { margin-top: 2px; }
+  .timer-page.compact .pause-button,
+  .timer-page.compact .complete-button,
+  .timer-page.compact .prev-button { flex: 0 0 44px; width: 44px; min-width: 44px; max-width: 44px; height: 44px; min-height: 44px; max-height: 44px; }
+}
+
+/* 描边空心没有外壳，内距会白白算进「原始尺寸」，导致 JS 把整钟缩得更小（字反而更细更小）
+   —— 计时页里直接清零，让轮廓字铺满容器 */
+.timer-page.clock-outline .plain-clock,
+.timer-page.compact .clock-outline .plain-clock,
+.timer-page.wide .clock-stage .clock-outline .plain-clock {
+  padding: 0 !important;
+}

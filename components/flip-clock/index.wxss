@@ -251,3 +251,34 @@
 .fc-compact .fc-row {
   gap: 4px;
 }
+/* ===== 大屏自适应：由宿主页面注入 --fc-scale，整体等比缩放 =====
+   组件内部尺寸是 rpx，在宽窗口下会被成倍放大；页面按窗口算出倍率后注入，
+   这里只做一次缩放，长宽高同比例，不会出现"只有高度变形"的情况。 */
+.fc-row {
+  transform: scale(var(--fc-scale, 1));
+  transform-origin: center center;
+}
+
+/* ===== 桌面 / 宽窗口档：rpx 会按窗口宽度放大成 2 倍以上 =====
+ * 缺少 px 档位时，翻页牌在宽窗口里会撑成三四百像素高，再被计时页的 --clk-fit 自动缩到下限，
+ * 表现出来就是"切到翻页时钟后突然变小"。这里按 CLOCK_BASE 的口径（452×108）给出固定 px 尺寸。 */
+@media (min-width: 700px) {
+  .fc-row { gap: 6px; perspective: 760px; }
+  .fc-colon { font-size: 26px; padding: 0 4px; }
+  .fc-card { width: 64px; height: 108px; border-width: 2px; border-radius: 10px; box-shadow: 3px 4px 0 var(--shadow); }
+  .fc-card::before { border-radius: 8px 8px 0 0; }
+  .fc-face-top, .fc-flap-top, .fc-flap-face { border-radius: 8px 8px 0 0; }
+  .fc-face-bottom, .fc-flap-bottom, .fc-flap-face-bottom { border-radius: 0 0 8px 8px; }
+  .fc-num { font-size: 46px; line-height: 108px; }
+  .fc-split { height: 2px; margin-top: -1px; }
+  .fc-card-ms { width: 64px; height: 108px; }
+  .fc-card-ms .fc-num { font-size: 46px; line-height: 108px; }
+  .fc-ms-dot { margin: 0 2px 14px; font-size: 26px; }
+  .fc-with-ms { gap: 4px; }
+  .fc-with-ms .fc-card,
+  .fc-with-ms .fc-card-ms { width: 56px; height: 100px; }
+  .fc-with-ms .fc-card .fc-num,
+  .fc-with-ms .fc-card-ms .fc-num { font-size: 42px; line-height: 100px; }
+  .fc-with-ms .fc-colon { font-size: 22px; padding: 0 2px; }
+  .fc-with-ms .fc-ms-dot { margin: 0 1px 13px; font-size: 20px; }
+}

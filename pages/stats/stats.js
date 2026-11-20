@@ -6,6 +6,8 @@ const { createPainter, exportPainter, loadImage, isSupported } = require('../../
 
 Page({
   data: {
+    // 首帧就按当前设备与主题渲染，避免桌面上先闪一下手机版顶栏 / 默认配色
+    isDesktop: !!(getApp() && getApp().globalData && getApp().globalData.isDesktop),
     theme: 'sky', themeStyle: '',
     todayText: '0 分钟',
     todayPercent: 0,
@@ -33,6 +35,7 @@ Page({
   },
 
   onLoad() {
+    this.setData({ isDesktop: !!(getApp().globalData && getApp().globalData.isDesktop) })
     const theme = app.getTheme ? app.getTheme() : { key: 'rose' }
     const mode = wx.getStorageSync(app.globalData.modeKey) || 'countup'
     const modeInfo = (app.modes || []).find(item => item.key === mode)
@@ -140,8 +143,24 @@ Page({
     }
   },
 
+  // 画布只用 300×150 的逻辑坐标：宽屏下如果直接画，图表只占左上角一小块，
+  // 右边和下面全是空白。这里先量出画布真实尺寸，再整体等比缩放 + 居中。
   drawTrend() {
     if (!this.data.hasTrend) return
+    wx.createSelectorQuery().select('.trend-canvas').boundingClientRect(rect => {
+      const width = (rect && rect.width) || 0
+      const height = (rect && rect.height) || 0
+      if (!width || !height) {
+        // 首帧还没排版完，等一帧再量，否则会退回 1 倍画出个小图
+        clearTimeout(this.trendRetry)
+        this.trendRetry = setTimeout(() => this.drawTrend(), 200)
+        return
+      }
+      this.paintTrend(Math.min(width / 300, height / 150), width, height)
+    }).exec()
+  },
+
+  paintTrend(k, rectW, rectH) {
     const theme = app.getTheme()
     const palette = theme.canvas
     const tone = theme.css || {}
@@ -153,6 +172,15 @@ Page({
     const success = tone.success || palette.success || palette.sub
     const colors = [primary, primary2, success]
     const ctx = wx.createCanvasContext('trendCanvas', this)
+    // 先按真实尺寸清一次底，避免窗口变化后旧图残留在缩放边界外
+    if (rectW && rectH) ctx.clearRect(0, 0, rectW, rectH)
+    const scale = k > 0 ? k : 1
+    if (scale !== 1) {
+      const boxW = 300 * scale
+      const boxH = 150 * scale
+      ctx.translate(((rectW || boxW) - boxW) / 2, ((rectH || boxH) - boxH) / 2)
+      ctx.scale(scale, scale)
+    }
     const W = 300
     const H = 150
     const left = 26

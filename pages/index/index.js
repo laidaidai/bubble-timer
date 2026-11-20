@@ -13,6 +13,32 @@ const QUOTES = ['稳定节奏，持续精进。', '今天的坚持，是明天�
 const WEEK_LABELS = ['一', '二', '三', '四', '五', '六', '日']
 const TOMATO_GRID_LIMIT = 28
 const TOMATO_COLUMNS = 8
+
+// 首页快捷计时：直接在工作台里跑，不跳页面；状态与快捷计时页共用同一个 storage
+const QUICK_STATE_KEY = 'exam-timer-quick-state'
+const POMODORO_FOCUS = 25 * 60 * 1000
+const POMODORO_REST = 5 * 60 * 1000
+const POMODORO_LONG_REST = 15 * 60 * 1000
+
+function homeStopwatchText(ms) {
+  const total = Math.max(0, ms)
+  const hours = Math.floor(total / 3600000)
+  const minutes = Math.floor((total % 3600000) / 60000)
+  const seconds = Math.floor((total % 60000) / 1000)
+  return hours > 0
+    ? `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`
+    : `${pad(minutes)}:${pad(seconds)}`
+}
+
+function homeCountdownText(ms) {
+  const total = Math.max(0, Math.ceil(ms / 1000))
+  const hours = Math.floor(total / 3600)
+  const minutes = Math.floor((total % 3600) / 60)
+  const seconds = total % 60
+  return hours > 0
+    ? `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`
+    : `${pad(minutes)}:${pad(seconds)}`
+}
 const app = getApp()
 const draw = require('../../utils/poster-draw')
 const { createPainter, exportPainter, loadImage, isSupported } = require('../../utils/painter')
@@ -23,10 +49,13 @@ function importantDateText(key) {
   return `${parts[0]} 年 ${parts[1]} 月 ${parts[2]} 日`
 }
 
-const { pad, clock: formatTime, dateTimeText: formatDateTime, clone, fold, dateKey } = require('../../utils/format')
+const { pad, clock: formatTime, dateTimeText: formatDateTime, clone, fold, dateKey, bindKeyboardHeight } = require('../../utils/format')
 
 Page({
   data: {
+    // 首帧就按当前设备与主题渲染，避免桌面上先闪一下手机版顶栏 / 默认配色
+    isDesktop: !!(getApp() && getApp().globalData && getApp().globalData.isDesktop),
+    kbVars: '',
     view: 'config',
     timerLaunching: false,
     modules: [],
@@ -82,16 +111,15 @@ Page({
     tomatoPop: false,
     incentiveReveal: false,
     homeReveal: false,
-    homePrimary: 'timer',
-    homeQuickTab: '',
-    homeQuickName: '',
     dockDim: false,
-    homeQuickDisplay: '',
-    homeTimerOverride: false,
-    homeTodo: null,
-    homeTodoPreview: [],
+    // 首页固定显示哪一项；pinnedQuickTab 非空时首页直接嵌快捷计时的真实面板
+    pinnedFeature: 'timer',
+    pinnedTodos: [],
+    pinnedTodoTotal: 0,
+    pinnedTodoDone: 0,
+    pinnedStats: {},
+    pinnedQuickTab: '',
     homeImportantPreview: [],
-    homeStats: null,
     // 首页只看最近 3 个倒计时
     homeCountdowns: [],
     homeCountdownCount: 0,
@@ -100,6 +128,9 @@ Page({
   },
 
   onLoad() {
+    // 兜底：万一 utils/format 的灰度/缓存版本没带上这个导出，页面也不该整个挂掉
+    this.unbindKeyboard = typeof bindKeyboardHeight === 'function' ? bindKeyboardHeight(this) : null
+    this.setData({ isDesktop: !!(getApp().globalData && getApp().globalData.isDesktop) })
     const theme = app.getTheme ? app.getTheme() : { key: 'rose' }
     // 首页只保留模块化计时；番茄钟独立在快捷计时里，不再和模块混用
     const modes = (app.modes || []).filter(item => item.key !== 'pomodoro').map(item => ({ ...item }))
@@ -152,8 +183,6 @@ Page({
     this.loadImportantDates()
     this.loadTomatoes()
     this.loadHomeConfig()
-    this.loadHomeTodo()
-    this.loadHomeStats()
   },
 
   resetPortraitMetrics() {
@@ -189,6 +218,19 @@ Page({
   onShow() {
     // 横屏计时页返回后，WebView 偶尔会沿用横屏的 rpx 基准，整页被放大；这里主动拉回竖屏基准
     this.resetPortraitMetrics()
+    // 从工具页「训练」进来时，强制回到首页（训练配置），不要停在计时中 / 报告视图
+    const nav = getApp()
+    if (nav && nav.globalData && nav.globalData.homeResetView) {
+      nav.globalData.homeResetView = ''
+      wx.removeStorageSync('exam-timer-pending-report')
+      if (this.data.view !== 'config') {
+        this.setData({ view: 'config', reportOrigin: '' })
+        // 不在 load 生命周期里直接跑测量/查询，挪到下一拍，避免和首次渲染抢生命周期
+        const runRefresh = () => { if (typeof this.refreshConfig === 'function') this.refreshConfig() }
+        if (wx.nextTick) wx.nextTick(runRefresh)
+        else setTimeout(runRefresh, 0)
+      }
+    }
     if (this.data.timerLaunching) {
       clearTimeout(this.timerCoverTimer)
       this.timerCoverTimer = setTimeout(() => this.setData({ timerLaunching: false }), 280)
@@ -217,9 +259,6 @@ Page({
       this.reportLeftPage = false
       this.resetToHome()
     }
-    const homeTimerRequest = wx.getStorageSync('exam-timer-home-timer')
-    if (homeTimerRequest) wx.removeStorageSync('exam-timer-home-timer')
-    this.setData({ homeTimerOverride: !!homeTimerRequest })
     const habitApply = wx.getStorageSync(app.globalData.habitApplyKey)
     if (habitApply) {
       wx.removeStorageSync(app.globalData.habitApplyKey)
@@ -273,8 +312,6 @@ Page({
     this.loadImportantDates()
     this.loadTomatoes()
     this.loadHomeConfig()
-    this.loadHomeTodo()
-    this.loadHomeStats()
     this.playIncentiveReveal()
     this.playHomeReveal()
     setTimeout(() => this.measureConfigScroll(), 150)
@@ -334,6 +371,10 @@ Page({
   },
 
   onUnload() {
+    if (this.unbindKeyboard) {
+      this.unbindKeyboard()
+      this.unbindKeyboard = null
+    }
     clearTimeout(this.settleTimer)
     clearTimeout(this.settleTimer2)
     clearTimeout(this.templateSwitchTimer)
@@ -346,110 +387,103 @@ Page({
   // ---- 重要日子倒计时 ----
   loadHomeConfig() {
     const settings = app.getSettings ? app.getSettings() : {}
-    const savedPrimary = settings.homePrimary || 'timer'
-    const primary = savedPrimary === 'quick' ? 'quick-stopwatch' : savedPrimary
-    const quickMeta = {
-      'quick-stopwatch': { tab: 'stopwatch', name: '秒表', display: '00:00' },
-      'quick-countdown': { tab: 'countdown', name: '计时器', display: this.quickHomeCountdownText() },
-      'quick-pomodoro': { tab: 'pomodoro', name: '番茄钟', display: '25:00' }
-    }
-    const quick = quickMeta[primary] || { tab: '', name: '', display: '' }
-    if (savedPrimary === 'quick') app.saveSettings && app.saveSettings({ homePrimary: primary })
+    const pinned = settings.pinnedFeature || 'timer'
     this.setData({
-      homePrimary: primary,
-      homeQuickTab: quick.tab,
-      homeQuickName: quick.name,
-      homeQuickDisplay: quick.display,
-      incentiveType: settings.incentiveType || 'tomato'
+      incentiveType: settings.incentiveType || 'tomato',
+      pinnedFeature: pinned,
+      pinnedQuickTab: pinned.indexOf('quick-') === 0 ? pinned.slice(6) : ''
     })
+    this.refreshPinnedData(pinned)
   },
 
-  quickHomeCountdownText() {
-    let minutes = 30
-    try {
-      const state = wx.getStorageSync('exam-timer-quick-state') || {}
-      minutes = Math.max(1, Number(state.selectedPreset) || 30)
-    } catch (e) {}
-    const hour = Math.floor(minutes / 60)
-    const min = minutes % 60
-    return hour ? `${hour}:${pad(min)}:00` : `${pad(min)}:00`
+  // 首页固定成待办 / 重要日子 / 打卡时，分别去读各自真实数据（不另建页面，直接复用存储与统计口径）
+  refreshPinnedData(pinned) {
+    const key = pinned || this.data.pinnedFeature
+    if (key === 'todo') this.loadPinnedTodos()
+    else if (key === 'stats') this.loadPinnedStats()
   },
 
-  loadHomeTodo() {
-    const todos = wx.getStorageSync(app.globalData.todoKey) || []
-    const pending = todos.filter(item => !item.done).sort((a, b) => {
-      const at = a.dueAt || Number.MAX_SAFE_INTEGER
-      const bt = b.dueAt || Number.MAX_SAFE_INTEGER
-      return at - bt
+  loadPinnedTodos() {
+    const raw = wx.getStorageSync(app.globalData.todoKey) || []
+    const list = Array.isArray(raw) ? raw : []
+    const pending = list.filter(item => !item.done)
+    const sorted = pending.slice().sort((a, b) => {
+      const av = a.dueAt || Number.MAX_SAFE_INTEGER
+      const bv = b.dueAt || Number.MAX_SAFE_INTEGER
+      return av - bv
     })
-    const preview = pending.slice(0, 3).map(item => {
-      const date = item.dueAt ? new Date(item.dueAt) : null
-      const todayKey = dateKey(new Date())
-      const timeText = date
-        ? (dateKey(date) === todayKey ? `${pad(date.getHours())}:${pad(date.getMinutes())}` : `${date.getMonth() + 1}/${date.getDate()} ${pad(date.getHours())}:${pad(date.getMinutes())}`)
-        : ''
-      return { id: item.id, text: item.text, timeText, overdue: !!(item.dueAt && item.dueAt < Date.now()) }
-    })
-    if (!pending.length) {
-      if (this.data.homeTodo || this.data.homeTodoPreview.length) this.setData({ homeTodo: null, homeTodoPreview: [] })
-      return
-    }
-    const todo = pending[0]
-    const date = todo.dueAt ? new Date(todo.dueAt) : null
-    const today = dateKey(new Date())
-    const timeText = date
-      ? (dateKey(date) === today ? `${pad(date.getHours())}:${pad(date.getMinutes())}` : `${date.getMonth() + 1}/${date.getDate()} ${pad(date.getHours())}:${pad(date.getMinutes())}`)
-      : ''
+    const rows = sorted.slice(0, 4).map(item => ({
+      id: item.id,
+      text: item.text || '',
+      dueText: this.pinnedDueText(item.dueAt)
+    }))
     this.setData({
-      homeTodo: {
-        id: todo.id,
-        text: todo.text,
-        timeText,
-        overdue: !!(todo.dueAt && todo.dueAt < Date.now())
-      },
-      homeTodoPreview: preview
+      pinnedTodos: rows,
+      pinnedTodoTotal: list.length,
+      pinnedTodoDone: list.filter(item => item.done).length
     })
   },
 
-  openQuickPage(event) {
-    const tab = event && event.currentTarget && event.currentTarget.dataset
-      ? event.currentTarget.dataset.tab
-      : ''
-    const url = tab && ['stopwatch', 'countdown', 'pomodoro'].indexOf(tab) >= 0
-      ? `/pages/quick/quick?tab=${tab}`
-      : '/pages/quick/quick'
-    wx.navigateTo({ url })
+  pinnedDueText(dueAt) {
+    if (!dueAt) return ''
+    const target = new Date(dueAt)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const thatDay = new Date(target.getFullYear(), target.getMonth(), target.getDate())
+    const dayDiff = Math.round((thatDay - today) / 86400000)
+    if (dayDiff === 0) return '今天'
+    if (dayDiff === 1) return '明天'
+    if (dayDiff === -1) return '昨天'
+    return `${target.getMonth() + 1}月${target.getDate()}日`
   },
 
-  startQuickHome(event) {
-    const tab = event && event.currentTarget && event.currentTarget.dataset
-      ? event.currentTarget.dataset.tab
-      : this.data.homeQuickTab
-    if (!tab) return
-    wx.navigateTo({ url: `/pages/quick/quick?tab=${tab}&autostart=1` })
-  },
-
-  openTodoPage() {
-    wx.navigateTo({ url: '/pages/todo/todo' })
-  },
-
-  loadHomeStats() {
-    const summary = app.dailyStats ? app.dailyStats() : {}
+  loadPinnedStats() {
+    if (!app.dailyStats) return
+    const stats = app.dailyStats()
     this.setData({
-      homeStats: {
-        percent: summary.todayPercent || 0,
-        streak: summary.streak || 0,
-        weekDays: summary.weekDays || 0
+      pinnedStats: {
+        todayMinutes: Math.floor((stats.todaySeconds || 0) / 60),
+        todayPercent: stats.todayPercent || 0,
+        weekMinutes: Math.floor((stats.weekSeconds || 0) / 60),
+        streak: stats.streak || 0,
+        totalDays: stats.totalDays || 0
       }
     })
   },
 
-  openStatsPage() {
-    wx.navigateTo({ url: '/pages/stats/stats' })
+  // 固定面板里勾一下即可完成待办，写回同一份存储
+  togglePinnedTodo(event) {
+    const id = event && event.currentTarget && event.currentTarget.dataset && event.currentTarget.dataset.id
+    if (!id) return
+    const raw = wx.getStorageSync(app.globalData.todoKey) || []
+    const list = (Array.isArray(raw) ? raw : []).map(item => (item.id === id ? { ...item, done: !item.done, doneAt: !item.done ? Date.now() : 0 } : item))
+    wx.setStorageSync(app.globalData.todoKey, list)
+    if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
+    this.loadPinnedTodos()
   },
 
-  exitTimerOverride() {
-    this.setData({ homeTimerOverride: false })
+  // 固定面板右上角箭头：进对应的真实页面
+  openPinnedFeature() {
+    const map = {
+      todo: '/pages/todo/todo',
+      important: '/pages/important/important',
+      stats: '/pages/stats/stats?tab=overview'
+    }
+    const url = map[this.data.pinnedFeature]
+    if (url) wx.navigateTo({ url })
+  },
+
+  applyPinnedFeature(key) {
+    const pinned = key || 'timer'
+    const quickTab = pinned.indexOf('quick-') === 0 ? pinned.slice(6) : ''
+    const nameMap = { timer: '训练计时', 'quick-stopwatch': '秒表', 'quick-countdown': '计时器', 'quick-pomodoro': '番茄钟', todo: '待办', important: '重要日子', stats: '打卡' }
+    app.saveSettings && app.saveSettings({ pinnedFeature: pinned })
+    this.setData({ pinnedFeature: pinned, pinnedQuickTab: quickTab }, () => {
+      setTimeout(() => this.measureConfigScroll(), 60)
+    })
+    this.refreshPinnedData(pinned)
+    if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
+    wx.showToast({ title: `已固定：${nameMap[pinned] || pinned}`, icon: 'none', duration: 1200 })
   },
 
   // 顶栏返回：任何首页子页面都回到首页主视图
@@ -468,7 +502,6 @@ Page({
       this.backToConfig()
       return
     }
-    if (this.data.homeTimerOverride) this.setData({ homeTimerOverride: false })
   },
 
   loadImportantDates() {
@@ -701,6 +734,18 @@ Page({
       clearTimeout(this.tomatoPopTimer)
       this.tomatoPopTimer = setTimeout(() => this.setData({ tomatoPop: false }), 700)
     }
+  },
+
+  // 点一下首页激励区的图案，就地循环切换激励图案（番茄 → 星星 → 泡泡 → 小鱼）
+  // 点一下直接换下一个图案，不再弹提示（图案本身就说明了切换结果）
+  cycleIncentive() {
+    const order = ['tomato', 'star', 'bubble', 'fish']
+    const current = this.data.incentiveType || 'tomato'
+    const next = order[(order.indexOf(current) + 1) % order.length]
+    if (app.saveSettings) app.saveSettings({ incentiveType: next })
+    this.loadTomatoes()
+    this.playIncentiveReveal()
+    if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
   },
 
   withIds(modules) {
@@ -1510,7 +1555,7 @@ Page({
       this.reportAutoExitTimer = null
     }
     this.reportLeftPage = false
-    this.setData({ view: 'config', homeTimerOverride: false }, this.refreshConfig)
+    this.setData({ view: 'config' }, this.refreshConfig)
   },
 
   onTabItemTap() {

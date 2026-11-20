@@ -949,3 +949,124 @@ button.round-small:last-child { border-radius: 0 999rpx 999rpx 0 !important; }
   -webkit-tap-highlight-color: transparent;
 }
 .back-icon::before { pointer-events: none; }
+
+/* ===== 桌面 / 大屏自适应 =====
+ * 窗口变宽后 rpx 会跟着放大，页面不再无限拉宽：
+ * 内容收进中央一列（与屏幕边缘保留留白），组件各自回到自己的位置，
+ * 不会因为窗口变大而挤成一团或被横向拉长。
+ */
+.desk {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  /* 兜底：限宽后两侧留白靠这圈超大扩散的底色填平，
+   * 即使 ::before 在个别页面被层叠上下文吃掉，也不会露出 app.json 的默认底色 */
+  box-shadow: 0 0 0 100vmax var(--bg);
+}
+/* 桌面内容列限宽 1280 后，两侧留白会露出 app.json 里写死的默认底色，
+ * 切换主题时只有中间那列变色、边缘不变。这里铺一层整屏主题底色兜住四边。
+ * 用 fixed 而不是给根节点撑宽，避免影响各页已算好的滚动高度。 */
+.desk::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: -1;
+  background: var(--bg);
+  pointer-events: none;
+}
+.desk .page-content { max-width: 100%; }
+
+/* ===== 桌面 / 大屏：顶栏锁在手机档高度，不再随窗口等比放大 =====
+ * rpx 会跟着窗口宽度放大，179rpx 的顶栏在 1700px 窗口里能撑到 400px，
+ * 这里直接用 px 钉死，并撑满视口宽（不受内容列限宽影响）。
+ */
+.desk .topbar {
+  width: 100vw;
+  margin-left: calc((100% - 100vw) / 2);
+  height: 84px;
+  padding: 34px 14px 0;
+  gap: 7px;
+  border-bottom-width: 2px;
+}
+.desk .topbar-title { font-size: 18px; letter-spacing: 1px; }
+.desk .back-icon {
+  flex: 0 0 36px;
+  width: 36px !important;
+  min-width: 36px !important;
+  max-width: 36px;
+  height: 32px;
+  font-size: 30px;
+}
+.desk .topbar-spacer,
+.desk .topbar-brand-slot { flex: 0 0 36px; width: 36px; height: 32px; }
+
+/* ===== 桌面 / 大屏：滚动区高度按「px 底栏 + 安全区」精确计算 =====
+ * 原来按 286rpx 预留，rpx 被放大后会算错，底部露出一条空白带。
+ * 桌面底栏实际高度是 52px 外加安全区，这里两者都扣掉；
+ * 无 tabBar 的页面直接占满一屏。
+ */
+/* 有底栏的页面：滚动区一路铺到窗口底边，底栏（不透明主题色）压在上面。
+ * 之前是「扣掉 52px + 安全区」把滚动区截断在底栏上方，一旦实际底栏比这个估算高，
+ * 截断线就会浮在底栏上方，露出一条画不出内容的死白带，最后一张卡还被切掉半截。
+ * 现在改成整屏高 + 用内距把内容抬到底栏之上，滚到末尾最后一张卡能完整露出来。 */
+.desk.app .config-scroll,
+.desk.app .report-scroll,
+.desk.tools-page .tools-body,
+.desk.history-page .history-body {
+  height: 100vh !important;
+  box-sizing: border-box;
+}
+/* 内容末尾给底栏（52px + 安全区）留出净空，外加 28px 呼吸位，
+ * 顺带避开左下角悬浮球，最后一行不会被压住。 */
+.desk.app .config-scroll,
+.desk.tools-page .tools-body,
+.desk.history-page .history-body {
+  padding-bottom: calc(52px + env(safe-area-inset-bottom) + 28px) !important;
+}
+.desk.stats-page .stats-body,
+.desk.todo-page .todo-body,
+.desk.imp-page .imp-body {
+  height: 100vh !important;
+  box-sizing: border-box;
+}
+
+/* ===== 桌面 / 大屏：通用弹窗（输入框与按钮属于控件，不随窗口放大）=====
+ * 弹窗宽度收成一列（620px），输入框、取消/确定按钮全部回到手机档。
+ */
+.desk .modal-mask { padding: 0 22px; }
+.desk .modal-card {
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 18px 16px 16px;
+  border-width: 2px;
+  border-radius: 17px;
+  box-shadow: 4px 5px 0 var(--shadow);
+}
+.desk .modal-title { font-size: 18px; }
+.desk .modal-desc { margin-top: 4px; font-size: 12px; }
+.desk .modal-input {
+  margin-top: 12px;
+  height: 46px;
+  padding: 0 12px;
+  border-width: 1px;
+  border-radius: 10px;
+  font-size: 15px;
+}
+.desk .modal-actions { margin-top: 13px; gap: 9px; }
+.desk .modal-cancel,
+.desk .modal-confirm {
+  padding: 11px 0;
+  border-width: 1px;
+  font-size: 14px;
+}
+.desk .modal-confirm { box-shadow: 2px 3px 0 var(--shadow); }
+
+/* ===== 软键盘弹起时给 fixed 弹窗让位 =====
+ * 弹层是 position: fixed 的，键盘弹起时不会跟页面一起上推，
+ * 页面用 utils/keyboard.js 把键盘高度写进 --kb，这里把弹窗内容整体上移。
+ * 用 !important 是因为各页 wxss 里的 `padding: 0 xx` 简写会覆盖 padding-bottom。 */
+.modal-mask { padding-bottom: var(--kb, 0px) !important; }

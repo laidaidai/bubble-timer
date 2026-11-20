@@ -1,5 +1,5 @@
-<view class="stats-page theme-{{theme}}" style="{{themeStyle}}">
-  <view class="topbar">
+<view class="stats-page theme-{{theme}} {{isDesktop ? 'desk' : ''}}" style="{{themeStyle}}">
+  <view class="topbar" wx:if="{{!isDesktop}}">
     <view class="back-icon" bindtap="handleBack" aria-label="返回">‹</view>
     <view class="topbar-title">打卡</view>
     <view class="topbar-spacer"></view>

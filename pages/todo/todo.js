@@ -46,6 +46,8 @@ function dueLabel(dueAt) {
 
 Page({
   data: {
+    // 首帧就按当前设备与主题渲染，避免桌面上先闪一下手机版顶栏 / 默认配色
+    isDesktop: !!(getApp() && getApp().globalData && getApp().globalData.isDesktop),
     theme: 'sky', themeStyle: '',
     todos: [],
     viewTodos: [],
@@ -89,6 +91,7 @@ Page({
   },
 
   onLoad() {
+    this.setData({ isDesktop: !!(getApp().globalData && getApp().globalData.isDesktop) })
     this.syncTheme()
     this.loadTodos()
     // 键盘高度 → 底部面板整体抬升，避免输入法盖住输入框
