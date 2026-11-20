@@ -15,6 +15,7 @@ const IMMERSIVE_CLOCK_SCALE = {
 }
 const OUTRO_DELAY = 180   // 外围组件淡出的时长，之后才切换沉浸布局
 const MORPH_GAP = 36      // 切换布局后等一帧再放开过渡，保证起点画面与切换前一致
+const CHROME_IDLE_DELAY = 3000  // 全屏时退出键闲置多久后自动收起
 
 Page({
   data: {
@@ -26,7 +27,7 @@ Page({
     msText: '00', msShow: true, theme: 'sky', themeStyle: '',
     isLastModule: false, isFirstModule: true,
     mode: 'countup', modeName: '正计时', mainLabel: '总用时',
-    phaseLabel: '', phaseText: '', tickMuted: true, compact: true, immersive: false, moduleCollapsed: false,
+    phaseLabel: '', phaseText: '', tickMuted: true, compact: true, immersive: false, moduleCollapsed: true, chromeIdle: false,
     celebrating: false, celebrationBubbles: [], celebrationMessage: '',
     timerReveal: false, immersiveAnim: false, immersiveLeaving: false,
     clockMorph: false, clockMorphStyle: ''
@@ -130,10 +131,13 @@ Page({
   },
 
   onHide() {
+    this.clearChromeIdle()
+    if (this.data.chromeIdle) this.setData({ chromeIdle: false })
     if (!this.finished) this.persistSession()
   },
 
   onUnload() {
+    this.clearChromeIdle()
     // 离开前结算最后一秒，避免会话里少记一段
     if (!this.finished) {
       try { this.tick() } catch (error) { /* 已销毁计时器，忽略 */ }
@@ -428,6 +432,27 @@ Page({
     this.setData(patch)
   },
 
+  // 全屏时退出键闲置 3s 自动收起（只动透明度与缩放，不参与布局）
+  scheduleChromeIdle() {
+    clearTimeout(this.chromeIdleTimer)
+    if (!this.data.immersive) return
+    if (this.data.chromeIdle) this.setData({ chromeIdle: false })
+    this.chromeIdleTimer = setTimeout(() => {
+      if (this.data.immersive) this.setData({ chromeIdle: true })
+    }, CHROME_IDLE_DELAY)
+  },
+
+  clearChromeIdle() {
+    clearTimeout(this.chromeIdleTimer)
+    this.chromeIdleTimer = null
+  },
+
+  // 点击屏幕任何位置唤回退出键，并把闲置计时重新开始
+  handlePageTap() {
+    if (!this.data.immersive) return
+    this.scheduleChromeIdle()
+  },
+
   toggleModuleSide() {
     const moduleCollapsed = !this.data.moduleCollapsed
     this.setData({ moduleCollapsed })
@@ -494,6 +519,7 @@ Page({
           // 下一帧放开过渡：由同一个 transform 平滑长到全屏倍率与页面中心
           this.immersiveAnimTimer = setTimeout(() => {
             this.setData({ clockMorph: false, clockMorphStyle: '' })
+            this.scheduleChromeIdle()
             this.immersivePhaseTimer = setTimeout(() => { this.immersiveBusy = false }, 460)
           }, MORPH_GAP)
         })
@@ -503,6 +529,8 @@ Page({
 
   closeImmersive() {
     this.immersiveBusy = true
+    this.clearChromeIdle()
+    if (this.data.chromeIdle) this.setData({ chromeIdle: false })
     const shift = this.immersiveShift || { dx: 0, dy: 0 }
     const scale = IMMERSIVE_CLOCK_SCALE[this.data.clockStyle] || 1.26
     // 退场期间关掉 reveal：出全屏动画收尾时 immersiveAnim 撤掉，

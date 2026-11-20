@@ -156,6 +156,14 @@ Page({
     this.loadHomeStats()
   },
 
+  resetPortraitMetrics() {
+    if (!wx.setDeviceOrientation) return
+    clearTimeout(this.portraitTimer)
+    this.portraitTimer = setTimeout(() => {
+      wx.setDeviceOrientation({ value: 'portrait', fail: () => {} })
+    }, 40)
+  },
+
   onHide() {
     if (this.dragActive) this.touchEnd()
     if (this.data.view === 'report') this.reportLeftPage = true
@@ -179,6 +187,8 @@ Page({
   },
 
   onShow() {
+    // 横屏计时页返回后，WebView 偶尔会沿用横屏的 rpx 基准，整页被放大；这里主动拉回竖屏基准
+    this.resetPortraitMetrics()
     if (this.data.timerLaunching) {
       clearTimeout(this.timerCoverTimer)
       this.timerCoverTimer = setTimeout(() => this.setData({ timerLaunching: false }), 280)

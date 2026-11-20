@@ -86,10 +86,10 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
 .stage-meta { margin-top: 0; display: flex; align-items: baseline; gap: 22rpx; color:var(--text-warm); font-size: 18rpx; }
 .meta-module { color:var(--ink); font-weight: 900; }
 .meta-total { margin-left: 10rpx; color:var(--text-2); font-size: 18rpx; }
-.stage-progress { width: 100%; max-width: 460rpx; height: 8rpx; box-sizing: border-box; margin-top: 2rpx; overflow: hidden; background:var(--track); border:2rpx solid var(--edge); border-radius: 999rpx; }
+.stage-progress { width: 100%; max-width: none; height: 8rpx; box-sizing: border-box; margin-top: 2rpx; overflow: hidden; background:var(--track); border:2rpx solid var(--edge); border-radius: 999rpx; }
 .stage-progress-fill { height: 100%; background:var(--primary-2); }
 .overtime-fill { background:var(--danger); }
-.stage-target { width: 100%; max-width: 460rpx; box-sizing: border-box; display: flex; justify-content: space-between; color:var(--text-2); font-size: 18rpx; font-weight: 900; }
+.stage-target { width: 100%; max-width: none; box-sizing: border-box; display: flex; justify-content: space-between; color:var(--text-2); font-size: 18rpx; font-weight: 900; }
 .on-track { color:var(--success-text); }
 .overtime { color:var(--danger-text); }
 
@@ -145,7 +145,7 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
 .timer-page.compact .flip-num { font-size: 40px; line-height: 96px; }
 .timer-page.compact .block-row { gap: 6px; }
 .timer-page.compact .block-colon { font-size: 22px; }
-.timer-page.compact .block-tile { width: 60px; height: 80px; border-width: 2px; border-radius: 9px; box-shadow: 3px 3px 0 var(--shadow); }
+.timer-page.compact .block-tile { width: 60px; height: 96px; border-width: 2px; border-radius: 9px; box-shadow: 3px 3px 0 var(--shadow); }
 .timer-page.compact .block-num { font-size: 36px; }
 .timer-page.compact .plain-num { font-size: 64px; }
 .timer-page.compact .clock-digital .plain-num { padding: 8px 26px; font-size: 62px; }
@@ -163,8 +163,8 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
 .timer-page.compact .next-button { width: auto !important; min-width: 0; max-width: none; justify-content: center; height: 50px; min-height: 50px; padding: 0 14px; gap: 5px; border-width: 2px; font-size: 14px; }
 .timer-page.compact .next-arrow { font-size: 14px; }
 
-.timer-page.compact .led-clock { gap: 4px; padding: 7px 13px; }
-.timer-page.compact .led-digit { flex-basis: 50px; width: 50px; height: 84px; }
+.timer-page.compact .led-clock { gap: 4px; padding: 2px 13px; }
+.timer-page.compact .led-digit { flex-basis: 50px; width: 50px; height: 92px; }
 .timer-page.compact .led-colon { flex-basis: 7px; width: 7px; height: 52px; gap: 14px; }
 .timer-page.compact .led-dot { width: 6px; height: 6px; }
 
@@ -396,9 +396,9 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
 .module-list.selected { transform: translateX(-2rpx); }
 
 /* 进度条略微加粗，下方品牌 logo 跟随进度移动 */
-.progress-rail { position: relative; width: 100%; max-width: 460rpx; padding-bottom: 42rpx; }
+.progress-rail { position: relative; width: 100%; max-width: none; box-sizing: border-box; padding-bottom: 42rpx; }
 .progress-rail .stage-progress { width: 100%; max-width: none; height: 12rpx; margin: 0; }
-.progress-logo { position: absolute; top: 18rpx; width: 32rpx; height: 32rpx; margin-left: -16rpx; transition: left .35s ease; animation: progress-logo-bob 1.8s ease-in-out infinite; }
+.progress-logo { position: absolute; top: -10rpx; width: 32rpx; height: 32rpx; margin-left: -16rpx; transition: left .35s ease; animation: progress-logo-bob 1.8s ease-in-out infinite; }
 .progress-logo-img { width: 32rpx; height: 32rpx; display: block; }
 @keyframes progress-logo-bob {
   0%, 100% { transform: translateY(0) scale(1); }
@@ -406,7 +406,7 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
 }
 .timer-page.compact .progress-rail { max-width: 100%; padding-bottom: 27px; }
 .timer-page.compact .progress-rail .stage-progress { height: 9px; }
-.timer-page.compact .progress-logo { top: 13px; width: 22px; height: 22px; margin-left: -11px; }
+.timer-page.compact .progress-logo { top: -6px; width: 22px; height: 22px; margin-left: -11px; }
 .timer-page.compact .progress-logo-img { width: 22px; height: 22px; }
 .timer-page.immersive .progress-rail { display: none; }
 
@@ -449,8 +449,8 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
 .module-side { scrollbar-width: none; -ms-overflow-style: none; }
 
 /* 模块信息行在总时间上方，和主时钟拉开一点距离 */
-.stage-meta { margin: 6rpx 0 2rpx; }
-.timer-page.compact .stage-meta { margin: 4px 0 2px; }
+.stage-meta { margin: -20rpx 0 2rpx; }
+.timer-page.compact .stage-meta { margin: -9px 0 2px; }
 
 /* 完成结算：改成轻量横向小卡片，不再铺一块大蓝色背景 */
 .celebrate-mask { background: transparent; pointer-events: none; }
@@ -1119,14 +1119,14 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
 .timer-page.compact .block-num { font-size: 44px; }
 .timer-page.compact .block-colon { font-size: 28px; }
 
-.timer-page.compact .plain-num { font-size: 84px; }
-.timer-page.compact .clock-digital .plain-num { font-size: 80px; padding: 10px 32px; }
-.timer-page.compact .clock-minimal .plain-num { font-size: 78px; }
+.timer-page.compact .plain-num { font-size: 96px; }
+.timer-page.compact .clock-digital .plain-num { font-size: 96px; padding: 0 32px; }
+.timer-page.compact .clock-minimal .plain-num { font-size: 96px; }
 .timer-page.compact .clock-neon .plain-num,
-.timer-page.compact .clock-outline .plain-num { font-size: 80px; }
+.timer-page.compact .clock-outline .plain-num { font-size: 96px; }
 .timer-page.compact .clock-neon .plain-clock,
 .timer-page.compact .clock-outline .plain-clock { padding: 12px 34px; }
-.timer-page.compact .clock-jelly .plain-num { font-size: 80px; }
+.timer-page.compact .clock-jelly .plain-num { font-size: 96px; }
 
 .timer-page.compact .led-clock { gap: 6px; padding: 12px 22px; }
 .timer-page.compact .led-digit { flex-basis: 68px; width: 68px; height: 116px; }
@@ -1184,3 +1184,38 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
 .clock-neon .plain-num { color: var(--clk-ink); }
 .clock-outline .plain-num { -webkit-text-stroke-color: var(--clk-ink); }
 .clock-jelly .plain-num { color: var(--clk-ink); }
+
+/* 全屏闲置：退出键静置 3s 自动收纳，点屏幕任何位置唤回（只动透明度/缩放，不参与布局） */
+.timer-page.immersive .immersive-toggle { transition: transform .26s cubic-bezier(.2, .9, .3, 1), opacity .26s ease, background-color .18s ease, box-shadow .18s ease; }
+.timer-page.immersive.chrome-idle .immersive-toggle { opacity: 0; transform: scale(.86); pointer-events: none; }
+
+/* 大时钟尺寸锁定：8 种样式统一占据同一块高度，切换样式时下方组件不再被顶动 */
+.timer-page.compact .clock-stage flip-clock,
+.timer-page.compact .clock-stage .block-row,
+.timer-page.compact .clock-stage .led-clock,
+.timer-page.compact .clock-stage .plain-clock {
+  height: 100px;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* TARGET / ON TRACK 下移一档并左右向中间收拢；两级下方各挂一个胶囊 */
+.stage-target { padding: 0 12%; }
+.stage-sub {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 12%;
+  margin-top: 4rpx;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.stage-sub-left { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; }
+.stage-sub-right { display: flex; flex-direction: column; align-items: flex-end; min-width: 0; }
+.stage-sub-left .mode-chip { position: static; align-self: flex-start; margin: 0; }
+.stage-sub-right .tick-pill { margin-top: 0; }
+.timer-page.compact .stage-sub { margin-top: 3px; }
+.timer-page.compact .stage-target { padding: 0 12%; }
+.timer-page.immersive .stage-sub { display: none; }

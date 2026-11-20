@@ -44,6 +44,13 @@ Page({
   },
 
   onShow() {
+    // 从横屏计时页回来后，强制回到竖屏基准，避免整页 rpx 被放大
+    if (wx.setDeviceOrientation) {
+      clearTimeout(this.portraitTimer)
+      this.portraitTimer = setTimeout(() => {
+        wx.setDeviceOrientation({ value: 'portrait', fail: () => {} })
+      }, 40)
+    }
     if (this.ready) {
       this.syncTheme()
       this.loadStats()

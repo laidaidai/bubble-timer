@@ -8,6 +8,13 @@
   <brand-dock theme-style="{{themeStyle}}" dim="{{dockDim}}" above-tabbar="{{true}}"></brand-dock>
 
   <scroll-view class="history-body" scroll-y>
+    <view class="history-toolbar" wx:if="{{records.length}}">
+      <text class="history-toolbar-count">共 <text class="num">{{records.length}}</text> 条记录</text>
+      <view class="clear-all-btn" bindtap="clearAllRecords" aria-label="清空全部记录">
+        <view class="cross-line a"></view>
+        <view class="cross-line b"></view>
+      </view>
+    </view>
     <view class="history-card {{burstingIndex === index ? 'bubble-bursting' : ''}}" wx:for="{{records}}" wx:key="id">
       <view class="history-head">
         <view class="history-title-wrap">

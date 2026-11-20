@@ -104,6 +104,23 @@ Page({
     this.launchTimer()
   },
 
+  clearAllRecords() {
+    if (!this.data.records.length) return
+    wx.showModal({
+      title: '清空全部记录？',
+      content: `共 ${this.data.records.length} 条训练记录，清空后无法恢复。`,
+      confirmText: '清空',
+      confirmColor: '#E8442F',
+      success: ({ confirm }) => {
+        if (!confirm) return
+        if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
+        wx.setStorageSync(app.globalData.recordsKey, [])
+        this.setData({ records: [], burstingIndex: -1 })
+        wx.showToast({ title: '已清空', icon: 'none' })
+      }
+    })
+  },
+
   removeRecord(event) {
     const index = Number(event.currentTarget.dataset.index)
     const record = this.data.records[index]

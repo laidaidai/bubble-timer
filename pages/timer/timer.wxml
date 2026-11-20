@@ -1,4 +1,4 @@
-<view class="timer-page theme-{{theme}} clock-{{clockStyle}} {{compact ? 'compact' : ''}} {{immersive ? 'immersive' : 'normal'}} {{immersiveAnim ? 'immersive-anim' : ''}} {{immersiveLeaving ? 'immersive-leaving' : ''}} {{clockMorph ? 'clock-morphing' : ''}} {{moduleCollapsed ? 'module-collapsed' : ''}} {{timerReveal ? 'reveal' : ''}} {{isPaused ? 'paused' : 'running'}}" style="{{themeStyle}}">
+<view class="timer-page theme-{{theme}} clock-{{clockStyle}} {{compact ? 'compact' : ''}} {{immersive ? 'immersive' : 'normal'}} {{immersiveAnim ? 'immersive-anim' : ''}} {{immersiveLeaving ? 'immersive-leaving' : ''}} {{clockMorph ? 'clock-morphing' : ''}} {{moduleCollapsed ? 'module-collapsed' : ''}} {{timerReveal ? 'reveal' : ''}} {{chromeIdle ? 'chrome-idle' : ''}} {{isPaused ? 'paused' : 'running'}}" style="{{themeStyle}}" bindtap="handlePageTap">
   <view class="timer-main">
     <view class="immersive-toggle {{(immersive || immersiveLeaving) ? 'on' : ''}}" catchtap="toggleImmersive">
       <view class="fs-icon {{(immersive || immersiveLeaving) ? 'hidden' : ''}}">
@@ -57,22 +57,28 @@
           <image class="progress-logo-img" src="/assets/brand/logo-mark.png" mode="aspectFit"></image>
         </view>
       </view>
-      <view class="mode-chip {{phaseLabel ? (phaseLabel === '专注' ? 'focus' : 'rest') : ''}}">
-        <text>{{modeName}}</text>
-        <text class="mode-phase" wx:if="{{phaseLabel}}">{{phaseLabel}}</text>
+      <view class="stage-target">
+        <text class="target-left">TARGET: <text class="num">{{currentModule.targetMinutes}}</text> 分</text>
+        <text class="target-right {{isOvertime ? 'overtime' : 'on-track'}}">{{isOvertime ? 'OVERTIME' : 'ON TRACK'}}</text>
+      </view>
+      <view class="stage-sub">
+        <view class="stage-sub-left">
+          <view class="mode-chip {{phaseLabel ? (phaseLabel === '专注' ? 'focus' : 'rest') : ''}}">
+            <text>{{modeName}}</text>
+            <text class="mode-phase" wx:if="{{phaseLabel}}">{{phaseLabel}}</text>
+          </view>
+        </view>
+        <view class="stage-sub-right">
+          <view class="tick-pill {{tickMuted ? 'muted' : ''}}" catchtap="toggleTick">
+            <text class="tick-icon">♪</text>
+            <text>{{tickMuted ? '滴答 · 静音' : '滴答 · 开'}}</text>
+          </view>
+        </view>
       </view>
       <view class="stage-meta">
         <text class="meta-module">{{currentModule.name || '训练完成'}}</text>
         <text class="meta-total"><text class="num">{{moduleTimeText}}</text></text>
         <text class="meta-ms" wx:if="{{msShow}}">{{msText}}ms</text>
-      </view>
-      <view class="stage-target">
-        <text>TARGET: <text class="num">{{currentModule.targetMinutes}}</text> 分</text>
-        <text class="{{isOvertime ? 'overtime' : 'on-track'}}">{{isOvertime ? 'OVERTIME' : 'ON TRACK'}}</text>
-      </view>
-      <view class="tick-pill {{tickMuted ? 'muted' : ''}}" catchtap="toggleTick">
-        <text class="tick-icon">♪</text>
-        <text>{{tickMuted ? '滴答 · 静音' : '滴答 · 开'}}</text>
       </view>
     </view>
 
