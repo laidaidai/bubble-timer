@@ -1,0 +1,44 @@
+<view class="train-page theme-{{theme}} {{isDesktop ? 'desk' : ''}}" style="{{themeStyle}}">
+  <view class="topbar" wx:if="{{!isDesktop}}">
+    <view class="back-icon" bindtap="handleBack" aria-label="返回">‹</view>
+    <view class="topbar-title">训练计时</view>
+    <view class="topbar-spacer"></view>
+  </view>
+
+  <view class="train-desk-head" wx:if="{{isDesktop}}">
+    <view class="train-desk-back" bindtap="handleBack" aria-label="返回">‹ 返回</view>
+    <text class="train-desk-title">训练计时</text>
+    <view class="train-desk-gap"></view>
+  </view>
+
+  <view class="train-body">
+    <view class="train-hero">
+      <view class="train-eyebrow">目标时间</view>
+      <view class="train-total">
+        <text class="num">{{totalMinutes}}</text>
+        <text class="train-unit">分钟</text>
+        <text class="train-count">{{modules.length}} 个模块</text>
+      </view>
+    </view>
+
+    <view class="train-list">
+      <view class="train-module" wx:for="{{modules}}" wx:key="id">
+        <view class="train-module-main">
+          <input class="train-name" value="{{item.name}}" data-index="{{index}}" bindinput="changeModuleName" bindblur="normalizeModuleName" maxlength="20" />
+          <view class="train-stepper">
+            <view class="train-step" data-index="{{index}}" data-step="-5" bindtap="adjustMinutes">−</view>
+            <input class="train-minutes num" type="number" value="{{item.targetMinutes}}" data-index="{{index}}" bindinput="changeMinutes" bindblur="normalizeMinutes" />
+            <text class="train-min-unit">分</text>
+            <view class="train-step" data-index="{{index}}" data-step="5" bindtap="adjustMinutes">＋</view>
+          </view>
+        </view>
+        <view class="train-del" data-index="{{index}}" bindtap="removeModule" aria-label="删除模块">×</view>
+      </view>
+
+      <view class="train-empty" wx:if="{{!modules.length}}">还没有模块，先添加一个</view>
+      <view class="train-add" wx:if="{{modules.length < 8}}" bindtap="addModule">＋ 添加模块</view>
+    </view>
+
+    <button class="train-start {{!modules.length ? 'is-disabled' : ''}}" bindtap="startTraining" disabled="{{!modules.length}}">开始计时 <text class="train-play">▶</text></button>
+  </view>
+</view>

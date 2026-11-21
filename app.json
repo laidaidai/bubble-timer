@@ -9,7 +9,8 @@
     "pages/history/history",
     "pages/todo/todo",
     "pages/blank/blank",
-    "pages/important/important"
+    "pages/important/important",
+    "pages/train/train"
   ],
   "window": {
     "navigationBarTitleText": "小鱼计时器",

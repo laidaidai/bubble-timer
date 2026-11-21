@@ -30,13 +30,13 @@
               <text class="pinned-more">›</text>
             </view>
           </view>
-          <view class="pinned-board">
-            <view class="pinned-row" wx:for="{{pinnedTodos}}" wx:key="id" data-id="{{item.id}}" bindtap="togglePinnedTodo">
-              <view class="pinned-check"></view>
-              <text class="pinned-row-text">{{item.text}}</text>
-              <text class="pinned-row-meta" wx:if="{{item.dueText}}">{{item.dueText}}</text>
+          <view class="pinned-todo-list">
+            <view class="pinned-todo-chip" wx:for="{{pinnedTodos}}" wx:key="id" data-id="{{item.id}}" bindtap="togglePinnedTodo">
+              <view class="pinned-todo-check"></view>
+              <text class="pinned-todo-text">{{item.text}}</text>
+              <text class="pinned-todo-due" wx:if="{{item.dueText}}">{{item.dueText}}</text>
             </view>
-            <view class="pinned-empty" wx:if="{{!pinnedTodos.length}}">暂无待办</view>
+            <view class="pinned-empty pinned-empty-board" wx:if="{{!pinnedTodos.length}}">暂无待办</view>
           </view>
         </view>
 
@@ -48,13 +48,22 @@
               <text class="pinned-more">›</text>
             </view>
           </view>
-          <view class="pinned-board">
-            <view class="pinned-row {{item.isPast ? 'past' : ''}}" wx:for="{{homeImportantPreview}}" wx:key="id" data-id="{{item.id}}" bindtap="editImportant">
-              <view class="pinned-dot"></view>
-              <text class="pinned-row-text">{{item.name}}</text>
-              <text class="pinned-row-meta">{{item.countdownNumber}}{{item.countdownUnit}}</text>
+          <view class="pinned-imp-grid">
+            <view class="pinned-imp-card {{item.isPast ? 'past' : ''}} {{item.soon ? 'soon' : ''}} {{item.isToday ? 'today' : ''}}" wx:for="{{homeImportantPreview}}" wx:key="id" data-id="{{item.id}}" bindtap="editImportant">
+              <view class="imp-top">
+                <view class="imp-date">
+                  <text class="imp-day num">{{item.dayNum}}</text>
+                  <text class="imp-month">{{item.monthText}}</text>
+                </view>
+                <text class="imp-week">周{{item.weekText}}</text>
+              </view>
+              <text class="imp-name">{{item.name}}</text>
+              <view class="imp-count">
+                <text class="imp-count-num num">{{item.countdownNumber}}</text>
+                <text class="imp-count-unit" wx:if="{{item.countdownUnit}}">{{item.countdownUnit}}</text>
+              </view>
             </view>
-            <view class="pinned-empty" wx:if="{{!homeImportantPreview.length}}">暂无重要日子</view>
+            <view class="pinned-empty pinned-empty-board" wx:if="{{!homeImportantPreview.length}}">暂无重要日子</view>
           </view>
         </view>
 
@@ -66,27 +75,48 @@
               <text class="pinned-more">›</text>
             </view>
           </view>
-          <view class="pinned-board">
-            <view class="pinned-stats">
-              <view class="pinned-stat">
-                <text class="pinned-stat-num num">{{pinnedStats.todayMinutes}}</text>
-                <text class="pinned-stat-label">今日分钟</text>
+          <view class="pinned-poster">
+            <view class="poster-top">
+              <view class="poster-big">
+                <text class="poster-pct num">{{pinnedStats.todayPercent}}</text>
+                <text class="poster-pct-unit">%</text>
               </view>
-              <view class="pinned-stat">
-                <text class="pinned-stat-num num">{{pinnedStats.streak}}</text>
-                <text class="pinned-stat-label">连续天数</text>
-              </view>
-              <view class="pinned-stat">
-                <text class="pinned-stat-num num">{{pinnedStats.weekMinutes}}</text>
-                <text class="pinned-stat-label">本周分钟</text>
-              </view>
-              <view class="pinned-stat">
-                <text class="pinned-stat-num num">{{pinnedStats.totalDays}}</text>
-                <text class="pinned-stat-label">累计打卡</text>
+              <view class="poster-meta">
+                <text class="poster-meta-label">今日专注</text>
+                <text class="poster-meta-value"><text class="num">{{pinnedStats.todayMinutes}}</text> / {{pinnedStats.todayTarget}} 分钟</text>
+                <text class="poster-meta-sub">本周 {{pinnedStats.weekMinutes}} 分钟 · {{pinnedStats.weekDays}} 天</text>
               </view>
             </view>
-            <view class="pinned-progress">
-              <view class="pinned-progress-fill" style="width: {{pinnedStats.todayPercent}}%;"></view>
+            <view class="poster-bar">
+              <view class="poster-bar-fill" style="width: {{pinnedStats.todayPercent}}%;"></view>
+            </view>
+            <view class="poster-chips">
+              <view class="poster-chip">
+                <text class="poster-chip-num num">{{pinnedStats.streak}}</text>
+                <text class="poster-chip-label">连续天数</text>
+              </view>
+              <view class="poster-chip">
+                <text class="poster-chip-num num">{{pinnedStats.weekMinutes}}</text>
+                <text class="poster-chip-label">本周分钟</text>
+              </view>
+              <view class="poster-chip">
+                <text class="poster-chip-num num">{{pinnedStats.totalDays}}</text>
+                <text class="poster-chip-label">累计打卡</text>
+              </view>
+            </view>
+            <view class="poster-cal">
+              <view class="poster-cal-head">
+                <text class="poster-cal-title">{{pinnedStats.monthLabel}}</text>
+                <text class="poster-cal-sub">{{pinnedStats.monthDays}} 天有记录</text>
+              </view>
+              <view class="poster-week">
+                <text class="poster-week-cell" wx:for="{{pinnedStats.weekdays}}" wx:key="*this">{{item}}</text>
+              </view>
+              <view class="poster-cal-row" wx:for="{{pinnedStats.rows}}" wx:key="key" wx:for-item="row">
+                <view class="poster-cell {{cell.empty ? 'empty' : ''}} lv-{{cell.level}} {{cell.isToday ? 'today' : ''}}" wx:for="{{row.cells}}" wx:key="key" wx:for-item="cell">
+                  <text class="poster-cell-day" wx:if="{{!cell.empty}}">{{cell.day}}</text>
+                </view>
+              </view>
             </view>
           </view>
         </view>

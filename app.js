@@ -14,6 +14,16 @@ const THEMES = PALETTE.map(theme => ({
   canvas: theme.canvas
 }))
 
+// 默认训练模块：与首页首启动展示的一致，工具页「训练」在没有模板时也用它，不依赖首页是否打开过
+const DEFAULT_TRAINING_MODULES = [
+  { name: '课程学习', targetMinutes: 30 },
+  { name: '知识梳理', targetMinutes: 20 },
+  { name: '专项练习', targetMinutes: 30 },
+  { name: '错题复盘', targetMinutes: 15 },
+  { name: '阅读积累', targetMinutes: 15 },
+  { name: '总结回顾', targetMinutes: 10 }
+]
+
 // 五款轻快常用的提示音：叮咚 / 钟琴 / 风铃 / 木琴 / 轻铃
 // key 沿用旧值，已保存的铃声选择不会失效，只是换成新音源与新名字
 const RINGS = [
@@ -251,6 +261,80 @@ App({
     if (!templates.length) return
     const finalName = templates.some(item => item.name === currentName) ? currentName : templates[0].name
     wx.setStorageSync(this.globalData.templateKey, { currentName: finalName, templates })
+  },
+
+  // 读取「当前模板」里可训练的模块（targetMinutes > 0）。
+  // 工具页「训练」直接用这个，不依赖首页是否被固定成计时、也不依赖首页是否被打开过：
+  // 没有存储的模板时回落到默认模块，保证任何入口点「训练」都能直接开一局。
+  getTrainingModules() {
+    try { this.normalizeTemplates() } catch (error) {}
+    const raw = wx.getStorageSync(this.globalData.templateKey)
+    let list = []
+    let currentName = ''
+    if (raw && Array.isArray(raw.templates)) {
+      list = raw.templates
+      currentName = raw.currentName || ''
+    } else if (Array.isArray(raw)) {
+      // 老结构：模块数组，或模板数组
+      const isTemplateList = raw.length && raw.every(item => item && Array.isArray(item.modules))
+      list = isTemplateList ? raw : [{ name: '常规', modules: raw }]
+    } else if (raw && Array.isArray(raw.modules)) {
+      list = [{ name: raw.name || '常规', modules: raw.modules }]
+    }
+    const chosen = list.find(item => item && item.name === currentName) || list[0]
+    let modules = (chosen && chosen.modules) || []
+    modules = modules
+      .filter(item => item && Number(item.targetMinutes) > 0)
+      .map(item => ({ name: item.name || '训练模块', targetMinutes: Number(item.targetMinutes) || 0, source: item.source || '' }))
+    if (!modules.length) modules = DEFAULT_TRAINING_MODULES.map(item => ({ ...item }))
+    return modules
+  },
+
+  // 保存当前模板的训练模块（训练页编辑后回写，首页读到的就是同一份）
+  saveTrainingModules(modules) {
+    const clean = (modules || [])
+      .map(item => ({ name: (item.name || '').trim() || '训练模块', targetMinutes: Math.max(0, Number(item.targetMinutes) || 0) }))
+      .filter(item => item.targetMinutes > 0)
+    const raw = wx.getStorageSync(this.globalData.templateKey)
+    let currentName = (raw && raw.currentName) || '常规'
+    let templates = (raw && Array.isArray(raw.templates)) ? raw.templates.slice() : []
+    const idx = templates.findIndex(item => item && item.name === currentName)
+    const next = { name: currentName, modules: clean }
+    if (idx >= 0) templates[idx] = next
+    else templates = [next].concat(templates)
+    wx.setStorageSync(this.globalData.templateKey, { currentName, templates })
+    return clean
+  },
+
+  // 起一局训练：写会话 + 模式，调用方负责跳转（训练页 / 工具页 / 首页共用同一口径）
+  startTrainingSession(modules, mode) {
+    const runtimeModules = (modules || [])
+      .filter(item => item && Number(item.targetMinutes) > 0)
+      .map((item, index) => ({
+        id: item.id || `m_${index}`,
+        name: item.name || '训练模块',
+        targetMinutes: Number(item.targetMinutes) || 0,
+        elapsedSeconds: 0,
+        status: 'pending'
+      }))
+    if (!runtimeModules.length) return false
+    const firstIndex = 0
+    runtimeModules[firstIndex].status = 'current'
+    const useMode = mode || wx.getStorageSync(this.globalData.modeKey) || 'countup'
+    wx.setStorageSync(this.globalData.modeKey, useMode)
+    const settings = this.getSettings ? this.getSettings() : {}
+    wx.setStorageSync(this.globalData.storageKey, {
+      modules: runtimeModules,
+      startedAt: Date.now(),
+      currentIndex: firstIndex,
+      globalSeconds: 0,
+      moduleSeconds: 0,
+      isPaused: false,
+      mode: useMode,
+      totalTargetSeconds: runtimeModules.reduce((sum, item) => sum + item.targetMinutes * 60, 0),
+      tickSound: settings.tickSound === true
+    })
+    return true
   },
 
   themes: THEMES,

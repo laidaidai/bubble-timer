@@ -218,6 +218,15 @@ Page({
   onShow() {
     // 横屏计时页返回后，WebView 偶尔会沿用横屏的 rpx 基准，整页被放大；这里主动拉回竖屏基准
     this.resetPortraitMetrics()
+    // 训练页改过模块后回写模板：这里只认这个标记，避免把首页正在编辑、还没保存的内容冲掉
+    const shared = getApp()
+    if (shared && shared.globalData && shared.globalData.trainingModulesDirty) {
+      shared.globalData.trainingModulesDirty = false
+      if (this.data.view === 'config') {
+        const nextModules = (shared.getTrainingModules && shared.getTrainingModules()) || []
+        if (nextModules.length) this.setData({ modules: this.withIds(nextModules) })
+      }
+    }
     // 从工具页「训练」进来时，强制回到首页（训练配置），不要停在计时中 / 报告视图
     const nav = getApp()
     if (nav && nav.globalData && nav.globalData.homeResetView) {
@@ -443,10 +452,17 @@ Page({
     this.setData({
       pinnedStats: {
         todayMinutes: Math.floor((stats.todaySeconds || 0) / 60),
+        todayTarget: Math.floor((stats.targetSeconds || 0) / 60) || 180,
         todayPercent: stats.todayPercent || 0,
         weekMinutes: Math.floor((stats.weekSeconds || 0) / 60),
+        weekDays: stats.weekDays || 0,
         streak: stats.streak || 0,
-        totalDays: stats.totalDays || 0
+        totalDays: stats.totalDays || 0,
+        // 海报同款月历热力格：直接复用 dailyStats 的口径
+        monthLabel: (stats.calendar && stats.calendar.monthLabel) || '',
+        monthDays: (stats.calendar && stats.calendar.monthDays) || 0,
+        weekdays: (stats.calendar && stats.calendar.weekdayLabels) || ['一', '二', '三', '四', '五', '六', '日'],
+        rows: (stats.calendar && stats.calendar.rows) || []
       }
     })
   },
@@ -555,6 +571,10 @@ Page({
       countdownNumber: isToday ? '今天' : Math.abs(diff),
       countdownUnit: isToday ? '' : (diff > 0 ? '天后' : '天前'),
       dateText: item.yearly ? `${parts[1]} 月 ${parts[2]} 日` : `${parts[0]}.${pad(parts[1])}.${pad(parts[2])}`,
+      monthNum: parts[1],
+      dayNum: parts[2],
+      monthText: `${parts[1]} 月`,
+      weekText: ['日', '一', '二', '三', '四', '五', '六'][new Date(parts[0], parts[1] - 1, parts[2]).getDay()],
       soon: diff >= 0 && diff <= 7,
       isPast: diff < 0
     }
