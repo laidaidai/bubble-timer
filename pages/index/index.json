@@ -3,7 +3,6 @@
   "pageOrientation": "portrait",
   "navigationStyle": "custom",
   "usingComponents": {
-    "brand-dock": "/components/brand-dock/index",
-    "quick-panel": "/components/quick-panel/index"
+    "brand-dock": "/components/brand-dock/index"
   }
 }

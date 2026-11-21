@@ -47,7 +47,8 @@ function fitScale(availW, availH, naturalW, naturalH, limits) {
   const min = (limits && limits.min) || 0.2
   const max = (limits && limits.max) || 3.2
   if (!availW || !availH || !naturalW || !naturalH) return 1
-  let fit = Math.min((availW - 4) / naturalW, (availH - 4) / naturalH)
+  const pad = (limits && limits.pad) || 4
+  let fit = Math.min((availW - pad) / naturalW, (availH - pad) / naturalH)
   if (!isFinite(fit) || fit <= 0) return 1
   fit = Math.min(max, Math.max(min, fit))
   return Math.round(fit * 1000) / 1000

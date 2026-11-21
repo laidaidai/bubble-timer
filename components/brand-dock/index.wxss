@@ -196,7 +196,7 @@
 .dot-timer { background: var(--primary-2, #F2A65A); }
 .dot-todo { background: var(--cream-3, #F3E5D2); }
 
-/* ===== 悬浮球二级菜单：首页显示哪一项 ===== */
+/* ===== 悬浮球二级菜单：真实工具页快捷入口 ===== */
 .dock-switch {
   align-self: stretch;
   display: flex;

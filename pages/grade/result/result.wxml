@@ -1,0 +1,127 @@
+<view class="topbar grade-topbar theme-{{theme}}" style="{{themeStyle}}" wx:if="{{!isDesktop}}">
+  <view class="back-icon" bindtap="goBack" aria-label="返回">‹</view>
+  <view class="topbar-title">批改结果</view>
+  <view class="topbar-spacer"></view>
+</view>
+<view class="page result-page {{isDesktop ? 'desk' : ''}} {{!isDesktop ? 'has-grade-topbar' : ''}} grade-root theme-{{theme}}" style="{{themeStyle}}">
+  <view wx:if="{{missing}}" class="card empty-card anim-pop">
+    <view class="empty-title">这份记录不存在</view>
+    <view class="btn btn-dark empty-btn" bindtap="goHome" hover-class="btn-pressed">返回首页</view>
+  </view>
+
+  <block wx:else>
+  <!-- 分数与对错：全部来自本次作答与已导入的参考答案 -->
+  <view class="card score-card anim-pop">
+    <view class="score-head">
+      <view class="paper-info">
+        <view class="paper-name">{{record.paperName}}</view>
+        <view class="paper-sub">{{record.timeText}}</view>
+      </view>
+      <view class="score-stamp">已批改</view>
+    </view>
+    <view class="score-body">
+      <!-- 左：分数块，正确率跟分数放一起，不和右侧题数挤 -->
+      <view class="score-main">
+        <view class="big-score num">{{detail.scoreText}}<text class="unit">/100</text></view>
+        <view class="acc-row">
+          <text class="acc-label">正确率</text>
+          <text class="acc-val num">{{detail.accuracyText}}%</text>
+        </view>
+        <view class="acc-bar"><view class="acc-fill" style="width: {{detail.accuracyText}}%;"></view></view>
+      </view>
+      <!-- 右：正确 / 错误 / 未做，各占一行，互不粘连 -->
+      <view class="score-side">
+        <view class="side-row side-ok">
+          <text class="side-label">正确</text>
+          <text class="num side-right is-right">{{detail.right}}</text>
+        </view>
+        <view class="side-row side-bad">
+          <text class="side-label">错误</text>
+          <text class="num side-right is-wrong">{{detail.wrong}}</text>
+        </view>
+        <view class="side-row">
+          <text class="side-label">未做</text>
+          <text class="num side-right">{{detail.blank}}</text>
+        </view>
+      </view>
+    </view>
+    <view wx:if="{{detail.pointText}}" class="score-note">{{detail.pointText}}</view>
+  </view>
+
+  <view wx:if="{{record.customStandard === false}}" class="notice-bar anim-rise">
+    <view class="notice-text">旧记录：用过系统预置答案，分数不可信</view>
+  </view>
+
+  <!-- 能力图：按本次作答各模块得分率画雷达，绿框是目标档，只呈现真实数据 -->
+  <view wx:if="{{modules.length > 0}}" class="card radar-card anim-rise" style="animation-delay: 60ms;">
+    <view class="radar-head">
+      <view class="radar-title">能力图</view>
+    </view>
+    <!-- 目标档：点哪档，绿框就画在那一档，轴尾同步显示距目标的差值 -->
+    <view class="target-tabs">
+      <view
+        wx:for="{{targets}}"
+        wx:key="*this"
+        class="target-tab {{radarTarget === item ? 'is-on' : ''}}"
+        data-v="{{item}}"
+        bindtap="switchTarget"
+        hover-class="is-press"
+      >目标 {{item}} 分</view>
+    </view>
+    <canvas type="2d" id="radar" class="radar-canvas"></canvas>
+    <view class="radar-legend">
+      <view class="legend-line is-mine"></view>
+      <text>我的表现</text>
+      <view class="legend-line is-target"></view>
+      <text>目标 {{radarTarget}} 分（0 分差）</text>
+    </view>
+    <view class="radar-hint">距目标（分）：<text class="is-lead">+ 领先</text> · <text class="is-weak">− 落后</text></view>
+    <view wx:if="{{radarTip}}" class="radar-tip">
+      <text class="tip-item is-weak num">{{radarTip.weakLabel}} {{radarTip.weakName}} {{radarTip.weakText}}</text>
+      <text class="tip-item is-lead num">拉分最多 {{radarTip.leadName}} {{radarTip.leadText}}</text>
+    </view>
+  </view>
+
+  <!-- 分模块：分数与得分常驻，点模块头展开 / 收起逐题对错 -->
+  <view wx:for="{{modules}}" wx:key="key" class="card mod-card anim-rise {{item.open ? 'opened' : ''}}" style="animation-delay: {{index * 60 + 80}}ms;">
+    <view class="mod-head" data-key="{{item.key}}" bindtap="toggleModule" hover-class="is-press">
+      <view class="mod-name">{{item.name}}</view>
+      <view class="mod-right">
+        <view class="mod-meta">
+          <view wx:if="{{item.pointText}}" class="mod-points num">{{item.pointText}}</view>
+        </view>
+        <view class="mod-caret {{item.open ? 'open' : ''}}"></view>
+      </view>
+    </view>
+    <view class="mod-bar-row">
+      <view class="mod-bar"><view class="mod-bar-fill anim-grow" style="width: {{item.pctText}}%; animation-delay: {{index * 60 + 140}}ms;"></view></view>
+      <view class="mod-score num">
+        <text class="mod-frac">{{item.right}}/{{item.total}}</text>
+        <text class="mod-pct">{{item.pctText}}%</text>
+      </view>
+    </view>
+
+    <!-- 逐题对错：题号色块 + A/B/C/D 四格（只标正解与你选，不含统计） -->
+    <view wx:if="{{item.open}}" id="qw-{{item.key}}" class="q-wrap" style="{{item.h ? 'height:' + item.h : ''}}">
+      <view id="qb-{{item.key}}" class="q-body anim-fade">
+        <view wx:for="{{item.rows}}" wx:for-item="q" wx:key="no" class="q-item">
+          <view class="q-line">
+            <view class="q-tag {{q.tag}} num">{{q.no}}</view>
+            <view class="q-cells">
+              <view wx:for="{{q.cells}}" wx:for-item="c" wx:key="label" class="q-cell {{c.mark}}">
+                <view class="q-cell-letter num">{{c.label}}</view>
+                <view wx:if="{{c.sub}}" class="q-cell-sub">{{c.sub}}</view>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="footer-btns anim-rise" style="animation-delay: 260ms;">
+    <view class="btn btn-dark half" bindtap="retryPaper" hover-class="btn-pressed">再练一次</view>
+    <view class="btn btn-outline half" bindtap="goHome" hover-class="btn-pressed">返回首页</view>
+  </view>
+  </block>
+</view>

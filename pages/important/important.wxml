@@ -1,4 +1,4 @@
-<view class="imp-page theme-{{theme}} {{isDesktop ? 'desk' : ''}}" style="{{themeStyle}} {{kbVars}}">
+<view class="imp-shell theme-{{theme}} {{isDesktop ? 'desk' : ''}}" style="{{themeStyle}}">
   <view class="topbar" wx:if="{{!isDesktop}}">
     <view class="back-icon" bindtap="goBack" aria-label="返回">‹</view>
     <view class="topbar-title">重要日子</view>
@@ -7,71 +7,7 @@
 
   <brand-dock theme-style="{{themeStyle}}" dim="{{dockDim}}"></brand-dock>
 
-  <scroll-view class="imp-body" scroll-y enhanced show-scrollbar="{{false}}">
-    <view class="imp-add" bindtap="openAdd">
-      <view class="imp-add-plus"></view>
-      <text>添加重要日子</text>
-    </view>
-
-    <view class="imp-list" wx:if="{{list.length}}">
-      <view class="imp-row {{item.isPast ? 'past' : ''}} {{burstingId === item.id ? 'bubble-bursting' : ''}}"
-        wx:for="{{list}}" wx:key="id"
-        data-id="{{item.id}}"
-        bindtap="editItem"
-        bindlongpress="removeItem">
-        <view class="imp-dot {{item.soon ? 'soon' : ''}}"></view>
-        <view class="imp-main">
-          <view class="imp-title-row">
-            <text class="imp-name">{{item.name}}</text>
-            <text class="imp-yearly" wx:if="{{item.yearly}}">每年</text>
-          </view>
-          <text class="imp-date num">{{item.dateText}}</text>
-        </view>
-        <text class="imp-count num">{{item.countdownNumber}}<text class="imp-unit" wx:if="{{item.countdownUnit}}">{{item.countdownUnit}}</text></text>
-        <view class="burst-layer" aria-hidden="true">
-          <view class="burst-ring"></view>
-          <view class="burst-drop d1"></view><view class="burst-drop d2"></view><view class="burst-drop d3"></view><view class="burst-drop d4"></view>
-          <view class="burst-drop d5"></view><view class="burst-drop d6"></view><view class="burst-drop d7"></view><view class="burst-drop d8"></view>
-        </view>
-      </view>
-    </view>
-
-    <view class="imp-empty" wx:else bindtap="openAdd">
-      <image class="imp-empty-logo" src="/assets/brand/logo.png" mode="aspectFit"></image>
-    </view>
-  </scroll-view>
-
-  <view class="modal-mask" wx:if="{{modalOpen}}" catchtouchmove="blockTouch" bindtap="closeModal">
-    <view class="modal-card important-modal" catchtap="blockTouch">
-      <view class="modal-title">{{editingId ? '编辑重要日子' : '添加重要日子'}}</view>
-      <input class="modal-input" value="{{name}}" placeholder="例如：考研初试、妈妈的生日" maxlength="16" focus="{{modalOpen}}" confirm-type="done" bindinput="onNameInput" bindconfirm="saveItem" />
-      <view class="important-form-row">
-        <view class="important-date-btn {{calendarOpen ? 'on' : ''}}" bindtap="toggleCalendar">
-          <text class="important-date-label">日期</text>
-          <text class="important-date-value">{{dateText}}</text>
-        </view>
-        <view class="important-yearly {{yearly ? 'on' : ''}}" bindtap="toggleYearly">每年重复</view>
-      </view>
-
-      <view class="important-calendar" wx:if="{{calendarOpen}}">
-        <view class="important-cal-head">
-          <view class="important-cal-nav" data-step="-1" catchtap="shiftMonth">‹</view>
-          <text class="important-cal-title">{{calTitle}}</text>
-          <view class="important-cal-nav" data-step="1" catchtap="shiftMonth">›</view>
-        </view>
-        <view class="important-cal-weekdays">
-          <text class="important-cal-weekday" wx:for="{{calWeekLabels}}" wx:key="*this">{{item}}</text>
-        </view>
-        <view class="important-cal-row" wx:for="{{calRows}}" wx:key="key" wx:for-item="row">
-          <view class="important-cal-cell {{cell.empty ? 'empty' : ''}} {{cell.selected ? 'selected' : ''}} {{cell.today ? 'today' : ''}}"
-            wx:for="{{row.cells}}" wx:for-item="cell" wx:key="key" data-key="{{cell.key}}" bindtap="selectDay">{{cell.day}}</view>
-        </view>
-      </view>
-
-      <view class="modal-actions">
-        <button class="modal-cancel" bindtap="closeModal">取消</button>
-        <button class="modal-confirm" bindtap="saveItem">{{editingId ? '保存修改' : '添加'}}</button>
-      </view>
-    </view>
+  <view class="imp-view-slot">
+    <important-view id="importantView" class="imp-view" bind:dockdim="onDockDim"></important-view>
   </view>
 </view>

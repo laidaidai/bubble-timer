@@ -27,6 +27,11 @@ Component({
     show() {
       this.syncDesk()
       this.sync()
+    },
+    // 桌面拖动窗口 / 平板转屏不会触发 show，必须在这里重新判定档位
+    resize() {
+      this.syncDesk()
+      this.sync()
     }
   },
 
@@ -34,7 +39,10 @@ Component({
     // 桌面 / 大屏：底栏尺寸锁在手机档，不跟着窗口一起放大
     syncDesk() {
       const app = getApp()
-      const desk = !!(app && app.globalData && app.globalData.isDesktop)
+      // 不能只读 onLaunch 时写下的值：窗口拉宽后 globalData 还是旧档，底栏会突然变大
+      const desk = !!(app && app.detectEnvironment
+        ? app.detectEnvironment()
+        : app && app.globalData && app.globalData.isDesktop)
       if (desk !== this.data.desk) this.setData({ desk })
     },
 
@@ -43,7 +51,9 @@ Component({
       const swatch = (theme && theme.swatch) || ['#FBF3DF', '#FFC94D', '#4B3A2A']
       const pages = getCurrentPages()
       const current = pages.length ? pages[pages.length - 1].route : ''
-      const selected = Math.max(0, TABS.findIndex(item => item.route === current))
+      // 批改页是从工具页进入的子页面，底栏仍高亮「工具」，避免显示成首页
+      const inGrade = current.indexOf('pages/grade/') === 0
+      const selected = inGrade ? 1 : Math.max(0, TABS.findIndex(item => item.route === current))
       this.setData({
         selected,
         activeColor: swatch[1] || '#4B3A2A',

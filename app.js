@@ -157,20 +157,8 @@ const DEFAULT_SETTINGS = {
   tickSound: false,
   tickDefaultOff: true,
   incentiveType: 'tomato',
-  // 首页固定显示哪一项：timer = 训练计时，quick-* = 秒表/计时器/番茄钟
-  pinnedFeature: 'timer',
   privacyAlbum: true,
   privacyCalendar: true
-}
-
-const detectDesktop = () => {
-  try {
-    const info = (wx.getDeviceInfo ? wx.getDeviceInfo() : wx.getSystemInfoSync()) || {}
-    const platform = String(info.platform || '').toLowerCase()
-    return platform === 'windows' || platform === 'mac'
-  } catch (e) {
-    return false
-  }
 }
 
 App({
@@ -190,12 +178,13 @@ App({
     tomatoKey: 'exam-timer-tomatoes',
     presetLimit: 8,
     presetFold: 4,
-    dailyTargetSeconds: 180 * 60
+    dailyTargetSeconds: 180 * 60,
+    windowWidth: 375
   },
   onLaunch() {
     // 微信桌面版（Windows / Mac）：自定义导航栏外还有一条系统标题栏（带返回箭头），
     // 页面自己画的 topbar 会和它重复，所以桌面端隐藏自绘 topbar，只留系统那条。
-    this.globalData.isDesktop = detectDesktop()
+    this.detectEnvironment()
     this.normalizeTemplates()
     // 历史版本里 tickSound 默认是开，第一次升级时统一关掉，之后按用户选择走
     const saved = wx.getStorageSync(this.globalData.settingsKey)
@@ -224,6 +213,21 @@ App({
     }
     // 首帧之前就把系统窗口色对齐当前主题，避免先露出 app.json 里的静态配色再看它变过去
     this.applyNavBar()
+  },
+
+  // 桌面窗口 / 手机宽屏统一判定：platform 判桌面，windowWidth > 600 兜底。
+  // 批改页的 onResize 也会调用这里，拖动窗口后不会还按手机档渲染。
+  detectEnvironment() {
+    try {
+      const info = (wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync()) || {}
+      const platform = String(info.platform || '').toLowerCase()
+      const width = Number(info.windowWidth || 0) || 375
+      this.globalData.windowWidth = width
+      this.globalData.isDesktop = platform === 'windows' || platform === 'mac' || width > 600
+    } catch (error) {
+      this.globalData.isDesktop = false
+    }
+    return this.globalData.isDesktop
   },
 
   // 模板存储只保留一种结构：{ currentName, templates: [{ name, modules }] }
@@ -264,7 +268,7 @@ App({
   },
 
   // 读取「当前模板」里可训练的模块（targetMinutes > 0）。
-  // 工具页「训练」直接用这个，不依赖首页是否被固定成计时、也不依赖首页是否被打开过：
+  // 工具页「训练」直接用这个，不依赖首页当前处于哪个视图，也不依赖首页是否被打开过：
   // 没有存储的模板时回落到默认模块，保证任何入口点「训练」都能直接开一局。
   getTrainingModules() {
     try { this.normalizeTemplates() } catch (error) {}

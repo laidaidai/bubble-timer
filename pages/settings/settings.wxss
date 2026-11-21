@@ -543,7 +543,6 @@
 
 .desk .pane { margin-top: 16px; }
 
-/* 首页显示方式（单选行） */
 .desk .pane-sub { margin-bottom: 9px; font-size: 12px; }
 .desk .pane-more { margin-top: 11px; padding: 10px; border-width: 1px; font-size: 12px; }
 

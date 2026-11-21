@@ -1,0 +1,101 @@
+<view class="topbar grade-topbar theme-{{theme}}" style="{{themeStyle}}" wx:if="{{!isDesktop}}">
+  <view class="back-icon" bindtap="goBack" aria-label="返回">‹</view>
+  <view class="topbar-title">过关斩将</view>
+  <view class="topbar-spacer"></view>
+</view>
+<view class="page index-page {{isDesktop ? 'desk' : ''}} {{!isDesktop ? 'has-grade-topbar' : ''}} grade-root theme-{{theme}} {{pageReveal ? 'reveal' : ''}}" style="{{themeStyle}}">
+  <!-- 顶部战绩：浅色成绩卡，分数、卷名与批改统计分栏 -->
+  <view class="grade-hero">
+    <view class="gh-hero-top">
+      <view class="gh-hero-label-wrap">
+        <view class="gh-hero-label-mark"></view>
+        <text class="gh-hero-eyebrow">{{homeSummary.hasLast ? '上次战绩' : '还没开始'}}</text>
+      </view>
+      <view class="gh-hero-letter" bindtap="goLetter" hover-class="gh-hero-letter-press">
+        <view class="gh-hero-envelope"></view>
+        <text>一封信</text>
+      </view>
+    </view>
+    <view class="gh-hero-main">
+      <view class="gh-hero-score-panel">
+        <view class="gh-hero-score-row {{homeSummary.lastScore.length > 2 ? 'is-compact' : ''}}">
+          <text wx:if="{{homeSummary.hasLast}}" class="gh-hero-score num">{{homeSummary.lastScore}}</text>
+          <text wx:else class="gh-hero-score-empty num">—</text>
+          <text class="gh-hero-denom">/100</text>
+        </view>
+      </view>
+      <view class="gh-hero-copy">
+        <text class="gh-hero-paper">{{homeSummary.hasLast ? homeSummary.lastPaper : '选一套卷，开始批改'}}</text>
+        <view class="gh-hero-stats">
+          <view class="gh-hero-stat"><text class="gh-hero-stat-num num">{{homeSummary.total}}</text><text class="gh-hero-stat-label">次批改</text></view>
+          <view class="gh-hero-stat-rule"></view>
+          <view class="gh-hero-stat"><text class="gh-hero-stat-num num">{{homeSummary.papers}}</text><text class="gh-hero-stat-label">套卷</text></view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 题库切换：只有一个题库时整行隐藏，标题直接接分组，少一层噪音 -->
+  <view wx:if="{{banks.length > 1}}" class="bank-row" style="animation-delay: 70ms;">
+    <view class="bank-name">
+      <text class="dot"></text>{{currentBankName}}
+    </view>
+    <view class="bank-switch">
+      <view
+        wx:for="{{banks}}"
+        wx:key="id"
+        class="bank-pill {{item.id === bankId ? 'active' : ''}}"
+        data-id="{{item.id}}"
+        bindtap="switchBank"
+        hover-class="bank-press"
+      >{{item.tag}}</view>
+    </view>
+  </view>
+
+  <!-- 分组试卷列表 -->
+  <view wx:for="{{groups}}" wx:key="id" class="card group-card" style="animation-delay: {{index * 60 + 130}}ms;">
+    <view class="group-head" bindtap="toggleGroup" data-id="{{item.id}}" hover-class="group-press">
+      <view class="group-name">{{item.name}}</view>
+      <view class="group-tail">
+        <text class="group-count num">{{item.papers.length}} 套</text>
+        <view class="group-arrow {{collapsed[item.id] ? 'rot' : ''}}">→</view>
+      </view>
+    </view>
+
+    <view wx:if="{{!collapsed[item.id]}}" class="paper-list anim-fade">
+      <view wx:for="{{item.papers}}" wx:for-item="p" wx:key="id" class="paper-row" style="animation-delay: {{index * 35}}ms;">
+        <navigator class="paper-open" url="/pages/grade/answer/answer?paperId={{p.id}}" hover-class="paper-open-press">
+          <view class="paper-main">
+            <view class="paper-name">{{p.name}}</view>
+            <view class="paper-meta">
+              <text class="meta-text">{{p.meta}}</text>
+              <text wx:if="{{p.draftCount > 0}}" class="pill draft-tag num">未交卷 {{p.draftCount}}/{{p.size}}</text>
+            </view>
+          </view>
+          <view class="paper-tail">
+            <view wx:if="{{p.hasScore}}" class="paper-score-col">
+              <view class="paper-score-cap">上次</view>
+              <view class="paper-score num">{{p.lastScore}}<text class="paper-score-unit">分</text></view>
+            </view>
+            <view class="paper-go">›</view>
+          </view>
+        </navigator>
+        <view class="paper-links">
+          <view class="btn-link" data-id="{{p.id}}" bindtap="goAnswers" hover-class="is-press">导入答案</view>
+          <view wx:if="{{p.draftCount > 0}}" class="btn-link link-reset" data-id="{{p.id}}" data-name="{{p.name}}" bindtap="restartPaper" hover-class="is-press">重做</view>
+          <view wx:if="{{p.custom}}" class="btn-link" data-id="{{p.id}}" bindtap="editCustom" hover-class="is-press">编辑</view>
+          <view class="btn-link" data-id="{{p.id}}" bindtap="goHistory" hover-class="is-press">历史</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 自定义卷：只留一个「新建」入口，表单在独立页面 -->
+  <view wx:if="{{bankId === 'bank-custom'}}" class="custom-card" bindtap="goCustom" hover-class="custom-press">
+    <view class="custom-plus">＋</view>
+    <view class="custom-title">新建自定义试卷</view>
+  </view>
+</view>
+
+<!-- 与主程序一致的底部 dock：批改页是从工具页进入的子页，工具项保持高亮 -->
+<app-dock />

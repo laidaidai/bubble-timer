@@ -19,7 +19,7 @@
       <view class="history-head">
         <view class="history-title-wrap">
           <view class="history-title">{{item.title}}</view>
-          <view class="history-time num">{{item.startedAtText}}</view>
+          <view class="history-time num" wx:if="{{item.startedAtText}}">{{item.startedAtText}}</view>
         </view>
       </view>
       <view class="history-meta">
@@ -42,6 +42,7 @@
       <image class="empty-logo" src="/assets/brand/logo.png" mode="aspectFit"></image>
       <text class="empty-short">完成一次计时后，记录会出现在这里</text>
     </view>
+    <view class="history-tail"></view>
   </scroll-view>
   <view class="timer-launch-cover" wx:if="{{timerLaunching}}"></view>
 </view>

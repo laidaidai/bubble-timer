@@ -777,7 +777,6 @@ button,
 .mode-capsule,
 .add-module-plus,
 .home-feature-add,
-.settings-entry,
 .template-plus,
 .template-save {
   border: 3rpx solid var(--edge) !important;
@@ -797,7 +796,6 @@ button:active,
 .mode-capsule:active,
 .add-module-plus:active,
 .home-feature-add:active,
-.settings-entry:active,
 .template-plus:active,
 .template-save:active {
   box-shadow:
@@ -819,7 +817,6 @@ button:active,
 .prev-button,
 .pause-button,
 .complete-button,
-.settings-entry,
 .add-module-plus,
 .home-feature-add,
 .template-plus {
@@ -897,7 +894,6 @@ button.round-small:last-child { border-radius: 0 999rpx 999rpx 0 !important; }
 .theme-sketch .mode-capsule,
 .theme-sketch .add-module-plus,
 .theme-sketch .home-feature-add,
-.theme-sketch .settings-entry,
 .theme-sketch .template-plus,
 .theme-sketch .template-save {
   border-width: 2.5rpx !important;
@@ -1020,9 +1016,13 @@ button.round-small:last-child { border-radius: 0 999rpx 999rpx 0 !important; }
   height: 100vh !important;
   box-sizing: border-box;
 }
-/* 内容末尾给底栏（52px + 安全区）留出净空，外加 28px 呼吸位，
- * 顺带避开左下角悬浮球，最后一行不会被压住。 */
-.desk.app .config-scroll,
+/* 内容末尾只给底栏（52px + 安全区）和 8px 呼吸位留净空；
+ * 原来再叠 28px，滚到末尾会在底栏上方露出一整条背景空带。
+ */
+.desk.app .config-scroll {
+  padding-bottom: calc(52px + env(safe-area-inset-bottom) + 8px) !important;
+}
+/* 工具 / 记录页没有这条背景带问题，保留原来的呼吸位，避开左下角浮层。 */
 .desk.tools-page .tools-body,
 .desk.history-page .history-body {
   padding-bottom: calc(52px + env(safe-area-inset-bottom) + 28px) !important;

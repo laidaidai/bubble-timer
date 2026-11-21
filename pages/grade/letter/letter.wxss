@@ -1,0 +1,84 @@
+@import "../base.wxss";
+.letter-page { padding-top: 32rpx; }
+
+.letter-card {
+  position: relative;
+  overflow: hidden;
+  padding: 34rpx 32rpx 30rpx;
+  border-radius: 30rpx;
+  box-shadow: 7rpx 8rpx 0 var(--shadow);
+}
+.letter-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 9rpx;
+  background: var(--primary);
+  border-bottom: 2rpx solid var(--edge);
+}
+
+.letter-seal {
+  position: absolute;
+  top: 26rpx;
+  right: 28rpx;
+  width: 74rpx;
+  height: 74rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-warm);
+  background: var(--accent-bg);
+  border: 3rpx solid var(--edge);
+  border-radius: 50%;
+  box-shadow: 3rpx 3rpx 0 var(--shadow-soft);
+  font-size: 27rpx;
+  font-weight: 900;
+  line-height: 1;
+  transform: rotate(8deg);
+}
+
+.letter-title {
+  padding-right: 92rpx;
+  color: var(--ink);
+  font-size: 37rpx;
+  font-weight: 900;
+  line-height: 1.35;
+}
+.letter-sign { margin-top: 8rpx; font-size: 22rpx; color: var(--text-3); font-weight: 700; }
+
+.letter-body { margin-top: 28rpx; }
+
+.para {
+  position: relative;
+  margin-bottom: 22rpx;
+  padding-left: 4rpx;
+  color: var(--ink);
+  font-size: 27rpx;
+  line-height: 1.86;
+}
+.para:first-child { margin-top: 2rpx; }
+
+.para.sign {
+  margin-top: 30rpx;
+  margin-bottom: 0;
+  padding-top: 20rpx;
+  border-top: 2rpx dashed var(--line-strong);
+  text-align: right;
+  font-weight: 800;
+  color: var(--text-warm);
+}
+
+/* 桌面档：rpx 随窗口放大，这里统一 px 化（px ≈ rpx × 0.56） */
+@media (min-width: 700px) {
+  .letter-page { padding-top: 18px; }
+  .letter-card { padding: 19px 18px 17px; border-radius: 17px; box-shadow: 4px 5px 0 var(--shadow); }
+  .letter-card::before { height: 5px; border-bottom-width: 1px; }
+  .letter-seal { top: 15px; right: 16px; width: 41px; height: 41px; border-width: 2px; box-shadow: 2px 2px 0 var(--shadow-soft); font-size: 15px; }
+  .letter-title { padding-right: 52px; font-size: 21px; }
+  .letter-sign { margin-top: 4px; font-size: 12px; }
+  .letter-body { margin-top: 16px; }
+  .para { margin-bottom: 12px; font-size: 15px; line-height: 1.88; }
+  .para.sign { margin-top: 17px; padding-top: 11px; border-top-width: 1px; }
+}

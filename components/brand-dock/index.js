@@ -18,15 +18,15 @@ Component({
     timerRunning: false,
     celebrate: false,
     dockStyle: '',
-    pinnedFeature: 'timer',
-    featureOptions: [
+    navOptions: [
       { key: 'timer', name: '训练计时' },
       { key: 'quick-stopwatch', name: '秒表' },
       { key: 'quick-countdown', name: '计时器' },
       { key: 'quick-pomodoro', name: '番茄钟' },
       { key: 'todo', name: '待办' },
       { key: 'important', name: '重要日子' },
-      { key: 'stats', name: '打卡' }
+      { key: 'stats', name: '打卡' },
+      { key: 'grade', name: '过关斩将' }
     ]
   },
   lifetimes: {
@@ -105,7 +105,6 @@ Component({
 
       const quick = wx.getStorageSync(QUICK_STATE_KEY) || {}
       const todayMinutes = Math.max(0, Math.round((summary.todaySeconds || 0) / 60))
-      const settings = app && app.getSettings ? app.getSettings() : {}
 
       this.setData({
         progress: Math.max(0, Math.min(100, summary.todayPercent || 0)),
@@ -115,8 +114,7 @@ Component({
         continueSub: this._lastRecord
           ? `${lastRows.length} 个模块 · ${last.totalActualText || '上次训练'}`
           : '',
-        todoSub: pendingTodos ? `${pendingTodos} 项待完成` : '今天没有待办',
-        pinnedFeature: settings.pinnedFeature || 'timer'
+        todoSub: pendingTodos ? `${pendingTodos} 项待完成` : '今天没有待办'
       })
     },
 
@@ -193,30 +191,50 @@ Component({
       wx.reLaunch({ url: '/pages/index/index' })
     },
 
-    // 悬浮球二级菜单：直接换首页显示的功能（不再依赖顶部长按）
-    switchFeature(event) {
+    // 悬浮球二级菜单：进入真实工具页，不在首页复制一套内容。
+    openFeature(event) {
       const key = event && event.currentTarget && event.currentTarget.dataset && event.currentTarget.dataset.key
       if (!key) return
-      // 七项都是首页真实可渲染的视图；其他未知 key 仍拦下来，避免记成不存在的固定项
-      if (['timer', 'quick-stopwatch', 'quick-countdown', 'quick-pomodoro', 'todo', 'important', 'stats'].indexOf(key) < 0) {
-        wx.showToast({ title: '暂不支持', icon: 'none', duration: 1200 })
-        if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
-        return
-      }
-      const pages = getCurrentPages()
-      const page = pages[pages.length - 1]
-      const app = getApp()
-      if (page && typeof page.applyPinnedFeature === 'function') {
-        this.setData({ pinnedFeature: key })
-        this.close()
-        page.applyPinnedFeature(key)
-        return
-      }
-      if (app && app.saveSettings) app.saveSettings({ pinnedFeature: key })
-      this.setData({ pinnedFeature: key })
       this.close()
-      if (this.currentRoute() === 'pages/index/index') return
-      wx.switchTab({ url: '/pages/index/index', fail: () => wx.showToast({ title: '切换失败，请重试', icon: 'none' }) })
+      const route = this.currentRoute()
+
+      if (key === 'timer') {
+        if (route === 'pages/index/index') {
+          const pages = getCurrentPages()
+          const page = pages[pages.length - 1]
+          if (page && typeof page.resetToHome === 'function') page.resetToHome()
+          return
+        }
+        wx.switchTab({ url: '/pages/index/index', fail: () => wx.showToast({ title: '切换失败，请重试', icon: 'none' }) })
+        return
+      }
+
+      const quickTabs = { 'quick-stopwatch': 'stopwatch', 'quick-countdown': 'countdown', 'quick-pomodoro': 'pomodoro' }
+      const quickTab = quickTabs[key]
+      if (quickTab) {
+        if (route === 'pages/quick/quick') {
+          const pages = getCurrentPages()
+          const page = pages[pages.length - 1]
+          if (page && typeof page.switchTab === 'function') {
+            page.switchTab({ currentTarget: { dataset: { tab: quickTab } } })
+          }
+          return
+        }
+        wx.navigateTo({ url: `/pages/quick/quick?tab=${quickTab}`, fail: () => wx.showToast({ title: '打不开快捷计时，请重试', icon: 'none' }) })
+        return
+      }
+
+      const routes = {
+        todo: '/pages/todo/todo',
+        important: '/pages/important/important',
+        stats: '/pages/stats/stats?tab=overview',
+        grade: '/pages/grade/index/index'
+      }
+      const url = routes[key]
+      if (!url) return
+      const targetRoute = url.split('?')[0].replace(/^\//, '')
+      if (route === targetRoute) return
+      wx.navigateTo({ url, fail: () => wx.showToast({ title: '打不开页面，请重试', icon: 'none' }) })
     },
 
     openTodo() {

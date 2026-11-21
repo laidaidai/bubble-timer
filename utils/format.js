@@ -37,6 +37,7 @@ const timeKey = value => {
 
 const dateTimeText = timestamp => {
   const date = new Date(timestamp)
+  if (!isFinite(date.getTime())) return ''
   return `${date.getFullYear()}/${pad(date.getMonth() + 1)}/${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 
@@ -61,8 +62,8 @@ const CLOCK_STYLES = [
   { key: 'sticker', name: '贴纸数字', desc: '白色描边，清楚可爱' },
   { key: 'outline', name: '描边空心', desc: '只画轮廓，中间留空' },
   { key: 'jelly', name: '果冻叠影', desc: '糖果描边，圆润轻快' },
-  { key: 'doodle', name: '手绘涂鸦', desc: '墨色数字 + 彩色铅笔边，整排微微歪着' },
-  { key: 'stamp', name: '手绘印章', desc: '像盖上去的章，粗描边 + 硬投影' },
+  { key: 'doodle', name: '手绘涂鸦', desc: '彩铅手写字 + 主色底线，整块歪着' },
+  { key: 'stamp', name: '手绘印章', desc: '纸张印章框 + 实心墨字，像盖上去' },
   { key: 'jellypop', name: '果冻弹跳', desc: '主色果冻 + 一道奶白高光，会轻轻弹' }
 ]
 

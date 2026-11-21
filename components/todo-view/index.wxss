@@ -1,0 +1,19 @@
+@import "../../pages/todo/todo.wxss";
+
+/* 组件高度由独立页槽位决定，不再自己占满 100vh */
+.todo-page {
+  height: 100%;
+  min-height: 0;
+}
+.todo-page .todo-body {
+  height: 100%;
+}
+.todo-tail {
+  height: calc(126rpx + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 700px) {
+  .todo-tail {
+    height: calc(75px + env(safe-area-inset-bottom));
+  }
+}

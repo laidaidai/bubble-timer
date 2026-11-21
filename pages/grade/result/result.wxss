@@ -1,0 +1,411 @@
+@import "../base.wxss";
+/* 成绩页：只呈现真实批改结果（分数、对错、逐题对照），不放任何模拟统计 */
+.empty-card { padding: 56rpx 32rpx; text-align: center; }
+.empty-title { font-size: 34rpx; font-weight: 800; }
+.empty-btn { margin-top: 32rpx; }
+
+.score-card {
+  overflow: hidden;
+  padding: 0;
+  margin-bottom: 22rpx;
+  border-radius: 30rpx;
+  box-shadow: 7rpx 8rpx 0 var(--shadow);
+}
+.score-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  padding: 17rpx 24rpx 15rpx;
+  background: var(--cream-1);
+  border-bottom: 2rpx dashed var(--line-strong);
+}
+.paper-info { flex: 1; min-width: 0; }
+.paper-name { overflow: hidden; font-size: 29rpx; font-weight: 900; white-space: nowrap; text-overflow: ellipsis; }
+.paper-sub { margin-top: 5rpx; font-size: 21rpx; color: var(--text-3); }
+.score-stamp {
+  flex: 0 0 auto;
+  padding: 5rpx 10rpx;
+  color: var(--danger-text);
+  background: var(--card);
+  border: 2rpx solid var(--danger);
+  border-radius: 7rpx;
+  box-shadow: 2rpx 2rpx 0 var(--shadow-soft);
+  font-size: 18rpx;
+  font-weight: 900;
+  letter-spacing: 2rpx;
+  line-height: 1.3;
+  transform: rotate(-6deg);
+}
+
+.score-body {
+  display: flex;
+  align-items: stretch;
+  gap: 18rpx;
+  padding: 20rpx 22rpx 22rpx;
+}
+
+/* 分数块：分数 + 正确率 + 进度条都在这一块里，跟右边题数分开 */
+.score-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 18rpx 20rpx 20rpx;
+  background: var(--accent-bg);
+  border: 3rpx solid var(--edge);
+  border-radius: 22rpx;
+  box-shadow: 5rpx 6rpx 0 var(--shadow-soft);
+  box-sizing: border-box;
+}
+
+.big-score {
+  color: var(--ink);
+  font-size: 104rpx;
+  font-weight: 900;
+  line-height: .96;
+  letter-spacing: -4rpx;
+  animation: result-score-pop .58s .08s cubic-bezier(.2,.9,.3,1.12) backwards;
+}
+@keyframes result-score-pop {
+  0% { opacity: .3; transform: scale(.55) rotate(-4deg); }
+  62% { opacity: 1; transform: scale(1.08) rotate(1deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0); }
+}
+.unit { font-size: 24rpx; font-weight: 800; margin-left: 5rpx; color: var(--text-2); letter-spacing: 0; }
+.score-note { margin-top: 16rpx; font-size: 22rpx; color: var(--text-3); }
+
+.acc-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12rpx;
+  margin-top: 10rpx;
+}
+.acc-label { font-size: 21rpx; font-weight: 800; color: var(--text-2); }
+.acc-val { font-size: 42rpx; font-weight: 900; color: var(--ink); }
+.acc-bar { margin-top: 7rpx; height: 12rpx; border: 2rpx solid var(--edge); border-radius: 999rpx; background: var(--panel-deep); overflow: hidden; box-sizing: border-box; }
+.acc-fill { height: 100%; background: var(--primary); border-right: 2rpx solid var(--edge); border-radius: 999rpx; box-sizing: border-box; transition: width .4s cubic-bezier(.2,.8,.3,1); }
+
+/* 能力图卡片 */
+.radar-card { padding: 22rpx 24rpx 24rpx; margin-bottom: 22rpx; border-radius: 28rpx; }
+.radar-head { display: flex; align-items: center; justify-content: space-between; }
+.radar-title { display: flex; align-items: center; gap: 10rpx; font-size: 29rpx; font-weight: 900; }
+.radar-title::before {
+  content: "";
+  width: 14rpx;
+  height: 14rpx;
+  background: var(--primary);
+  border: 2rpx solid var(--edge);
+  border-radius: 4rpx;
+  box-sizing: border-box;
+}
+
+/* 目标档：三段切换，选中的一段黄底深边，绿框跟着换位置 */
+.target-tabs {
+  display: flex;
+  gap: 6rpx;
+  margin-top: 16rpx;
+  padding: 5rpx;
+  background: var(--cream-2);
+  border: 2rpx solid var(--edge);
+  border-radius: 999rpx;
+  box-shadow: 3rpx 3rpx 0 var(--shadow-soft);
+}
+.target-tab {
+  flex: 1 1 0;
+  padding: 12rpx 0;
+  text-align: center;
+  font-size: 23rpx;
+  font-weight: 800;
+  color: var(--text-2);
+  border: 2rpx solid transparent;
+  border-radius: 999rpx;
+  box-sizing: border-box;
+  transition: background-color .18s ease, color .18s ease, box-shadow .18s ease;
+}
+.target-tab.is-on {
+  background: var(--primary);
+  border-color: var(--edge);
+  color: var(--on-primary);
+  font-weight: 900;
+  box-shadow: 2rpx 2rpx 0 var(--shadow-soft);
+}
+
+.radar-canvas { width: 100%; height: 460rpx; margin-top: 8rpx; }
+
+.radar-legend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10rpx;
+  margin-top: 10rpx;
+  font-size: 22rpx;
+  color: var(--text-3);
+}
+.legend-line { width: 36rpx; height: 4rpx; border-radius: 999rpx; }
+.is-mine { background: var(--accent-deep); }
+.is-target { background: var(--success-text); }
+.radar-hint { margin-top: 6rpx; text-align: center; font-size: 20rpx; color: var(--text-3); }
+.radar-hint .is-lead { color: var(--success-text); font-weight: 700; }
+.radar-hint .is-weak { color: var(--danger-text); font-weight: 700; }
+
+/* 优先补 / 拉分最多：全部由本次模块得分算出，不掺假数据 */
+.radar-tip {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8rpx 20rpx;
+  margin-top: 12rpx;
+  padding-top: 14rpx;
+  border-top: 2rpx dashed var(--line-2);
+  font-size: 24rpx;
+  font-weight: 700;
+}
+.tip-item.is-weak { color: var(--danger-text); }
+.tip-item.is-lead { color: var(--success-text); }
+
+.score-side { flex: 0 0 218rpx; display: flex; flex-direction: column; gap: 9rpx; }
+.side-row {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10rpx;
+  padding: 0 16rpx;
+  min-height: 62rpx;
+  background: var(--cream-2);
+  border: 2rpx solid var(--line-strong);
+  border-radius: 14rpx;
+  box-shadow: 2rpx 3rpx 0 var(--shadow-soft);
+  box-sizing: border-box;
+}
+.side-row.side-ok { background: var(--success-bg); border-color: var(--success); }
+.side-row.side-bad { background: var(--danger-bg); border-color: var(--danger); }
+.side-row.side-ok .side-label { color: var(--success-text); }
+.side-row.side-bad .side-label { color: var(--danger-text); }
+.side-label { font-size: 22rpx; font-weight: 800; color: var(--text-2); }
+.side-right { font-size: 40rpx; font-weight: 900; text-align: right; letter-spacing: -1rpx; }
+.side-right.is-right { color: var(--success-text); }
+.side-right.is-wrong { color: var(--danger-text); }
+
+.notice-bar {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  padding: 16rpx 20rpx;
+  margin-bottom: 22rpx;
+  border: 2rpx solid var(--danger);
+  border-radius: 16rpx;
+  background: var(--danger-bg);
+  box-shadow: 3rpx 3rpx 0 var(--shadow-soft);
+}
+.notice-text { flex: 1; min-width: 0; font-size: 23rpx; font-weight: 700; color: var(--danger-text); }
+
+.mod-card {
+  overflow: hidden;
+  padding: 0;
+  margin-bottom: 22rpx;
+  border-radius: 26rpx;
+  box-shadow: 5rpx 6rpx 0 var(--shadow-soft);
+  transition: border-color .18s ease;
+}
+.mod-card.opened { border-color: var(--primary); box-shadow: 6rpx 7rpx 0 var(--shadow); }
+.mod-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18rpx;
+  padding: 20rpx 22rpx 14rpx;
+}
+.mod-name { flex: 1; min-width: 0; overflow: hidden; font-size: 29rpx; font-weight: 900; white-space: nowrap; text-overflow: ellipsis; }
+.mod-right { flex: 0 0 auto; display: flex; align-items: center; gap: 10rpx; }
+/* 展开指示：三角朝下，展开后转 180° */
+.mod-caret {
+  width: 0;
+  height: 0;
+  border-left: 10rpx solid transparent;
+  border-right: 10rpx solid transparent;
+  border-top: 12rpx solid var(--text-3);
+  transition: transform .18s cubic-bezier(.2, .8, .3, 1);
+}
+.mod-caret.open { transform: rotate(180deg); }
+.mod-score {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: baseline;
+  gap: 7rpx;
+  padding: 3rpx 9rpx;
+  background: var(--cream-2);
+  border: 2rpx solid var(--line-strong);
+  border-radius: 999rpx;
+  font-size: 20rpx;
+  font-weight: 700;
+  color: var(--text-3);
+  box-sizing: border-box;
+}
+.mod-frac { color: var(--text-2); font-weight: 800; }
+.mod-pct { font-size: 25rpx; color: var(--ink); font-weight: 900; }
+.mod-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 4rpx; }
+.mod-points {
+  padding: 2rpx 9rpx;
+  color: var(--text-warm);
+  background: var(--accent-bg);
+  border: 2rpx solid var(--line-strong);
+  border-radius: 999rpx;
+  font-size: 21rpx;
+  font-weight: 800;
+}
+
+.mod-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  padding: 0 22rpx 20rpx;
+}
+.mod-bar {
+  flex: 1;
+  min-width: 0;
+  height: 12rpx;
+  border: 2rpx solid var(--edge);
+  border-radius: 999rpx;
+  background: var(--panel-deep);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+.mod-bar-fill { height: 100%; background: var(--primary); border-right: 2rpx solid var(--edge); border-radius: 999rpx; box-sizing: border-box; }
+.mod-bar-fill.anim-grow { transform-origin: left center; }
+
+/* 逐题区：外层只做高度过渡（0 → 实测高度 → auto），内容一次性插入被裁在 0 高度里，展开才顺 */
+.q-wrap {
+  border-top: 2rpx dashed var(--line-strong);
+  background: var(--cream-1);
+  overflow: hidden;
+  transition: height .26s cubic-bezier(.25, .8, .35, 1);
+}
+.q-body { padding: 12rpx 18rpx 10rpx; }
+.q-item { border-bottom: 2rpx solid var(--line); }
+.q-item:last-child { border-bottom: none; }
+
+.q-line {
+  display: flex;
+  align-items: stretch;
+  gap: 7rpx;
+  padding: 8rpx 0;
+}
+
+/* 题号：对＝松绿、错＝砖红、未做＝杏黄、无答案＝灰 */
+.q-tag {
+  flex: 0 0 62rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2rpx solid var(--edge);
+  border-radius: 11rpx;
+  box-shadow: 2rpx 2rpx 0 var(--shadow-soft);
+  box-sizing: border-box;
+  font-size: 23rpx;
+  font-weight: 900;
+  color: var(--on-primary);
+}
+.q-tag.ok { background: var(--success); }
+.q-tag.bad { background: var(--danger); }
+.q-tag.miss { background: var(--primary); color: var(--on-primary); }
+.q-tag.void { background: var(--chip-neutral); color: var(--text-3); }
+
+.q-cells { flex: 1; display: flex; gap: 8rpx; min-width: 0; }
+
+.q-cell {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8rpx 0;
+  background: var(--card);
+  border: 2rpx solid var(--line);
+  border-radius: 10rpx;
+  box-sizing: border-box;
+}
+.q-cell-letter { font-size: 25rpx; font-weight: 800; color: var(--text-3); }
+.q-cell-sub { font-size: 18rpx; color: transparent; margin-top: 2rpx; }
+
+/* 正解＝绿底绿字；你选错＝红底红字 */
+.q-cell.ans { background: var(--success-bg); border-color: var(--success); }
+.q-cell.ans .q-cell-letter { color: var(--success-text); }
+.q-cell.ans .q-cell-sub { color: var(--success-text); }
+.q-cell.pick { background: var(--danger-bg); border-color: var(--danger); }
+.q-cell.pick .q-cell-letter { color: var(--danger-text); }
+.q-cell.pick .q-cell-sub { color: var(--danger-text); }
+
+.footer-btns { display: flex; gap: 20rpx; margin-top: 8rpx; }
+.btn.half { flex: 1; min-width: 0; }
+
+/* 桌面档：rpx 随窗口放大，这里统一 px 化（px ≈ rpx × 0.56） */
+@media (min-width: 700px) {
+  .empty-card { padding: 32px 18px; }
+  .empty-title { font-size: 19px; }
+  .empty-btn { margin-top: 18px; }
+  .score-card { padding: 0; margin-bottom: 12px; border-radius: 17px; box-shadow: 4px 5px 0 var(--shadow); }
+  .score-head { padding: 9px 14px 8px; gap: 9px; border-bottom-width: 1px; }
+  .paper-name { font-size: 17px; }
+  .paper-sub { font-size: 12px; margin-top: 3px; }
+  .score-stamp { padding: 3px 6px; border-width: 1px; border-radius: 4px; box-shadow: 1px 1px 0 var(--shadow-soft); font-size: 10px; letter-spacing: 1px; }
+  .score-body { gap: 10px; padding: 11px 12px 12px; justify-content: center; }
+  .score-main { flex: 0 1 400px; max-width: 400px; padding: 10px 11px 11px; border-width: 2px; border-radius: 12px; box-shadow: 3px 3px 0 var(--shadow-soft); }
+  .big-score { font-size: 58px; letter-spacing: -2px; }
+  .unit { font-size: 14px; margin-left: 3px; }
+  .score-note { font-size: 12px; margin-top: 8px; }
+  .acc-row { gap: 7px; margin-top: 6px; }
+  .acc-label { font-size: 11px; }
+  .acc-val { font-size: 23px; }
+  .acc-bar { margin-top: 4px; height: 7px; border-width: 1px; }
+  .radar-card { padding: 12px 14px 13px; margin-bottom: 12px; border-radius: 16px; }
+  .radar-title { font-size: 16px; gap: 6px; }
+  .radar-title::before { width: 8px; height: 8px; border-width: 1px; border-radius: 2px; }
+  .target-tabs { margin-top: 9px; padding: 3px; gap: 4px; border-width: 1px; border-radius: 999px; box-shadow: 2px 2px 0 var(--shadow-soft); }
+  .target-tab { padding: 6px 0; font-size: 12px; border-width: 1px; border-radius: 999px; }
+  .radar-canvas { height: 260px; margin-top: 5px; }
+  .radar-legend { margin-top: 6px; font-size: 13px; gap: 6px; }
+  .legend-line { width: 20px; height: 2px; }
+  .radar-tip { margin-top: 7px; padding-top: 8px; font-size: 13px; gap: 5px 12px; border-top-width: 1px; }
+  .radar-hint { margin-top: 4px; font-size: 12px; }
+  .score-side { flex: 0 0 160px; gap: 5px; }
+  .side-row { padding: 0 9px; min-height: 34px; border-radius: 8px; border-width: 1px; box-shadow: 1px 2px 0 var(--shadow-soft); gap: 6px; }
+  .side-label { font-size: 12px; }
+  .side-right { font-size: 22px; }
+  .notice-bar { gap: 8px; padding: 9px 11px; margin-bottom: 12px; border-width: 1px; box-shadow: 2px 2px 0 var(--shadow-soft); border-radius: 9px; }
+  .notice-text { font-size: 12px; }
+  .mod-card { padding: 0; margin-bottom: 12px; border-radius: 15px; box-shadow: 3px 4px 0 var(--shadow-soft); }
+  .mod-head { gap: 9px; padding: 11px 13px 8px; }
+  .mod-right { gap: 6px; }
+  .mod-caret { border-left-width: 6px; border-right-width: 6px; border-top-width: 7px; }
+  .mod-name { font-size: 16px; }
+  .mod-score { padding: 2px 6px; font-size: 11px; gap: 4px; border-width: 1px; }
+  .mod-pct { font-size: 14px; }
+  .mod-points { padding: 1px 6px; font-size: 11px; border-width: 1px; }
+  .mod-meta { gap: 2px; }
+  .mod-bar-row { gap: 8px; padding: 0 13px 11px; }
+  .mod-bar { height: 7px; border-width: 1px; }
+  .q-wrap { border-top-width: 1px; }
+  .q-body { padding: 7px 10px 5px; }
+  .q-item { border-bottom-width: 1px; }
+  .q-line { gap: 4px; padding: 5px 0; }
+  .q-tag { flex: 0 0 35px; border-radius: 6px; border-width: 1px; box-shadow: 1px 1px 0 var(--shadow-soft); font-size: 13px; }
+  .q-cells { gap: 4px; }
+  .q-cell { padding: 5px 0; border-radius: 6px; border-width: 1px; }
+  .q-cell-letter { font-size: 14px; }
+  .q-cell-sub { font-size: 10px; margin-top: 1px; }
+  .footer-btns { gap: 11px; margin-top: 4px; }
+}
+
+/* 小屏（320 这类）：分数块收窄一档，避免 100.0 这种数字撑出去 */
+@media (max-width: 359px) {
+  .score-body { gap: 16rpx; }
+  .score-side { flex: 0 0 200rpx; }
+  .big-score { font-size: 80rpx; letter-spacing: -1rpx; }
+  .unit { font-size: 22rpx; }
+  .acc-val { font-size: 34rpx; }
+  .side-right { font-size: 34rpx; }
+  .side-row { padding: 0 16rpx; min-height: 56rpx; }
+}

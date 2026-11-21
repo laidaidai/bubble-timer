@@ -1,0 +1,410 @@
+@import "../base.wxss";
+.custom-page {
+  padding-bottom: 232rpx;
+}
+
+/* 顶部设置卡：卷名主输入 + 全部可见的模板网格 */
+.setup-card {
+  position: relative;
+  overflow: hidden;
+  padding: 24rpx 26rpx 26rpx;
+  border-radius: 30rpx;
+  box-shadow: 6rpx 7rpx 0 var(--shadow);
+}
+.setup-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 8rpx;
+  background: var(--primary);
+  border-bottom: 2rpx solid var(--edge);
+}
+
+.name-input {
+  width: 100%;
+  height: 84rpx;
+  padding: 4rpx 2rpx 0;
+  border: none;
+  border-bottom: 3rpx solid var(--edge);
+  border-radius: 0;
+  background: transparent;
+  box-sizing: border-box;
+  font-size: 36rpx;
+  font-weight: 900;
+  color: var(--ink);
+}
+.name-ph { color: var(--text-3); font-weight: 700; }
+
+.preset-block { margin-top: 22rpx; }
+
+.preset-label {
+  margin-bottom: 10rpx;
+  font-size: 21rpx;
+  font-weight: 800;
+  color: var(--text-3);
+}
+
+.presets {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12rpx;
+}
+
+.preset {
+  min-height: 60rpx;
+  padding: 0 12rpx;
+  border: 2rpx solid var(--edge);
+  border-radius: 999rpx;
+  background: var(--card);
+  box-shadow: 3rpx 4rpx 0 var(--shadow-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  font-size: 21rpx;
+  font-weight: 800;
+  color: var(--ink);
+  white-space: nowrap;
+  transition: transform .12s cubic-bezier(.2,.8,.3,1), box-shadow .12s cubic-bezier(.2,.8,.3,1);
+}
+.preset-press {
+  transform: translate(2rpx, 3rpx);
+  box-shadow: 1rpx 1rpx 0 var(--shadow-soft);
+  background: var(--cream-3);
+}
+
+/* 模块独立成卡：和首页试卷行同一套深描边、白底、硬投影 */
+.mod-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  margin-top: 20rpx;
+}
+
+.mod-card {
+  display: flex;
+  gap: 12rpx;
+  padding: 20rpx 14rpx 20rpx 22rpx;
+  border-radius: 24rpx;
+  box-shadow: 5rpx 6rpx 0 var(--shadow-soft);
+}
+
+.mod-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.mod-name-input {
+  width: 100%;
+  height: 50rpx;
+  padding: 0 0 6rpx;
+  border-bottom: 2rpx dashed var(--line-strong);
+  box-sizing: border-box;
+  font-size: 30rpx;
+  font-weight: 900;
+  color: var(--ink);
+}
+/* 标准模块的占位就是它的名字，用正文色，避免整列看起来像禁用；自建空白卡才用灰占位 */
+.mod-name-ph { color: var(--text-2); font-weight: 800; }
+.mod-name-ph-custom { color: var(--text-3); font-weight: 700; }
+
+.mod-per {
+  margin-top: 5rpx;
+  font-size: 21rpx;
+  color: var(--text-3);
+}
+
+/* 题量 / 分值并排，单位「题 / 分」写在控件里，不做额外标签行 */
+.mod-fields {
+  display: flex;
+  gap: 12rpx;
+  margin-top: 14rpx;
+}
+
+.stepper {
+  flex: 1;
+  min-width: 0;
+  height: 66rpx;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 5rpx;
+  background: var(--card);
+  border: 2rpx solid var(--edge);
+  border-radius: 999rpx;
+  box-shadow: 3rpx 3rpx 0 var(--shadow-soft);
+}
+
+.step {
+  width: 48rpx;
+  height: 46rpx;
+  flex: 0 0 auto;
+  border: 2rpx solid var(--edge);
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 2rpx 2rpx 0 var(--shadow-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  font-size: 30rpx;
+  font-weight: 900;
+  color: var(--on-primary);
+  line-height: 1;
+  transition: transform .1s ease, box-shadow .1s ease;
+}
+.step-press {
+  transform: translate(1rpx, 2rpx);
+  box-shadow: none;
+  background: var(--primary-2);
+}
+
+.step-mid {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4rpx;
+}
+
+.step-num {
+  width: 62rpx;
+  flex: 0 0 auto;
+  height: 52rpx;
+  text-align: right;
+  font-size: 28rpx;
+  font-weight: 900;
+  color: var(--ink);
+}
+
+.point-box {
+  flex: 1;
+  min-width: 0;
+  height: 66rpx;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+  padding: 0 18rpx;
+  background: var(--card);
+  border: 2rpx solid var(--edge);
+  border-radius: 999rpx;
+  box-shadow: 3rpx 3rpx 0 var(--shadow-soft);
+}
+
+.point-num {
+  flex: 1;
+  min-width: 0;
+  height: 52rpx;
+  font-size: 28rpx;
+  font-weight: 900;
+  color: var(--ink);
+  text-align: right;
+}
+
+.unit {
+  flex: 0 0 auto;
+  font-size: 20rpx;
+  color: var(--text-3);
+}
+
+/* 排序 / 移除收进竖排胶囊，和表单控件区分开 */
+.mod-acts {
+  flex: 0 0 auto;
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rpx;
+  padding: 4rpx;
+  background: var(--cream-2);
+  border: 2rpx solid var(--line-strong);
+  border-radius: 999rpx;
+  box-shadow: 2rpx 2rpx 0 var(--shadow-soft);
+  box-sizing: border-box;
+}
+
+.mod-act {
+  width: 46rpx;
+  height: 46rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 23rpx;
+  font-weight: 800;
+  color: var(--text-2);
+}
+.mod-act.del { font-size: 27rpx; color: var(--danger-text); }
+.mod-act.off { opacity: 0.25; }
+
+.act-press { background: var(--card); }
+.del-press { background: var(--danger-bg); color: var(--danger-text); }
+
+/* 添加模块＝虚线卡，和首页「新建自定义试卷」入口同一套 */
+.add-mod {
+  min-height: 86rpx;
+  margin-top: 16rpx;
+  padding: 0 24rpx;
+  border: 2rpx dashed var(--edge-soft);
+  border-radius: 22rpx;
+  background: var(--cream-2);
+  box-shadow: 3rpx 4rpx 0 var(--shadow-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14rpx;
+  box-sizing: border-box;
+  font-size: 25rpx;
+  font-weight: 900;
+  color: var(--ink);
+}
+.add-plus {
+  width: 50rpx;
+  height: 50rpx;
+  border: 2rpx solid var(--edge);
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 2rpx 2rpx 0 var(--shadow-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  font-size: 30rpx;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--on-primary);
+}
+.add-press {
+  transform: translateY(2rpx);
+  background: var(--line-2);
+}
+
+/* 删除是危险操作，用红色描边胶囊，和普通操作分开 */
+.delete-row {
+  width: 220rpx;
+  min-height: 58rpx;
+  margin: 28rpx auto 0;
+  border: 2rpx solid var(--danger-line);
+  border-radius: 999rpx;
+  background: var(--card);
+  box-shadow: 2rpx 3rpx 0 var(--shadow-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  font-size: 21rpx;
+  font-weight: 800;
+  color: var(--danger-text);
+}
+.delete-press {
+  transform: translate(1rpx, 2rpx);
+  box-shadow: none;
+  background: var(--danger-bg);
+}
+
+/* 底部合计条：固定但不贴边，宽屏下和正文同宽居中 */
+.save-bar {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 720px;
+  box-sizing: border-box;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  padding: 14rpx 26rpx;
+  padding-bottom: calc(14rpx + env(safe-area-inset-bottom));
+  background: var(--cream-1);
+  border-top: 2rpx solid var(--edge);
+  box-shadow: 0 -6rpx 0 var(--shadow-soft);
+}
+
+.bar-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.bar-total {
+  font-size: 26rpx;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.bar-diff {
+  margin-top: 4rpx;
+  font-size: 21rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bar-diff.ok { color: var(--success-text); }
+.bar-diff.bad { color: var(--danger-text); }
+
+.bar-fix {
+  flex: 0 0 auto;
+  min-height: 56rpx;
+  padding: 0 18rpx;
+  border: 2rpx solid var(--edge);
+  border-radius: 999rpx;
+  background: var(--card);
+  box-shadow: 2rpx 2rpx 0 var(--shadow-soft);
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  font-size: 22rpx;
+  font-weight: 900;
+  color: var(--ink);
+}
+.bar-fix-press { background: var(--line-2); }
+
+.bar-save {
+  flex: 0 0 auto;
+  min-height: 72rpx;
+  padding: 0 36rpx;
+}
+
+.is-off { opacity: 0.5; }
+
+@media (min-width: 700px) {
+  .custom-page { padding-bottom: 134px; }
+  .setup-card { padding: 14px 15px 15px; border-radius: 17px; box-shadow: 4px 5px 0 var(--shadow); }
+  .setup-card::before { height: 5px; border-bottom-width: 1px; }
+  .name-input { height: 47px; font-size: 20px; border-bottom-width: 2px; }
+  .preset-block { margin-top: 13px; }
+  .preset-label { margin-bottom: 6px; font-size: 12px; }
+  .presets { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; }
+  .preset { min-height: 34px; padding: 0 7px; border-width: 1px; font-size: 13px; box-shadow: 2px 2px 0 var(--shadow-soft); }
+  .mod-list { gap: 9px; margin-top: 12px; }
+  .mod-card { padding: 11px 8px 11px 12px; gap: 7px; border-radius: 13px; box-shadow: 3px 3px 0 var(--shadow-soft); }
+  .mod-name-input { height: 29px; padding-bottom: 3px; border-bottom-width: 1px; font-size: 16px; }
+  .mod-per { margin-top: 2px; font-size: 12px; }
+  .mod-fields { gap: 7px; margin-top: 8px; }
+  .stepper { height: 38px; padding: 0 3px; border-width: 2px; box-shadow: 2px 2px 0 var(--shadow-soft); }
+  .step { width: 27px; height: 26px; border-width: 1px; font-size: 16px; box-shadow: 1px 1px 0 var(--shadow-soft); }
+  .step-mid { gap: 2px; }
+  .step-num { width: 36px; height: 30px; font-size: 16px; }
+  .point-box { height: 38px; padding: 0 10px; border-width: 2px; gap: 2px; box-shadow: 2px 2px 0 var(--shadow-soft); }
+  .point-num { height: 30px; font-size: 16px; }
+  .unit { font-size: 11px; }
+  .mod-acts { gap: 1px; padding: 2px; border-width: 1px; box-shadow: 1px 1px 0 var(--shadow-soft); }
+  .mod-act { width: 27px; height: 27px; font-size: 13px; }
+  .mod-act.del { font-size: 16px; }
+  .add-mod { min-height: 47px; margin-top: 9px; padding: 0 14px; gap: 8px; border-width: 1px; border-radius: 12px; font-size: 14px; box-shadow: 2px 2px 0 var(--shadow-soft); }
+  .add-plus { width: 28px; height: 28px; font-size: 17px; border-width: 1px; box-shadow: 1px 1px 0 var(--shadow-soft); }
+  .delete-row { width: 125px; min-height: 33px; margin-top: 16px; border-width: 1px; font-size: 12px; box-shadow: 1px 2px 0 var(--shadow-soft); }
+  .save-bar { max-width: 688px; padding: 8px 15px; padding-bottom: 8px; gap: 8px; border-width: 1px; box-shadow: 0 -3px 0 var(--shadow-soft); }
+  .bar-total { font-size: 15px; }
+  .bar-diff { font-size: 12px; margin-top: 2px; }
+  .bar-fix { min-height: 31px; padding: 0 11px; border-width: 1px; font-size: 12px; }
+  .bar-save { min-height: 40px; padding: 0 20px; }
+}

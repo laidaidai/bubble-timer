@@ -73,7 +73,7 @@
     <view class="quick-tab {{tab === 'pomodoro' ? 'on' : ''}}" data-tab="pomodoro" bindtap="switchTab">番茄钟</view>
   </view>
 
-  <view class="quick-body">
+  <view class="quick-body {{tab === 'countdown' && !countdownStarted ? 'picker-body' : ''}}">
     <view class="quick-clock-card {{tab === 'countdown' && !countdownStarted ? 'picker-mode' : ''}}">
       <view class="pomo-chip {{pomodoroPhase === 'focus' ? 'focus' : 'rest'}}" wx:if="{{tab === 'pomodoro'}}">
         <text class="pomo-dot {{running ? 'on' : ''}}"></text>
@@ -99,8 +99,8 @@
       </view>
 
       <view class="quick-clock-stage" wx:else bindtap="cycleClockStyle">
-        <view class="q-clock-slot" style="height: {{clockSlotH}}px;">
-          <view class="clock-display" style="{{clockFitVars}}">
+        <view class="q-clock-slot">
+          <view class="clock-display {{clockReady ? 'ready' : ''}}" style="{{clockFitVars}}">
             <template is="quickClock" data="{{...clockData}}"/>
           </view>
         </view>

@@ -1,0 +1,714 @@
+@import "../base.wxss";
+.answer-page { padding-top: 0; }
+
+/* 模块 Tabs：吸顶，滚到任意题都能直接切模块，不用翻回顶部 */
+.mod-tabs {
+  position: sticky;
+  /* 吸在自定义顶栏下方，不能盖住返回键和标题 */
+  top: 176rpx;
+  z-index: 55;
+  white-space: nowrap;
+  background: var(--cream-1);
+  border-bottom: 2rpx solid var(--edge-soft);
+  box-shadow: 0 3rpx 0 var(--shadow-soft);
+  margin: 0 -28rpx 18rpx;
+  padding: 16rpx 28rpx;
+}
+
+.mod-tabs-inner {
+  display: inline-flex;
+  gap: 12rpx;
+}
+
+.mode-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6rpx;
+  min-height: 50rpx;
+  border: 2rpx solid var(--edge);
+  border-radius: 999rpx;
+  background: var(--accent-bg);
+  color: var(--text-warm);
+  font-weight: 900;
+  font-size: 21rpx;
+  letter-spacing: 1rpx;
+  padding: 0 18rpx;
+  box-shadow: 2rpx 3rpx 0 var(--shadow-soft);
+}
+
+/* 模块 tab：未选是一枚带投影的浅按钮，选中反色成深底 */
+.mod-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50rpx;
+  border: 2rpx solid var(--edge);
+  border-radius: 999rpx;
+  padding: 0 20rpx;
+  font-size: 23rpx;
+  font-weight: 900;
+  color: var(--ink);
+  background: var(--card);
+  box-shadow: 2rpx 3rpx 0 var(--shadow-soft);
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  transition: background .16s ease, color .16s ease, box-shadow .16s ease, transform .12s cubic-bezier(.2,.8,.3,1);
+}
+
+.mod-tab.active {
+  background: var(--primary);
+  color: var(--on-primary);
+  border-color: var(--edge-deep);
+  box-shadow: 3rpx 4rpx 0 var(--shadow);
+  transform: translateY(-1rpx);
+}
+
+/* 已答进度：一张压住页面的小成绩条 */
+.progress-row {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  margin: 0 0 18rpx;
+  padding: 14rpx 18rpx 15rpx;
+  background: var(--card);
+  border: 2rpx solid var(--edge);
+  border-radius: 22rpx;
+  box-shadow: 3rpx 4rpx 0 var(--shadow-soft);
+  box-sizing: border-box;
+}
+
+.progress-main { flex: 1; min-width: 0; }
+
+.progress-copy {
+  display: flex;
+  align-items: baseline;
+  gap: 6rpx;
+  min-width: 0;
+}
+.progress-label {
+  color: var(--text-2);
+  font-size: 20rpx;
+  font-weight: 800;
+}
+.progress-count {
+  color: var(--ink);
+  font-size: 42rpx;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -1rpx;
+}
+.progress-total {
+  color: var(--text-3);
+  font-size: 23rpx;
+  font-weight: 800;
+}
+
+/* 列表模式的答题卡入口 */
+.sheet-chip {
+  flex: 0 0 auto;
+  min-height: 48rpx;
+  padding: 0 18rpx;
+  border: 2rpx solid var(--edge);
+  border-radius: 999rpx;
+  background: var(--card);
+  color: var(--ink);
+  font-size: 21rpx;
+  font-weight: 900;
+  box-shadow: 2rpx 3rpx 0 var(--shadow-soft);
+  box-sizing: border-box;
+  transition: transform .12s cubic-bezier(.2,.8,.3,1), box-shadow .12s cubic-bezier(.2,.8,.3,1);
+}
+
+.progress-pct {
+  flex: 0 0 auto;
+  padding: 4rpx 10rpx;
+  color: var(--ink);
+  background: var(--accent-bg);
+  border: 2rpx solid var(--line-strong);
+  border-radius: 12rpx;
+  box-shadow: 2rpx 2rpx 0 var(--shadow-soft);
+  font-size: 32rpx;
+  font-weight: 900;
+  line-height: 1;
+}
+.progress-pct-unit { margin-left: 2rpx; color: var(--text-warm); font-size: 17rpx; font-weight: 800; }
+
+.progress-bar {
+  margin-top: 9rpx;
+  height: 14rpx;
+  border: 2rpx solid var(--edge);
+  border-radius: 999rpx;
+  background: var(--panel-deep);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--primary);
+  border-right: 2rpx solid var(--edge);
+  border-radius: 999rpx;
+  box-sizing: border-box;
+  transition: width .3s cubic-bezier(.2,.8,.3,1);
+}
+
+/* 章节填写模式 */
+.list-view {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 章节标题 */
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12rpx;
+  margin: 4rpx 4rpx 20rpx;
+}
+
+.section-title {
+  flex: 0 1 auto;
+  min-width: 0;
+  padding: 0 10rpx;
+  color: var(--ink);
+  font-size: 39rpx;
+  font-weight: 900;
+  line-height: 1.35;
+  background: linear-gradient(transparent 62%, var(--accent-bg) 62%);
+}
+
+.section-count {
+  flex: 0 0 auto;
+  padding: 3rpx 11rpx;
+  color: var(--text-3);
+  background: var(--card);
+  border: 2rpx solid var(--line-strong);
+  border-radius: 999rpx;
+  box-shadow: 2rpx 2rpx 0 var(--shadow-soft);
+  font-size: 20rpx;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 列表模式题目行 */
+.q-row {
+  display: flex;
+  align-items: center;
+  gap: 18rpx;
+  padding: 18rpx 20rpx;
+  margin-bottom: 16rpx;
+  border-radius: 22rpx;
+  box-shadow: 4rpx 5rpx 0 var(--shadow-soft);
+}
+
+.q-no {
+  width: 64rpx;
+  height: 64rpx;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink);
+  background: var(--accent-bg);
+  border: 2rpx solid var(--edge);
+  border-radius: 16rpx;
+  box-shadow: 2rpx 3rpx 0 var(--shadow-soft);
+  box-sizing: border-box;
+  font-size: 31rpx;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.opts {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12rpx;
+  min-width: 0;
+}
+
+.opt {
+  height: 72rpx;
+  border: 2rpx solid var(--edge);
+  border-radius: 14rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 25rpx;
+  background: var(--card);
+  box-shadow: 3rpx 3rpx 0 var(--shadow-soft);
+  transition: background .14s ease, color .14s ease, box-shadow .14s cubic-bezier(.2,.8,.3,1), transform .12s cubic-bezier(.2,.8,.3,1);
+}
+
+/* 选中态必须一眼可见：浅灰底在白卡上只有 1.12:1 对比度，等于没有反馈 */
+.opt.selected {
+  background: var(--primary);
+  border-color: var(--edge-deep);
+  color: var(--on-primary);
+  box-shadow: 4rpx 5rpx 0 var(--shadow);
+  animation: grade-opt-pop .24s cubic-bezier(.2,.9,.3,1.1);
+}
+
+@keyframes grade-opt-pop {
+  0% { transform: scale(.9); }
+  62% { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+
+/* 底部操作 */
+.footer { margin-top: 8rpx; }
+
+
+.btn.half {
+  flex: 1;
+  min-width: 0;
+}
+
+.footer .btn-outline {
+  margin-bottom: 20rpx;
+}
+
+/* 逐题模式 */
+.single-view {
+  display: flex;
+  flex-direction: column;
+  /* 底栏固定后，给最后一张题卡留出不被按钮压住的呼吸区 */
+  padding-bottom: calc(132rpx + env(safe-area-inset-bottom));
+}
+
+/* 换题：真·推拉 —— 旧题卡（.ghost）同时向另一侧滑出，新题卡跟着从翻页方向推入，
+   两张卡同一屏高、同一速度，滑到一半时正好各占半屏，不会先空一拍再闪出来 */
+.single-stage {
+  position: relative;
+  flex: 0 0 auto;
+  min-height: 0;
+  display: flex;
+  /* 只露舞台内的卡片，推拉时不会让两张卡同时铺到页面外再回弹 */
+  overflow: hidden;
+}
+
+.single-card {
+  position: relative;
+  z-index: 2;
+  overflow: hidden;
+  padding: 0;
+  flex: 0 0 auto;
+  width: 100%;
+  min-width: 0;
+  background: var(--card);
+  border: 3rpx solid var(--edge);
+  border-radius: 30rpx;
+  box-shadow: 7rpx 8rpx 0 var(--shadow);
+  box-sizing: border-box;
+  /* 换题只跑 transform，提前提层，减少宽窗口下阴影/文字重绘造成的掉帧 */
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+/* 离场卡：绝对定位盖在原卡片位置上，压在新卡下面，新卡滑进来时把它推出去 */
+.single-card.ghost {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  flex: none;
+  box-shadow: none;
+}
+
+/* 玻璃高光：跟着新卡一起扫过 */
+.glass-sheen {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 58%;
+  pointer-events: none;
+  z-index: 1;
+  will-change: transform, opacity;
+  background: linear-gradient(102deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.62) 50%, rgba(255, 255, 255, 0) 100%);
+}
+
+/* 新卡从右侧推入 / 旧卡向左侧滑出（下一题） */
+@keyframes push-in-next-a {
+  from { transform: translate3d(100%, 0, 0); }
+  to { transform: translate3d(0, 0, 0); }
+}
+@keyframes push-in-next-b {
+  from { transform: translate3d(100%, 0, 0); }
+  to { transform: translate3d(0, 0, 0); }
+}
+@keyframes push-out-next-a {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-100%, 0, 0); }
+}
+@keyframes push-out-next-b {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-100%, 0, 0); }
+}
+/* 上一题：方向反过来 */
+@keyframes push-in-prev-a {
+  from { transform: translate3d(-100%, 0, 0); }
+  to { transform: translate3d(0, 0, 0); }
+}
+@keyframes push-in-prev-b {
+  from { transform: translate3d(-100%, 0, 0); }
+  to { transform: translate3d(0, 0, 0); }
+}
+@keyframes push-out-prev-a {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(100%, 0, 0); }
+}
+@keyframes push-out-prev-b {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(100%, 0, 0); }
+}
+
+@keyframes sheen-next-a {
+  from { transform: translateX(-130%) skewX(-10deg); opacity: 0; }
+  22% { opacity: 0.75; }
+  78% { opacity: 0.75; }
+  to { transform: translateX(210%) skewX(-10deg); opacity: 0; }
+}
+@keyframes sheen-next-b {
+  from { transform: translateX(-130%) skewX(-10deg); opacity: 0; }
+  22% { opacity: 0.75; }
+  78% { opacity: 0.75; }
+  to { transform: translateX(210%) skewX(-10deg); opacity: 0; }
+}
+@keyframes sheen-prev-a {
+  from { transform: translateX(210%) skewX(-10deg); opacity: 0; }
+  22% { opacity: 0.75; }
+  78% { opacity: 0.75; }
+  to { transform: translateX(-130%) skewX(-10deg); opacity: 0; }
+}
+@keyframes sheen-prev-b {
+  from { transform: translateX(210%) skewX(-10deg); opacity: 0; }
+  22% { opacity: 0.75; }
+  78% { opacity: 0.75; }
+  to { transform: translateX(-130%) skewX(-10deg); opacity: 0; }
+}
+
+.push-in-next-a { animation: push-in-next-a 0.26s cubic-bezier(0.2, 0.8, 0.3, 1) both; }
+.push-in-next-b { animation: push-in-next-b 0.26s cubic-bezier(0.2, 0.8, 0.3, 1) both; }
+.push-out-next-a { animation: push-out-next-a 0.26s cubic-bezier(0.2, 0.8, 0.3, 1) both; }
+.push-out-next-b { animation: push-out-next-b 0.26s cubic-bezier(0.2, 0.8, 0.3, 1) both; }
+.push-in-prev-a { animation: push-in-prev-a 0.26s cubic-bezier(0.2, 0.8, 0.3, 1) both; }
+.push-in-prev-b { animation: push-in-prev-b 0.26s cubic-bezier(0.2, 0.8, 0.3, 1) both; }
+.push-out-prev-a { animation: push-out-prev-a 0.26s cubic-bezier(0.2, 0.8, 0.3, 1) both; }
+.push-out-prev-b { animation: push-out-prev-b 0.26s cubic-bezier(0.2, 0.8, 0.3, 1) both; }
+.sheen-next-a { animation: sheen-next-a 0.3s cubic-bezier(0.2, 0.8, 0.3, 1) both; }
+.sheen-next-b { animation: sheen-next-b 0.3s cubic-bezier(0.2, 0.8, 0.3, 1) both; }
+.sheen-prev-a { animation: sheen-prev-a 0.3s cubic-bezier(0.2, 0.8, 0.3, 1) both; }
+.sheen-prev-b { animation: sheen-prev-b 0.3s cubic-bezier(0.2, 0.8, 0.3, 1) both; }
+
+.single-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14rpx;
+  padding: 20rpx 26rpx 17rpx;
+  background: var(--accent-bg);
+  border-bottom: 2rpx dashed var(--line-strong);
+}
+
+.single-no-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5rpx;
+  min-width: 0;
+}
+.single-rule {
+  width: 54rpx;
+  height: 7rpx;
+  background: var(--primary);
+  border: 2rpx solid var(--edge);
+  border-radius: 999rpx;
+  box-sizing: border-box;
+}
+.single-no {
+  font-size: 58rpx;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -2rpx;
+}
+
+.single-meta {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.single-picked {
+  padding: 3rpx 11rpx;
+  color: var(--text-2);
+  background: var(--card);
+  border: 2rpx solid var(--line-strong);
+  border-radius: 999rpx;
+  font-size: 20rpx;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.4;
+}
+.single-picked.picked-on {
+  color: var(--text-warm);
+  background: var(--primary);
+  border-color: var(--edge);
+}
+
+.single-point {
+  padding: 3rpx 10rpx;
+  color: var(--ink);
+  background: var(--card);
+  border: 2rpx solid var(--edge-soft);
+  border-radius: 999rpx;
+  font-size: 20rpx;
+  font-weight: 900;
+  line-height: 1.4;
+}
+
+.single-opts {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  padding: 24rpx 26rpx 30rpx;
+}
+
+.single-opt {
+  height: 104rpx;
+  border: 3rpx solid var(--edge);
+  border-radius: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 34rpx;
+  font-weight: 900;
+  background: var(--card);
+  box-shadow: 5rpx 6rpx 0 var(--shadow-soft);
+  transition: background .14s ease, color .14s ease, box-shadow .14s cubic-bezier(.2,.8,.3,1), transform .12s cubic-bezier(.2,.8,.3,1);
+}
+
+/* 选中态必须一眼可见 */
+.single-opt.selected {
+  background: var(--primary);
+  border-color: var(--edge-deep);
+  color: var(--on-primary);
+  box-shadow: 6rpx 7rpx 0 var(--shadow);
+  animation: grade-opt-pop .24s cubic-bezier(.2,.9,.3,1.1);
+}
+
+/* 底部操作条：固定贴底，题卡缩短后按钮仍在拇指可及的位置 */
+.single-bar {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  z-index: 40;
+  width: 100%;
+  max-width: 720px;
+  box-sizing: border-box;
+  display: flex;
+  gap: 14rpx;
+  margin: 0;
+  padding: 14rpx 28rpx calc(14rpx + env(safe-area-inset-bottom));
+  background: var(--cream-1);
+  border-top: 2rpx solid var(--line-strong);
+  box-shadow: 0 -4rpx 0 var(--shadow-soft);
+}
+
+.single-bar-card {
+  flex: 0 0 auto;
+  min-width: 190rpx;
+  min-height: 92rpx;
+}
+
+.single-submit {
+  flex: 1;
+  min-width: 0;
+  min-height: 92rpx;
+}
+
+.single-total {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: var(--text-3);
+  margin-left: 8rpx;
+}
+
+
+.tri {
+  width: 0;
+  height: 0;
+  border-left: 10rpx solid transparent;
+  border-right: 10rpx solid transparent;
+  border-top: 14rpx solid var(--amber-deep);
+}
+
+.tri.up {
+  border-top: none;
+  border-bottom: 14rpx solid var(--amber-deep);
+}
+
+/* 答题卡浮窗：定高 + flex 分区，内容区自己滚动，底部按钮永远在屏内；宽窗口与正文列同宽居中 */
+.sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  height: 70vh;
+  box-sizing: border-box;
+  background: var(--card);
+  border: 3rpx solid var(--edge);
+  border-bottom: 0;
+  border-radius: 32rpx 32rpx 0 0;
+  box-shadow: 0 -6rpx 0 var(--shadow-soft);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.sheet-handle {
+  width: 66rpx;
+  height: 8rpx;
+  border: 2rpx solid var(--edge);
+  border-radius: 999rpx;
+  background: var(--primary);
+  margin: 16rpx auto 0;
+  box-sizing: border-box;
+}
+
+.sheet-body {
+  flex: 1 1 0;
+  height: 0;
+  min-height: 0;
+  /* 滚动区必须把 padding 算进自身宽度，否则内容比浮窗宽、右列题号被裁 */
+  width: 100%;
+  box-sizing: border-box;
+  padding: 24rpx 28rpx;
+}
+
+.sheet-group { margin-bottom: 28rpx; }
+
+.sheet-group-name {
+  font-size: 27rpx;
+  font-weight: 900;
+  border-left: 8rpx solid var(--primary);
+  padding-left: 14rpx;
+  margin-bottom: 18rpx;
+}
+
+/* minmax(0,1fr)：轨道不被内容最小宽撑破，窄屏 / 大字号下右列也不会被裁 */
+.sheet-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 18rpx;
+}
+
+.circle {
+  width: 100%;
+  min-width: 0;
+  aspect-ratio: 1;
+  box-sizing: border-box;
+  border: 2rpx solid var(--edge-soft);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 23rpx;
+  font-weight: 900;
+  background: var(--card);
+  box-shadow: 2rpx 3rpx 0 var(--shadow-soft);
+  transition: background .14s ease, color .14s ease, border-color .14s ease, box-shadow .14s ease, transform .14s ease;
+}
+
+.circle.answered {
+  background: var(--primary);
+  border-color: var(--edge);
+  color: var(--on-primary);
+}
+
+.circle.current {
+  border-color: var(--edge);
+  box-shadow: 0 0 0 3rpx var(--card), 0 0 0 6rpx var(--primary);
+  z-index: 1;
+  transform: scale(1.02);
+}
+
+.sheet-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+  padding: 16rpx 24rpx 18rpx;
+  background: var(--cream-1);
+  border-top: 2rpx solid var(--edge);
+}
+
+/* 未导入参考答案时把入口标出来 */
+/* 桌面档：rpx 会随窗口放大，这里统一 px 化（px ≈ rpx × 0.56） */
+@media (min-width: 700px) {
+  .answer-page { padding-top: 0; }
+  .mod-tabs { top: 0; z-index: 60; margin: 0 -16px 10px; padding: 9px 16px; border-bottom-width: 1px; box-shadow: 0 2px 0 var(--shadow-soft); }
+  .mod-tabs-inner { gap: 7px; }
+  .mode-chip { min-height: 28px; padding: 0 10px; font-size: 12px; box-shadow: 1px 2px 0 var(--shadow-soft); }
+  .mod-tab { min-height: 28px; padding: 0 11px; font-size: 13px; box-shadow: 1px 2px 0 var(--shadow-soft); }
+  .progress-row { gap: 8px; margin: 0 0 10px; padding: 8px 10px 9px; border-width: 2px; border-radius: 12px; box-shadow: 2px 2px 0 var(--shadow-soft); }
+  .progress-label { font-size: 11px; }
+  .progress-count { font-size: 24px; }
+  .progress-total { font-size: 13px; }
+  .progress-pct { padding: 2px 6px; border-width: 1px; font-size: 18px; box-shadow: 1px 1px 0 var(--shadow-soft); }
+  .progress-pct-unit { font-size: 10px; }
+  .sheet-chip { min-height: 27px; padding: 0 10px; font-size: 12px; border-width: 1px; box-shadow: 1px 2px 0 var(--shadow-soft); }
+  .progress-bar { margin-top: 5px; height: 8px; border-width: 2px; }
+  .section-head { margin: 2px 2px 11px; gap: 7px; }
+  .section-title { font-size: 22px; padding: 0 6px; }
+  .section-count { padding: 2px 6px; font-size: 11px; border-width: 1px; box-shadow: 1px 1px 0 var(--shadow-soft); }
+  .q-row { gap: 10px; padding: 10px 11px; margin-bottom: 9px; border-radius: 12px; box-shadow: 2px 3px 0 var(--shadow-soft); }
+  .q-no { width: 36px; height: 36px; border-width: 2px; border-radius: 9px; font-size: 18px; box-shadow: 1px 2px 0 var(--shadow-soft); }
+  .opts { gap: 7px; }
+  .opt { height: 42px; font-size: 15px; border-radius: 8px; border-width: 2px; box-shadow: 2px 2px 0 var(--shadow-soft); }
+  .single-view { min-height: 0; padding-bottom: 78px; }
+  .single-card { padding: 0; border-width: 2px; border-radius: 17px; box-shadow: 4px 5px 0 var(--shadow); }
+  .single-head { padding: 11px 15px 10px; gap: 8px; border-bottom-width: 1px; }
+  .single-rule { width: 30px; height: 4px; border-width: 1px; }
+  .single-no { font-size: 32px; }
+  .single-total { font-size: 14px; margin-left: 4px; }
+  .single-meta { gap: 5px; }
+  .single-picked, .single-point { padding: 2px 7px; font-size: 11px; border-width: 1px; }
+  .single-opts { gap: 9px; padding: 13px 15px 17px; }
+  .single-opt { height: 58px; font-size: 19px; border-radius: 11px; border-width: 2px; box-shadow: 3px 4px 0 var(--shadow-soft); }
+  .single-bar { max-width: 688px; gap: 9px; margin: 0; padding: 9px 16px 9px; border-top-width: 1px; box-shadow: 0 -3px 0 var(--shadow-soft); }
+  .single-bar-card { min-width: 110px; min-height: 46px; }
+  .single-submit { min-height: 46px; }
+  /* 桌面档关掉整卡高光，减少大幅面渐变重绘，优先换题帧率 */
+  .glass-sheen { display: none; }
+  .sheet { max-width: 688px; height: 560px; max-height: 76vh; border-width: 2px; border-radius: 18px 18px 0 0; box-shadow: 0 -3px 0 var(--shadow-soft); }
+  .sheet-handle { width: 38px; height: 4px; margin: 9px auto 0; border-width: 1px; }
+  .sheet-body { padding: 13px 16px; }
+  .sheet-group { margin-bottom: 16px; }
+  .sheet-group-name { font-size: 16px; border-left-width: 5px; padding-left: 9px; margin-bottom: 11px; }
+  .sheet-grid { grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 8px; }
+  .circle { font-size: 14px; border-width: 1px; border-radius: 50%; box-shadow: 2px 2px 0 var(--shadow-soft); }
+  .circle.current { box-shadow: 0 0 0 2px var(--card), 0 0 0 4px var(--primary); }
+  .sheet-foot { gap: 13px; padding: 9px 14px 10px; border-top-width: 1px; }
+
+  /* 桌面档换题不整卡横推：大幅面移动最吃帧，改成轻位移 + 淡入，读题节奏更稳 */
+  .single-card.ghost { display: none; }
+  .push-in-next-a, .push-in-next-b, .push-in-prev-a, .push-in-prev-b {
+    animation: desk-card-in .22s cubic-bezier(.2,.8,.3,1) both;
+  }
+  .push-out-next-a, .push-out-next-b, .push-out-prev-a, .push-out-prev-b { animation: none; }
+  @keyframes desk-card-in {
+    from { opacity: .55; transform: translate3d(0, 12px, 0); }
+    to { opacity: 1; transform: translate3d(0, 0, 0); }
+  }
+}

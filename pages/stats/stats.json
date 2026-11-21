@@ -2,7 +2,8 @@
   "navigationBarTitleText": "打卡",
   "navigationStyle": "custom",
   "usingComponents": {
-    "brand-dock": "/components/brand-dock/index"
+    "brand-dock": "/components/brand-dock/index",
+    "stats-view": "/components/stats-view/index"
   },
   "pageOrientation": "portrait"
 }

@@ -18,11 +18,10 @@
 .tool-tile-icon { flex: 0 0 52rpx; width: 52rpx; height: 52rpx; display: flex; align-items: center; justify-content: center; }
 .tool-tile-label { min-width: 0; overflow: hidden; color: var(--ink); font-size: 24rpx; font-weight: 900; white-space: nowrap; text-overflow: ellipsis; }
 .tool-tile-badge { position: absolute; z-index: 2; top: -9rpx; right: -7rpx; min-width: 24rpx; height: 24rpx; padding: 0 7rpx; display: flex; align-items: center; justify-content: center; color: var(--on-primary); background: var(--primary); border: 2rpx solid var(--edge); border-radius: 999rpx; font-size: 16rpx; font-weight: 900; line-height: 1; }
+.glyph-paper { position: relative; width: 30rpx; height: 38rpx; box-sizing: border-box; border: 2rpx solid var(--ink); border-radius: 7rpx; background: var(--card); }
+.glyph-paper::before { content: ""; position: absolute; left: 7rpx; top: 9rpx; width: 14rpx; height: 2rpx; background: var(--ink); box-shadow: 0 8rpx 0 var(--ink), 0 16rpx 0 var(--ink); }
+.glyph-paper::after { content: ""; position: absolute; right: -5rpx; bottom: -5rpx; width: 12rpx; height: 12rpx; box-sizing: border-box; border: 2rpx solid var(--edge); border-radius: 50%; background: var(--primary); }
 
-.settings-entry { width: 96rpx; height: 96rpx; margin: 16rpx 0 0 auto; display: flex; align-items: center; justify-content: center; background: var(--card); border: 2rpx solid var(--line-strong); border-radius: 50%; box-shadow: 4rpx 5rpx 0 var(--shadow-soft); transition: transform .12s ease, box-shadow .12s ease; }
-.settings-entry:active { transform: translate(1rpx, 1rpx); box-shadow: 2rpx 3rpx 0 var(--shadow-soft); }
-.settings-entry-icon { width: 52rpx; height: 52rpx; display: flex; align-items: center; justify-content: center; }
-.settings-entry-icon .di-gear { transform: scale(.9); }
 
 .glyph-clock { position: relative; width: 42rpx; height: 42rpx; box-sizing: border-box; border: 2rpx solid var(--ink); border-radius: 50%; }
 .glyph-clock::before { content: ""; position: absolute; left: 18rpx; top: 8rpx; width: 2rpx; height: 12rpx; background: var(--ink); border-radius: 2rpx; }
@@ -171,12 +170,12 @@
 .tool-tile:nth-child(2) { animation-delay: .10s; }
 .tool-tile:nth-child(3) { animation-delay: .15s; }
 .tool-tile:nth-child(4) { animation-delay: .20s; }
+.tool-tile:nth-child(5) { animation-delay: .25s; }
+.tool-tile:nth-child(6) { animation-delay: .30s; }
 .todo-preview-row, .important-tool-item { animation: app-rise-in .34s cubic-bezier(.2, .8, .3, 1) backwards; }
 .todo-preview-row:nth-child(2), .important-tool-item:nth-child(2) { animation-delay: .06s; }
 .todo-preview-row:nth-child(3), .important-tool-item:nth-child(3) { animation-delay: .12s; }
 .todo-preview-row:nth-child(4), .important-tool-item:nth-child(4) { animation-delay: .18s; }
-.settings-entry { animation: app-pop-in .46s .26s cubic-bezier(.2, .8, .3, 1) backwards; }
-.settings-entry-icon .di-gear { animation: tools-gear-in .72s cubic-bezier(.2, .8, .3, 1) both; }
 .tool-tile-badge { animation: app-pop-in .42s cubic-bezier(.2, .8, .3, 1) both; }
 
 /* 图标轻微呼吸，让工具页不死板 */
@@ -184,6 +183,7 @@
 .tool-tile:nth-child(2) .tool-tile-icon { animation-delay: .28s; }
 .tool-tile:nth-child(3) .tool-tile-icon { animation-delay: .56s; }
 .tool-tile:nth-child(4) .tool-tile-icon { animation-delay: .84s; }
+.tool-tile:nth-child(6) .tool-tile-icon { animation-delay: 1.12s; }
 .quick-feature-icon .stopwatch-hand { animation: tools-hand-sweep 4.8s linear infinite; }
 .tool-tile .glyph-clock::after { animation: tools-clock-sweep 6s linear infinite; }
 .tool-tile .chart-bar { transform-origin: center bottom; animation: tools-bar-grow .72s cubic-bezier(.2, .8, .3, 1) both; }
@@ -213,6 +213,8 @@
 .tools-page.reveal .tool-tile:nth-child(2) { animation-delay: .10s; }
 .tools-page.reveal .tool-tile:nth-child(3) { animation-delay: .15s; }
 .tools-page.reveal .tool-tile:nth-child(4) { animation-delay: .20s; }
+.tools-page.reveal .tool-tile:nth-child(5) { animation-delay: .25s; }
+.tools-page.reveal .tool-tile:nth-child(6) { animation-delay: .30s; }
 .tools-page.reveal .todo-preview-row,
 .tools-page.reveal .important-tool-item { animation: app-rise-in .34s cubic-bezier(.2, .8, .3, 1) backwards; }
 .tools-page.reveal .todo-preview-row:nth-child(2),
@@ -221,7 +223,6 @@
 .tools-page.reveal .important-tool-item:nth-child(3) { animation-delay: .12s; }
 .tools-page.reveal .todo-preview-row:nth-child(4),
 .tools-page.reveal .important-tool-item:nth-child(4) { animation-delay: .18s; }
-.tools-page.reveal .settings-entry { animation: app-pop-in .46s .26s cubic-bezier(.2, .8, .3, 1) backwards; }
 .tools-page.reveal .tool-tile-badge { animation: app-pop-in .42s cubic-bezier(.2, .8, .3, 1) both; }
 
 /* ===== 工具页入场动画：只挂在 reveal 上，每次切回都重播 ===== */
@@ -230,10 +231,8 @@
 .tool-tile,
 .todo-preview-row,
 .important-tool-item,
-.settings-entry,
 .tool-tile-badge { animation: none; }
 .quick-feature::after,
-.settings-entry-icon .di-gear,
 .tool-tile .chart-bar,
 .tool-tile .todo-check { animation: none; }
 
@@ -244,6 +243,7 @@
 .tools-page.reveal .tool-tile:nth-child(2) { animation-delay: .10s; }
 .tools-page.reveal .tool-tile:nth-child(3) { animation-delay: .15s; }
 .tools-page.reveal .tool-tile:nth-child(4) { animation-delay: .20s; }
+
 .tools-page.reveal .todo-preview-row,
 .tools-page.reveal .important-tool-item { animation: app-rise-in .34s cubic-bezier(.2, .8, .3, 1) backwards; }
 .tools-page.reveal .todo-preview-row:nth-child(2),
@@ -252,23 +252,12 @@
 .tools-page.reveal .important-tool-item:nth-child(3) { animation-delay: .12s; }
 .tools-page.reveal .todo-preview-row:nth-child(4),
 .tools-page.reveal .important-tool-item:nth-child(4) { animation-delay: .18s; }
-.tools-page.reveal .settings-entry { animation: app-pop-in .46s .26s cubic-bezier(.2, .8, .3, 1) backwards; }
 .tools-page.reveal .tool-tile-badge { animation: app-pop-in .42s cubic-bezier(.2, .8, .3, 1) both; }
 .tools-page.reveal .quick-feature::after { animation: tools-shimmer 1.1s .35s ease-out both; }
-.tools-page.reveal .settings-entry-icon .di-gear { animation: tools-gear-in .72s cubic-bezier(.2, .8, .3, 1) both; }
 .tools-page.reveal .tool-tile .chart-bar { animation: tools-bar-grow .72s cubic-bezier(.2, .8, .3, 1) both; }
 .tools-page.reveal .tool-tile .chart-bar.b2 { animation-delay: .08s; }
 .tools-page.reveal .tool-tile .chart-bar.b3 { animation-delay: .16s; }
 .tools-page.reveal .tool-tile .todo-check { animation: tools-check-pop .6s cubic-bezier(.2, .8, .3, 1) both; }
-
-/* 设置齿轮固定在工具页右下角，不随内容滚动 */
-.tools-page .settings-entry {
-  position: fixed;
-  right: 28rpx;
-  bottom: calc(126rpx + env(safe-area-inset-bottom));
-  margin: 0;
-  z-index: 40;
-}
 
 /* ===== 桌面 / 大屏：工具页按手机档物理尺寸渲染，避免 rpx 被窗口等比放大 ===== */
 /* 底部内距要避开左下角悬浮球（它落在这块内容区上方），否则最后一张卡被压住 */
@@ -298,17 +287,10 @@
 .desk .tool-tile-icon { flex: 0 0 29px; width: 29px; height: 29px; }
 .desk .tool-tile-label { font-size: 13px; }
 .desk .tool-tile-badge { top: -5px; right: -4px; min-width: 13px; height: 13px; padding: 0 4px; border-width: 1px; font-size: 9px; }
+.desk .glyph-paper { width: 17px; height: 22px; border-width: 1px; border-radius: 4px; }
+.desk .glyph-paper::before { left: 4px; top: 5px; width: 8px; height: 1px; box-shadow: 0 4px 0 var(--ink), 0 8px 0 var(--ink); }
+.desk .glyph-paper::after { right: -3px; bottom: -3px; width: 7px; height: 7px; border-width: 1px; }
 
-.desk .settings-entry { width: 54px; height: 54px; margin: 9px 0 0 auto; border-width: 1px; box-shadow: 2px 3px 0 var(--shadow-soft); }
-/* 桌面下 28rpx / 126rpx 会被窗口放大成 63px / 286px，齿轮浮在半空、离底栏很远；
- * 这里钉成 px：贴屏幕右边 24px、浮在自定义底栏（52px + 安全区）上方 14px，
- * 与左下角悬浮球的基线齐平，内容列限宽时也不会被挤到列内。 */
-.desk.tools-page .settings-entry {
-  right: 24px;
-  bottom: calc(52px + env(safe-area-inset-bottom) + 14px);
-  margin: 0;
-}
-.desk .settings-entry-icon { width: 29px; height: 29px; }
 
 /* 图标按手机档重绘 */
 .desk .glyph-clock { width: 24px; height: 24px; border-width: 1px; }

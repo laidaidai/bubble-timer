@@ -10,7 +10,13 @@
     "pages/todo/todo",
     "pages/blank/blank",
     "pages/important/important",
-    "pages/train/train"
+    "pages/grade/index/index",
+    "pages/grade/answer/answer",
+    "pages/grade/result/result",
+    "pages/grade/history/history",
+    "pages/grade/custom/custom",
+    "pages/grade/letter/letter",
+    "pages/grade/answers/answers"
   ],
   "window": {
     "navigationBarTitleText": "小鱼计时器",

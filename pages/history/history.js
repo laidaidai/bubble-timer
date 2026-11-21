@@ -1,4 +1,5 @@
 const app = getApp()
+const { dateTimeText } = require('../../utils/format')
 
 Page({
   data: {
@@ -57,10 +58,21 @@ Page({
     })
   },
 
+  // 旧记录可能缺少 startedAt，或 startedAtText 已写成 NaN；优先用记录 id 里的时间兜底
+  recordStartedAtText(record) {
+    if (!record) return ''
+    const text = record.startedAt ? dateTimeText(record.startedAt) : ''
+    if (text) return text
+    const savedText = String(record.startedAtText || '')
+    if (savedText && savedText.indexOf('NaN') === -1) return savedText
+    const idMatch = String(record.id || '').match(/^record-(\d{10,13})$/)
+    return idMatch ? dateTimeText(Number(idMatch[1])) : ''
+  },
+
   loadRecords() {
     const records = (wx.getStorageSync(app.globalData.recordsKey) || []).map(record => {
       const names = (record.rows || []).map(item => item.name).filter(Boolean)
-      return { ...record, title: names[0] || '训练记录' }
+      return { ...record, title: names[0] || '训练记录', startedAtText: this.recordStartedAtText(record) }
     })
     this.setData({ records })
   },

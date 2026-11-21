@@ -1,0 +1,17 @@
+@import "../../pages/important/important.wxss";
+
+/* 组件以外层槽位为高度，不再自己占满 100vh */
+.imp-page {
+  height: 100%;
+  min-height: 0;
+}
+
+/* 底部 dock 会压住列表最后一项：净空放在滚动内容末尾，不占视口 */
+.imp-tail {
+  height: calc(126rpx + env(safe-area-inset-bottom));
+}
+@media (min-width: 700px) {
+  .imp-tail {
+    height: calc(75px + env(safe-area-inset-bottom));
+  }
+}

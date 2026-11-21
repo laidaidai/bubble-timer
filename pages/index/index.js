@@ -112,13 +112,6 @@ Page({
     incentiveReveal: false,
     homeReveal: false,
     dockDim: false,
-    // 首页固定显示哪一项；pinnedQuickTab 非空时首页直接嵌快捷计时的真实面板
-    pinnedFeature: 'timer',
-    pinnedTodos: [],
-    pinnedTodoTotal: 0,
-    pinnedTodoDone: 0,
-    pinnedStats: {},
-    pinnedQuickTab: '',
     homeImportantPreview: [],
     // 首页只看最近 3 个倒计时
     homeCountdowns: [],
@@ -182,7 +175,7 @@ Page({
     }
     this.loadImportantDates()
     this.loadTomatoes()
-    this.loadHomeConfig()
+    this.loadHomeSettings()
   },
 
   resetPortraitMetrics() {
@@ -215,6 +208,14 @@ Page({
     return false
   },
 
+  // 桌面拖动窗口 / 平板转屏后重新判定档位，避免页面还停在手机档、底栏已经变成桌面档
+  onResize() {
+    const desktop = app && app.detectEnvironment
+      ? app.detectEnvironment()
+      : !!(app && app.globalData && app.globalData.isDesktop)
+    if (desktop !== this.data.isDesktop) this.setData({ isDesktop: desktop })
+  },
+
   onShow() {
     // 横屏计时页返回后，WebView 偶尔会沿用横屏的 rpx 基准，整页被放大；这里主动拉回竖屏基准
     this.resetPortraitMetrics()
@@ -227,7 +228,7 @@ Page({
         if (nextModules.length) this.setData({ modules: this.withIds(nextModules) })
       }
     }
-    // 从工具页「训练」进来时，强制回到首页（训练配置），不要停在计时中 / 报告视图
+    // 从工具页「训练」进来时，确保回到训练配置，不停留在计时中 / 报告视图。
     const nav = getApp()
     if (nav && nav.globalData && nav.globalData.homeResetView) {
       nav.globalData.homeResetView = ''
@@ -320,7 +321,7 @@ Page({
     }
     this.loadImportantDates()
     this.loadTomatoes()
-    this.loadHomeConfig()
+    this.loadHomeSettings()
     this.playIncentiveReveal()
     this.playHomeReveal()
     setTimeout(() => this.measureConfigScroll(), 150)
@@ -394,112 +395,9 @@ Page({
   },
 
   // ---- 重要日子倒计时 ----
-  loadHomeConfig() {
+  loadHomeSettings() {
     const settings = app.getSettings ? app.getSettings() : {}
-    const pinned = settings.pinnedFeature || 'timer'
-    this.setData({
-      incentiveType: settings.incentiveType || 'tomato',
-      pinnedFeature: pinned,
-      pinnedQuickTab: pinned.indexOf('quick-') === 0 ? pinned.slice(6) : ''
-    })
-    this.refreshPinnedData(pinned)
-  },
-
-  // 首页固定成待办 / 重要日子 / 打卡时，分别去读各自真实数据（不另建页面，直接复用存储与统计口径）
-  refreshPinnedData(pinned) {
-    const key = pinned || this.data.pinnedFeature
-    if (key === 'todo') this.loadPinnedTodos()
-    else if (key === 'stats') this.loadPinnedStats()
-  },
-
-  loadPinnedTodos() {
-    const raw = wx.getStorageSync(app.globalData.todoKey) || []
-    const list = Array.isArray(raw) ? raw : []
-    const pending = list.filter(item => !item.done)
-    const sorted = pending.slice().sort((a, b) => {
-      const av = a.dueAt || Number.MAX_SAFE_INTEGER
-      const bv = b.dueAt || Number.MAX_SAFE_INTEGER
-      return av - bv
-    })
-    const rows = sorted.slice(0, 4).map(item => ({
-      id: item.id,
-      text: item.text || '',
-      dueText: this.pinnedDueText(item.dueAt)
-    }))
-    this.setData({
-      pinnedTodos: rows,
-      pinnedTodoTotal: list.length,
-      pinnedTodoDone: list.filter(item => item.done).length
-    })
-  },
-
-  pinnedDueText(dueAt) {
-    if (!dueAt) return ''
-    const target = new Date(dueAt)
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const thatDay = new Date(target.getFullYear(), target.getMonth(), target.getDate())
-    const dayDiff = Math.round((thatDay - today) / 86400000)
-    if (dayDiff === 0) return '今天'
-    if (dayDiff === 1) return '明天'
-    if (dayDiff === -1) return '昨天'
-    return `${target.getMonth() + 1}月${target.getDate()}日`
-  },
-
-  loadPinnedStats() {
-    if (!app.dailyStats) return
-    const stats = app.dailyStats()
-    this.setData({
-      pinnedStats: {
-        todayMinutes: Math.floor((stats.todaySeconds || 0) / 60),
-        todayTarget: Math.floor((stats.targetSeconds || 0) / 60) || 180,
-        todayPercent: stats.todayPercent || 0,
-        weekMinutes: Math.floor((stats.weekSeconds || 0) / 60),
-        weekDays: stats.weekDays || 0,
-        streak: stats.streak || 0,
-        totalDays: stats.totalDays || 0,
-        // 海报同款月历热力格：直接复用 dailyStats 的口径
-        monthLabel: (stats.calendar && stats.calendar.monthLabel) || '',
-        monthDays: (stats.calendar && stats.calendar.monthDays) || 0,
-        weekdays: (stats.calendar && stats.calendar.weekdayLabels) || ['一', '二', '三', '四', '五', '六', '日'],
-        rows: (stats.calendar && stats.calendar.rows) || []
-      }
-    })
-  },
-
-  // 固定面板里勾一下即可完成待办，写回同一份存储
-  togglePinnedTodo(event) {
-    const id = event && event.currentTarget && event.currentTarget.dataset && event.currentTarget.dataset.id
-    if (!id) return
-    const raw = wx.getStorageSync(app.globalData.todoKey) || []
-    const list = (Array.isArray(raw) ? raw : []).map(item => (item.id === id ? { ...item, done: !item.done, doneAt: !item.done ? Date.now() : 0 } : item))
-    wx.setStorageSync(app.globalData.todoKey, list)
-    if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
-    this.loadPinnedTodos()
-  },
-
-  // 固定面板右上角箭头：进对应的真实页面
-  openPinnedFeature() {
-    const map = {
-      todo: '/pages/todo/todo',
-      important: '/pages/important/important',
-      stats: '/pages/stats/stats?tab=overview'
-    }
-    const url = map[this.data.pinnedFeature]
-    if (url) wx.navigateTo({ url })
-  },
-
-  applyPinnedFeature(key) {
-    const pinned = key || 'timer'
-    const quickTab = pinned.indexOf('quick-') === 0 ? pinned.slice(6) : ''
-    const nameMap = { timer: '训练计时', 'quick-stopwatch': '秒表', 'quick-countdown': '计时器', 'quick-pomodoro': '番茄钟', todo: '待办', important: '重要日子', stats: '打卡' }
-    app.saveSettings && app.saveSettings({ pinnedFeature: pinned })
-    this.setData({ pinnedFeature: pinned, pinnedQuickTab: quickTab }, () => {
-      setTimeout(() => this.measureConfigScroll(), 60)
-    })
-    this.refreshPinnedData(pinned)
-    if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
-    wx.showToast({ title: `已固定：${nameMap[pinned] || pinned}`, icon: 'none', duration: 1200 })
+    this.setData({ incentiveType: settings.incentiveType || 'tomato' })
   },
 
   // 顶栏返回：任何首页子页面都回到首页主视图
@@ -784,8 +682,21 @@ Page({
     }))
   },
 
+  // 旧记录可能缺少 startedAt，历史文本也可能是上一次渲染留下的 NaN；优先用记录 id 里的时间兜底
+  reportStartedAtText(report) {
+    if (!report) return ''
+    const startedAtText = report.startedAt ? formatDateTime(report.startedAt) : ''
+    if (startedAtText) return startedAtText
+    const savedText = String(report.startedAtText || '')
+    if (savedText && savedText.indexOf('NaN') === -1) return savedText
+    const idMatch = String(report.id || '').match(/^record-(\d{10,13})$/)
+    return idMatch ? formatDateTime(Number(idMatch[1])) : ''
+  },
+
   prepareReport(report) {
-    if (!report || !report.rows) return report
+    if (!report) return report
+    const startedAtText = this.reportStartedAtText(report)
+    if (!report.rows) return Object.assign({}, report, { startedAtText })
     const totalTargetSeconds = report.rows.reduce((sum, item) => sum + (item.targetMinutes || 0) * 60, 0)
     const totalActualSeconds = report.rows.reduce((sum, item) => sum + (item.elapsedSeconds || 0), 0)
     const incompleteCount = report.rows.filter(item => item.skipped || item.status === 'skipped' || (item.status === 'done' && (item.elapsedSeconds || 0) <= 0) || (item.elapsedSeconds || 0) <= 0).length
@@ -863,7 +774,7 @@ Page({
     }
     return {
       ...report,
-      startedAtText: report.startedAt ? formatDateTime(report.startedAt) : report.startedAtText,
+      startedAtText,
       totalActualText: report.totalActual !== undefined ? formatTime(report.totalActual) : report.totalActualText,
       overtimeCount,
       incompleteCount,

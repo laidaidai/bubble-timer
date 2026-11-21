@@ -1,0 +1,148 @@
+<view class="topbar grade-topbar theme-{{theme}}" style="{{themeStyle}}" wx:if="{{!isDesktop}}">
+  <view class="back-icon" bindtap="goBack" aria-label="返回">‹</view>
+  <view class="topbar-title">{{paperName || '正在答题'}}</view>
+  <view class="topbar-spacer"></view>
+</view>
+<view class="page answer-page {{isDesktop ? 'desk' : ''}} {{!isDesktop ? 'has-grade-topbar' : ''}} grade-root theme-{{theme}}" style="{{themeStyle}}">
+  <!-- 模块切换 + 模式切换 -->
+  <scroll-view scroll-x enhanced show-scrollbar="{{false}}" class="mod-tabs">
+    <view class="mod-tabs-inner">
+      <view class="mode-chip" bindtap="toggleMode" hover-class="is-press">{{mode === 'list' ? '逐题' : '列表'}}</view>
+      <view
+        wx:for="{{modules}}"
+        wx:key="key"
+        class="mod-tab {{item.key === activeKey ? 'active' : ''}}"
+        data-key="{{item.key}}"
+        bindtap="switchModule"
+        hover-class="is-press"
+      >{{item.short || item.name}}</view>
+    </view>
+  </scroll-view>
+
+  <!-- 已答进度：点选后这里会立刻变化，确认点击已生效 -->
+  <view class="progress-row">
+    <view class="progress-main">
+      <view class="progress-copy">
+        <text class="progress-label">已答</text>
+        <text class="progress-count num">{{answeredCount}}</text>
+        <text class="progress-total num">/ {{total}}</text>
+      </view>
+      <view class="progress-bar">
+        <view class="progress-fill" style="width: {{progressPct}}%;"></view>
+      </view>
+    </view>
+    <view class="progress-pct num">{{progressPct}}<text class="progress-pct-unit">%</text></view>
+    <view wx:if="{{mode === 'list'}}" class="sheet-chip" bindtap="openCard" hover-class="is-press">答题卡</view>
+  </view>
+
+  <!-- 章节填写模式 -->
+  <view wx:if="{{mode === 'list'}}" class="list-view anim-fade">
+    <view class="section-head anim-rise">
+      <view class="section-title">{{activeModule.name}}</view>
+      <view class="section-count">{{activeModule.pointsText}} 分 · 已答 {{answeredInModule}}/{{activeModule.questions.length}}</view>
+    </view>
+
+    <view wx:for="{{activeModule.questions}}" wx:key="no" class="card q-row">
+      <view class="q-no num">{{item.no}}</view>
+      <view class="opts">
+        <view
+          wx:for="{{OPTIONS}}"
+          wx:for-item="opt"
+          wx:key="*this"
+          class="opt {{answers[item.no] === opt ? 'selected' : ''}}"
+          data-no="{{item.no}}"
+          data-opt="{{opt}}"
+          bindtap="selectOption"
+          hover-class="is-press"
+        >{{opt}}</view>
+      </view>
+    </view>
+
+    <view class="footer">
+      <view class="btn btn-dark btn-lg btn-block {{submitting ? 'disabled' : ''}}" bindtap="submit" hover-class="btn-pressed">{{submitting ? '交卷中…' : '交卷'}}</view>
+    </view>
+  </view>
+
+  <!-- 逐题填写模式 -->
+  <view wx:else class="single-view">
+    <view class="single-stage">
+      <!-- 离场卡：上一题的定格画面，和新卡同一速度滑出去，让人看得见「推」的过程 -->
+      <view wx:if="{{ghostNo}}" class="card single-card ghost push-out-{{flipDir}}-{{qFlip ? 'a' : 'b'}}" catchtap="noop">
+        <view class="single-head">
+          <view class="single-no-wrap">
+            <view class="single-no num">{{ghostNo}}<text class="single-total">/ {{total}}</text></view>
+            <view class="single-rule"></view>
+          </view>
+          <view class="single-meta">
+            <view wx:if="{{ghostPointText}}" class="single-point num">{{ghostPointText}} 分</view>
+            <view class="single-picked {{answers[ghostNo] ? 'picked-on' : ''}}">{{answers[ghostNo] ? '已选 ' + answers[ghostNo] : '未选'}}</view>
+          </view>
+        </view>
+        <view class="single-opts">
+          <view wx:for="{{OPTIONS}}" wx:key="*this" class="single-opt {{answers[ghostNo] === item ? 'selected' : ''}}">{{item}}</view>
+        </view>
+      </view>
+
+      <!-- 新题卡：从翻页方向推入 -->
+      <view class="card single-card push-in-{{flipDir}}-{{qFlip ? 'a' : 'b'}}" bindtouchstart="onTouchStart" bindtouchend="onTouchEnd" bindtouchmove="onTouchMove">
+        <view class="glass-sheen sheen-{{flipDir}}-{{qFlip ? 'a' : 'b'}}"></view>
+        <view class="single-head">
+          <view class="single-no-wrap">
+            <view class="single-no num">{{current.no}}<text class="single-total">/ {{total}}</text></view>
+            <view class="single-rule"></view>
+          </view>
+          <view class="single-meta">
+            <view wx:if="{{current.pointText}}" class="single-point num">{{current.pointText}} 分</view>
+            <view class="single-picked {{answers[current.no] ? 'picked-on' : ''}}">{{answers[current.no] ? '已选 ' + answers[current.no] : '未选'}}</view>
+          </view>
+        </view>
+        <view class="single-opts">
+          <view
+            wx:for="{{OPTIONS}}"
+            wx:key="*this"
+            class="single-opt {{answers[current.no] === item ? 'selected' : ''}}"
+            data-no="{{current.no}}"
+            data-opt="{{item}}"
+            bindtap="selectOption"
+            hover-class="is-press"
+          >{{item}}</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 底部操作条：答题卡入口和交卷并列，逐题模式下不再重复顶部胶囊 -->
+    <view class="single-bar">
+      <view class="btn btn-outline single-bar-card" bindtap="openCard" hover-class="btn-pressed">答题卡</view>
+      <view class="btn btn-pink single-submit {{submitting ? 'disabled' : ''}}" bindtap="submit" hover-class="btn-pressed">{{submitting ? '交卷中…' : '交卷'}}</view>
+    </view>
+  </view>
+</view>
+
+<!-- 答题卡浮窗 -->
+<view wx:if="{{showCard}}" class="mask anim-fade grade-root theme-{{theme}}" style="{{themeStyle}}" bindtap="closeCard">
+  <view class="sheet anim-sheet" catchtap="noop">
+    <view class="sheet-handle"></view>
+    <scroll-view scroll-y class="sheet-body">
+      <view wx:for="{{sheetGroups}}" wx:key="key" class="sheet-group">
+        <view class="sheet-group-name">{{item.name}}</view>
+        <view class="sheet-grid">
+          <view
+            wx:for="{{item.questions}}"
+            wx:for-item="q"
+            wx:key="no"
+            class="circle {{q.no === current.no ? 'current' : ''}} {{q.answered ? 'answered' : ''}}"
+            data-no="{{q.no}}"
+            bindtap="jumpTo"
+            hover-class="is-press"
+          >{{q.no}}</view>
+        </view>
+      </view>
+    </scroll-view>
+    <view class="sheet-foot">
+      <view class="btn btn-outline" bindtap="closeCard" hover-class="btn-pressed">
+        <view class="tri up"></view>收起
+      </view>
+      <view class="btn btn-pink {{submitting ? 'disabled' : ''}}" bindtap="submit" hover-class="btn-pressed">{{submitting ? '交卷中…' : '交卷'}}</view>
+    </view>
+  </view>
+</view>

@@ -1,5 +1,6 @@
 .history-page { min-height: 100vh; background: var(--bg); color: var(--ink); overflow-x: hidden; }
-.history-body { width: 100%; height: calc(100vh - 286rpx - env(safe-area-inset-bottom)); box-sizing: border-box; overflow-x: hidden; padding: 20rpx 24rpx 30rpx; }
+.history-body { width: 100%; height: calc(100vh - 286rpx - env(safe-area-inset-bottom)); box-sizing: border-box; overflow-x: hidden; padding: 20rpx 24rpx 0; }
+.history-tail { height: 30rpx; }
 .history-tip { margin-bottom: 22rpx; color: var(--text-warm); font-size: 22rpx; line-height: 1.7; }
 .history-tip .tip-line { display: block; }
 
@@ -97,7 +98,8 @@
 
 /* ===== 桌面 / 大屏：记录页按手机档物理尺寸渲染 ===== */
 /* 底部内距避开左下角悬浮球，避免最后一条记录被压住 */
-.desk .history-body { padding: 11px 13px 72px; }
+.desk .history-body { padding: 11px 13px 0; }
+.desk .history-tail { height: 72px; }
 .desk .history-toolbar { gap: 7px; margin-bottom: 9px; padding: 0 2px; }
 .desk .history-toolbar-count { font-size: 12px; }
 .desk .clear-all-btn { flex: 0 0 29px; width: 29px; height: 29px; border-width: 1px; box-shadow: 2px 2px 0 var(--shadow-soft); }

@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "过关斩将",
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "app-dock": "/custom-tab-bar/index"
+  }
+}

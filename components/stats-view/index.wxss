@@ -1,0 +1,17 @@
+@import "../../pages/stats/stats.wxss";
+
+.stats-page {
+  height: 100%;
+  min-height: 0;
+}
+.stats-page .stats-body {
+  height: 100%;
+}
+.stats-tail {
+  height: calc(126rpx + env(safe-area-inset-bottom));
+}
+@media (min-width: 700px) {
+  .stats-tail {
+    height: calc(75px + env(safe-area-inset-bottom));
+  }
+}

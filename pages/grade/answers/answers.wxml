@@ -1,0 +1,84 @@
+<view class="topbar grade-topbar theme-{{theme}}" style="{{themeStyle}}" wx:if="{{!isDesktop}}">
+  <view class="back-icon" bindtap="goBack" aria-label="返回">‹</view>
+  <view class="topbar-title">导入参考答案</view>
+  <view class="topbar-spacer"></view>
+</view>
+<view class="page answers-page {{isDesktop ? 'desk' : ''}} {{!isDesktop ? 'has-grade-topbar' : ''}} grade-root theme-{{theme}}" style="{{themeStyle}}">
+  <view class="card info-card anim-rise">
+    <view class="info-main">
+      <view class="info-name">{{paperName}}</view>
+      <view class="info-sub">共 {{total}} 题</view>
+    </view>
+    <view class="btn-link" bindtap="goAnswer" hover-class="is-press">去答题</view>
+  </view>
+
+  <view class="card input-card anim-rise" style="animation-delay: 70ms;">
+    <textarea
+      class="ans-textarea"
+      placeholder="{{ph}}"
+      placeholder-class="ans-ph"
+      value="{{text}}"
+      aria-label="粘贴参考答案"
+      bindinput="onInput"
+      maxlength="-1"
+      cursor-spacing="120"
+    />
+    <view wx:if="{{message}}" class="message">{{message}}</view>
+    <view wx:if="{{filled > 0 && filled < total}}" class="missing">缺：{{missingText}}</view>
+  </view>
+
+  <view wx:if="{{filled > 0}}" class="card preview-card anim-rise" style="animation-delay: 130ms;">
+    <view class="preview-head">
+      <view class="preview-title">逐题校对</view>
+      <view class="preview-meta num">{{filled}} / {{total}}</view>
+      <view class="preview-clear" bindtap="clear" hover-class="is-press">清除</view>
+    </view>
+    <view class="ans-grid">
+      <view
+        wx:for="{{answers}}"
+        wx:key="index"
+        class="ans-cell {{item ? 'is-set' : ''}}"
+        data-no="{{index + 1}}"
+        aria-label="第 {{index + 1}} 题，答案 {{item || '未填'}}"
+        bindtap="openEditor"
+        hover-class="cell-press"
+      >
+        <text class="ans-no num">{{index + 1}}</text>
+        <text class="ans-letter">{{item || '—'}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="save-bar">
+    <view class="bar-info">
+      <view class="bar-count num">已填 {{filled}} / {{total}} 题</view>
+      <view class="bar-state {{filled === total ? 'ok' : 'bad'}}">{{filled === total ? '答案已齐' : (filled > 0 ? '还缺 ' + (total - filled) + ' 题' : '未填答案')}}</view>
+    </view>
+    <view class="btn btn-dark save-btn {{filled ? '' : 'is-off'}}" aria-label="保存参考答案" bindtap="save" hover-class="btn-pressed">保存</view>
+  </view>
+
+  <!-- 单题校对：点题号后只改这一题，避免误改整段粘贴文本 -->
+  <view wx:if="{{editorNo}}" class="mask editor-mask grade-root theme-{{theme}}" style="{{themeStyle}}" catchtap="closeEditor">
+    <view class="editor-sheet" catchtap="noop">
+      <view class="editor-head">
+        <view class="editor-title">第 {{editorNo}} 题</view>
+        <view class="editor-current num">{{editorValue ? '当前 ' + editorValue : '未填'}}</view>
+      </view>
+      <view class="editor-opts">
+        <view
+          wx:for="{{letters}}"
+          wx:key="*this"
+          class="editor-opt {{item === editorValue ? 'on' : ''}}"
+          data-v="{{item}}"
+          aria-label="选择 {{item}}"
+          bindtap="pickOption"
+          hover-class="opt-press"
+        >{{item}}</view>
+      </view>
+      <view class="editor-actions">
+        <view class="editor-btn ghost" bindtap="clearOne" hover-class="is-press">清除</view>
+        <view class="editor-btn" bindtap="closeEditor" hover-class="is-press">取消</view>
+      </view>
+    </view>
+  </view>
+</view>

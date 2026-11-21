@@ -1,0 +1,324 @@
+@import "../base.wxss";
+.answers-page {
+  padding-bottom: 198rpx;
+}
+
+.info-card {
+  padding: 22rpx 24rpx;
+  margin-bottom: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18rpx;
+  border-radius: 26rpx;
+  box-shadow: 5rpx 6rpx 0 var(--shadow-soft);
+}
+.info-main { flex: 1; min-width: 0; }
+.info-name {
+  overflow: hidden;
+  font-size: 30rpx;
+  font-weight: 900;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.info-sub {
+  display: inline-block;
+  margin-top: 7rpx;
+  padding: 2rpx 10rpx;
+  color: var(--text-3);
+  background: var(--cream-2);
+  border: 2rpx solid var(--line-strong);
+  border-radius: 999rpx;
+  font-size: 20rpx;
+  font-weight: 800;
+}
+
+.input-card {
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+  border-radius: 28rpx;
+  box-shadow: 6rpx 7rpx 0 var(--shadow);
+}
+
+.ans-textarea {
+  width: 100%;
+  height: 260rpx;
+  border: 2rpx solid var(--edge);
+  border-radius: 18rpx;
+  padding: 18rpx;
+  box-sizing: border-box;
+  font-size: 27rpx;
+  line-height: 1.7;
+  background: var(--cream-1);
+  box-shadow: inset 0 3rpx 0 var(--shadow-soft);
+}
+
+.ans-ph {
+  color: var(--text-3);
+  font-size: 24rpx;
+  line-height: 2;
+}
+
+.message {
+  margin-top: 12rpx;
+  padding: 8rpx 12rpx;
+  border: 2rpx solid var(--danger);
+  border-radius: 12rpx;
+  background: var(--danger-bg);
+  font-size: 21rpx;
+  line-height: 1.5;
+  color: var(--danger-text);
+}
+
+.missing {
+  margin-top: 12rpx;
+  font-size: 21rpx;
+  line-height: 1.6;
+  color: var(--danger-text);
+}
+
+.preview-card {
+  padding: 22rpx 20rpx 24rpx;
+  margin-bottom: 20rpx;
+  border-radius: 28rpx;
+  box-shadow: 6rpx 7rpx 0 var(--shadow-soft);
+}
+
+.preview-head {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  margin-bottom: 14rpx;
+  padding-bottom: 12rpx;
+  border-bottom: 2rpx dashed var(--line-strong);
+}
+.preview-title { display: flex; align-items: center; gap: 8rpx; font-size: 27rpx; font-weight: 900; }
+.preview-title::before {
+  content: "";
+  width: 12rpx;
+  height: 12rpx;
+  background: var(--primary);
+  border: 2rpx solid var(--edge);
+  border-radius: 3rpx;
+  box-sizing: border-box;
+}
+.preview-meta {
+  padding: 1rpx 9rpx;
+  color: var(--text-3);
+  background: var(--cream-2);
+  border: 2rpx solid var(--line-strong);
+  border-radius: 999rpx;
+  font-size: 19rpx;
+  font-weight: 800;
+}
+.preview-clear {
+  margin-left: auto;
+  padding: 3rpx 10rpx;
+  border: 2rpx solid var(--danger);
+  border-radius: 999rpx;
+  color: var(--danger-text);
+  background: var(--card);
+  font-size: 19rpx;
+  font-weight: 900;
+}
+
+/* 6 列校对格：点哪题改哪题，比一个 135 行的表单短得多 */
+.ans-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8rpx;
+}
+
+.ans-cell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5rpx;
+  min-height: 58rpx;
+  padding: 0 8rpx;
+  border: 2rpx dashed var(--line-strong);
+  border-radius: 10rpx;
+  background: var(--card);
+  box-shadow: 1rpx 2rpx 0 var(--shadow-soft);
+  box-sizing: border-box;
+}
+
+.ans-cell.is-set {
+  border-style: solid;
+  border-color: var(--edge);
+  background: var(--accent-bg);
+}
+
+.ans-no {
+  font-size: 18rpx;
+  color: var(--text-3);
+}
+
+.ans-letter {
+  font-size: 24rpx;
+  font-weight: 900;
+  color: var(--text-3);
+}
+.ans-cell.is-set .ans-letter { color: var(--ink); }
+
+.cell-press { background: var(--cream-3); }
+
+/* 单题校对弹层：只改一题，选项做大，避免点错 */
+.editor-mask {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 44rpx;
+  box-sizing: border-box;
+}
+
+.editor-sheet {
+  width: 100%;
+  max-width: 360px;
+  box-sizing: border-box;
+  padding: 26rpx;
+  background: var(--card);
+  border: 3rpx solid var(--edge);
+  border-radius: 28rpx;
+  box-shadow: 9rpx 10rpx 0 var(--shadow);
+}
+
+.editor-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14rpx;
+  padding-bottom: 14rpx;
+  border-bottom: 2rpx dashed var(--line-strong);
+}
+.editor-title { font-size: 30rpx; font-weight: 900; color: var(--ink); }
+.editor-current {
+  padding: 2rpx 9rpx;
+  color: var(--text-3);
+  background: var(--cream-2);
+  border: 2rpx solid var(--line-strong);
+  border-radius: 999rpx;
+  font-size: 19rpx;
+  font-weight: 800;
+}
+
+.editor-opts {
+  display: flex;
+  gap: 10rpx;
+  margin-top: 22rpx;
+}
+
+.editor-opt {
+  flex: 1;
+  min-width: 0;
+  height: 96rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2rpx solid var(--edge);
+  border-radius: 16rpx;
+  background: var(--card);
+  font-size: 33rpx;
+  font-weight: 900;
+  color: var(--ink);
+  box-shadow: 3rpx 4rpx 0 var(--shadow-soft);
+}
+.editor-opt.on {
+  background: var(--primary);
+  border-color: var(--edge);
+  color: var(--on-primary);
+  box-shadow: 4rpx 5rpx 0 var(--shadow);
+  animation: grade-opt-pop .24s cubic-bezier(.2,.9,.3,1.1);
+}
+.opt-press { transform: translateY(2rpx); box-shadow: none; }
+
+.editor-actions {
+  display: flex;
+  gap: 12rpx;
+  margin-top: 20rpx;
+}
+
+.editor-btn {
+  flex: 1;
+  min-height: 66rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2rpx solid var(--edge);
+  border-radius: 999rpx;
+  background: var(--card);
+  box-shadow: 2rpx 3rpx 0 var(--shadow-soft);
+  box-sizing: border-box;
+  font-size: 23rpx;
+  font-weight: 900;
+  color: var(--ink);
+}
+.editor-btn.ghost { color: var(--danger-text); border-color: var(--danger); background: var(--danger-bg); }
+
+/* 底栏：粘贴后继续校对，保存始终在拇指边 */
+.save-bar {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 720px;
+  box-sizing: border-box;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 14rpx 26rpx;
+  padding-bottom: calc(14rpx + env(safe-area-inset-bottom));
+  background: var(--cream-1);
+  border-top: 2rpx solid var(--edge);
+  box-shadow: 0 -6rpx 0 var(--shadow-soft);
+}
+
+.bar-info { flex: 1; min-width: 0; }
+.bar-count { font-size: 25rpx; font-weight: 800; color: var(--ink); }
+.bar-state { margin-top: 4rpx; font-size: 21rpx; }
+.bar-state.ok { color: var(--success-text); }
+.bar-state.bad { color: var(--danger-text); }
+
+.save-btn {
+  flex: 0 0 auto;
+  min-height: 70rpx;
+  padding: 0 36rpx;
+}
+.is-off { opacity: 0.5; }
+
+@media (min-width: 700px) {
+  .answers-page { padding-bottom: 118px; }
+  .info-card { padding: 12px 14px; margin-bottom: 11px; gap: 9px; border-radius: 14px; box-shadow: 3px 4px 0 var(--shadow-soft); }
+  .info-name { font-size: 18px; }
+  .info-sub { margin-top: 4px; padding: 1px 6px; font-size: 11px; border-width: 1px; }
+  .input-card { padding: 14px; margin-bottom: 11px; border-radius: 16px; box-shadow: 4px 5px 0 var(--shadow); }
+  .ans-textarea { height: 120px; min-height: 0; border-width: 2px; border-radius: 10px; padding: 10px; font-size: 15px; box-shadow: inset 0 2px 0 var(--shadow-soft); }
+  .ans-ph { font-size: 14px; }
+  .message { margin-top: 7px; padding: 5px 7px; border-width: 1px; border-radius: 7px; font-size: 12px; }
+  .missing { margin-top: 7px; font-size: 12px; }
+  .preview-card { padding: 12px 11px 13px; margin-bottom: 11px; border-radius: 16px; box-shadow: 4px 4px 0 var(--shadow-soft); }
+  .preview-head { gap: 6px; margin-bottom: 8px; padding-bottom: 7px; border-bottom-width: 1px; }
+  .preview-title { font-size: 16px; gap: 5px; }
+  .preview-title::before { width: 7px; height: 7px; border-width: 1px; }
+  .preview-meta { padding: 1px 5px; border-width: 1px; font-size: 10px; }
+  .preview-clear { padding: 2px 6px; border-width: 1px; font-size: 10px; }
+  .ans-grid { grid-template-columns: repeat(10, 1fr); gap: 5px; }
+  .ans-cell { min-height: 33px; padding: 0 5px; border-width: 1px; border-radius: 6px; gap: 3px; box-shadow: 1px 1px 0 var(--shadow-soft); }
+  .ans-no { font-size: 10px; }
+  .ans-letter { font-size: 14px; }
+  .editor-mask { padding: 26px; }
+  .editor-sheet { max-width: 360px; padding: 15px; border-width: 2px; border-radius: 16px; box-shadow: 5px 6px 0 var(--shadow); }
+  .editor-head { gap: 8px; padding-bottom: 8px; border-bottom-width: 1px; }
+  .editor-title { font-size: 18px; }
+  .editor-current { padding: 1px 5px; font-size: 10px; border-width: 1px; }
+  .editor-opts { gap: 6px; margin-top: 12px; }
+  .editor-opt { height: 55px; border-width: 2px; border-radius: 9px; font-size: 19px; box-shadow: 2px 3px 0 var(--shadow-soft); }
+  .editor-actions { gap: 8px; margin-top: 11px; }
+  .editor-btn { min-height: 38px; border-width: 1px; font-size: 13px; box-shadow: 1px 2px 0 var(--shadow-soft); }
+  .save-bar { max-width: 688px; padding: 8px 15px; padding-bottom: 8px; gap: 8px; border-width: 1px; box-shadow: 0 -3px 0 var(--shadow-soft); }
+  .bar-count { font-size: 15px; }
+  .bar-state { margin-top: 2px; font-size: 12px; }
+  .save-btn { min-height: 40px; padding: 0 20px; }
+}

@@ -103,6 +103,7 @@ Page({
     clockBoxStyle: '',
     clockSlotH: 0,
     clockFitVars: '',
+    clockReady: false,
     indicatorStyle: 'height: 88rpx',
     laps: [],
     finishBurst: false,
@@ -187,15 +188,42 @@ Page({
     this.stopTicker()
   },
 
-  // PC 上拖窗口：重算时钟的放大系数
+  // PC 上拖窗口：重判桌面档并重算时钟的放大系数
   onResize() {
-    this.syncClockBox()
+    const app = getApp()
+    const desktop = app && app.detectEnvironment
+      ? app.detectEnvironment()
+      : !!(app && app.globalData && app.globalData.isDesktop)
+    if (desktop !== this.data.isDesktop) this.setData({ isDesktop: desktop }, () => this.syncClockBox())
+    else this.syncClockBox()
+  },
+
+  // 时钟形状（主时间位数 / 是否带毫秒）变化时重新适配容器；
+  // 否则起表后数字从 00:00 变成 00:00.00 会把旧倍率沿用下来，直接横向溢出。
+  noteClockShape(mainText, msShow) {
+    const shape = `${String(mainText || '').length}:${msShow ? 1 : 0}`
+    if (shape === this.clockShape) return
+    this.clockShape = shape
+    this.scheduleClockFit()
+  },
+
+  scheduleClockFit() {
+    clearTimeout(this.clockFitTimer)
+    this.clockFitTimer = setTimeout(() => {
+      this.clockFitTimer = null
+      if (this._destroyed) return
+      this.syncClockBox()
+    }, 80)
   },
 
   onUnload() {
+    this._destroyed = true
     this.saveQuickState()
     this.stopTicker()
     if (this.finishBurstTimer) clearTimeout(this.finishBurstTimer)
+    if (this.clockFitTimer) clearTimeout(this.clockFitTimer)
+    if (this.clockSettleTimer) clearTimeout(this.clockSettleTimer)
+    if (this.clockFitVerifyTimer) clearTimeout(this.clockFitVerifyTimer)
   },
 
   readQuickState() {
@@ -380,6 +408,12 @@ Page({
     const run = () => this.fitQuickClock(slot.h, desk)
     if (slot.h !== this.data.clockSlotH) this.setData({ clockSlotH: slot.h }, run)
     else run()
+    // 首帧拿到的宽度可能还没扣掉 body 内边距；等布局稳定后再按真实槽宽复算一次。
+    clearTimeout(this.clockSettleTimer)
+    this.clockSettleTimer = setTimeout(() => {
+      if (this._destroyed) return
+      this.fitQuickClock(slot.h, desk)
+    }, 260)
   },
 
   // 时钟统一缩进「固定高度的容器」：换皮肤时容器不变，卡片/按钮不会跟着跳
@@ -394,12 +428,33 @@ Page({
       const current = this.clockFit || 1
       const naturalW = shell.width / current
       const naturalH = shell.height / current
-      const fit = fitScale(slot.width, slotH || slot.height, naturalW, naturalH, { max: desk ? 2.6 : 1.6 })
-      if (Math.abs(fit - current) < 0.02) return
+      const availH = slot.height || slotH || 0
+      const fit = fitScale(slot.width, availH, naturalW, naturalH, { max: desk ? 2.6 : 1.6, pad: 20 })
+      if (Math.abs(fit - current) < 0.015) {
+        if (!this.data.clockReady) this.setData({ clockReady: true })
+        return
+      }
       this.clockFit = fit
       const vars = Math.abs(fit - 1) < 0.02 ? '' : `--q-fit: ${fit};`
-      if (vars !== this.data.clockFitVars) this.setData({ clockFitVars: vars })
+      const needVars = vars !== this.data.clockFitVars
+      const needReady = !this.data.clockReady
+      if (needVars || needReady) {
+        const patch = {}
+        if (needVars) patch.clockFitVars = vars
+        if (needReady) patch.clockReady = true
+        this.setData(patch, needVars ? () => this.scheduleFitVerify(slotH, desk) : undefined)
+      }
     })
+  },
+
+  // setData 写回 zoom 后，下一次 rect 才是新倍率下的尺寸；
+  // 等一帧再复算，避免拿旧倍率反推原始尺寸，越算越偏。
+  scheduleFitVerify(slotH, desk) {
+    clearTimeout(this.clockFitVerifyTimer)
+    this.clockFitVerifyTimer = setTimeout(() => {
+      if (this._destroyed) return
+      this.fitQuickClock(slotH, desk)
+    }, 120)
   },
 
   syncTheme() {
@@ -445,6 +500,7 @@ Page({
     this.modeStates[this.data.tab] = this.captureModeState(this.data.tab)
     this.setData({ tab, running: false, sessionStarted: false })
     this.applyModeState(tab)
+    this.scheduleClockFit()
     if (this.data.running) this.startTicker()
     this.saveQuickState()
     if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
@@ -596,6 +652,7 @@ Page({
     const text = formatStopwatch(ms)
     this.stopwatchMs = Math.max(0, ms)
     const showMs = text.main.length <= 5 && ms > 0
+    this.noteClockShape(text.main, showMs)
     const payload = text.main !== this.lastClockText ? this.buildClockPayload(text.main, undefined, text.ms) : {}
     const msCells = showMs ? text.ms.split('').map((char, index) => ({
       key: `q-ms-${index}`,
@@ -910,6 +967,7 @@ Page({
     // 秒表 / 计时器 / 番茄钟都显示毫秒；进入小时后主时间变成 HH:MM:SS，空间让给小时，毫秒自动收起
     const hasHours = text.length > 5
     const showMs = !!ms && !hasHours
+    this.noteClockShape(text, showMs)
     const msCells = showMs ? ms.split('').map((char, index) => ({
       key: `q-ms-${index}`,
       text: char,
@@ -968,14 +1026,14 @@ Page({
       total: `${total.main}.${total.ms}`,
       split: `+${split.main}.${split.ms}`
     }
-    this.setData({ laps: [lap, ...this.data.laps] })
+    this.setData({ laps: [lap, ...this.data.laps] }, () => this.scheduleClockFit())
     if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
   },
 
   clearLaps() {
     this.lapNo = 0
     this.lastLapMs = 0
-    if (this.data.laps.length) this.setData({ laps: [] })
+    if (this.data.laps.length) this.setData({ laps: [] }, () => this.scheduleClockFit())
   },
 
   recordPresetUse(minutes) {

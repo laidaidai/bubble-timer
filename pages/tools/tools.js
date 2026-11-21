@@ -68,6 +68,15 @@ Page({
     this.setData({ toolsReveal: false })
   },
 
+  // 拖动桌面窗口 / 平板横竖屏切换时，工具页也跟着换桌面档，避免 rpx 被放大后挤成两列巨卡。
+  onResize() {
+    const app = getApp()
+    const isDesktop = app && app.detectEnvironment
+      ? app.detectEnvironment()
+      : !!(app && app.globalData && app.globalData.isDesktop)
+    if (isDesktop !== this.data.isDesktop) this.setData({ isDesktop })
+  },
+
   onUnload() {
     if (this.unbindKeyboard) {
       this.unbindKeyboard()
@@ -304,6 +313,14 @@ Page({
     wx.navigateTo({ url: '/pages/quick/quick' })
   },
 
+  // 批改小助手入口：整套页面已迁到 pages/grade，从工具页进，不改三个 Tab。
+  openGrade() {
+    wx.navigateTo({
+      url: '/pages/grade/index/index',
+      fail: () => wx.showToast({ title: '打不开批改页，请重试', icon: 'none' })
+    })
+  },
+
   openImportantPage() {
     wx.navigateTo({ url: '/pages/important/important' })
   },
@@ -316,14 +333,16 @@ Page({
     wx.navigateTo({ url: '/pages/stats/stats?tab=overview' })
   },
 
-  // 「训练」直接进计时训练页：首页可以固定成秒表/待办等任意视图，不能再靠首页当入口。
-  // 这里按当前模板里的模块起一局计时，然后走 blank 中转进横屏计时页（和首页开始计时同一链路）。
-  // 工具页「训练」= 打开独立的「训练计时」页（选模块、定时长、再开始），
-  // 不再依赖首页是否固定成计时训练，也不是点一下就直接开跑
+  // 「训练」回到首页的训练计时配置，不再维护一套重复页面。
   openHome() {
-    wx.navigateTo({
-      url: '/pages/train/train',
-      fail: () => wx.showToast({ title: '打不开训练页，请重试', icon: 'none' })
+    const app = getApp()
+    if (app && app.globalData) app.globalData.homeResetView = 'training'
+    wx.switchTab({
+      url: '/pages/index/index',
+      fail: () => {
+        if (app && app.globalData) app.globalData.homeResetView = ''
+        wx.showToast({ title: '打不开训练页，请重试', icon: 'none' })
+      }
     })
   },
 

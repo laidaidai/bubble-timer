@@ -1,5 +1,5 @@
 .todo-page { min-height: 100vh; background: var(--bg); color: var(--ink); }
-.todo-body { height: calc(100vh - 176rpx); box-sizing: border-box; padding: 20rpx 24rpx calc(8rpx + env(safe-area-inset-bottom)); }
+.todo-body { height: 100%; box-sizing: border-box; padding: 20rpx 24rpx 0; }
 
 /* 完成度 */
 .todo-hero { padding: 24rpx 26rpx; background: var(--card); border: 2rpx solid var(--edge); border-radius: 26rpx; box-shadow: 5rpx 6rpx 0 var(--shadow); }
@@ -155,7 +155,7 @@
  * 悬浮 +、勾选圈、日历箭头、输入框、日期/时间入口、提醒胶囊、底部按钮全部锁手机档。
  */
 /* 底部内距同时避开左下角悬浮球和右下角加号（60px + 27px 落点） */
-.desk .todo-body { padding: 11px 13px calc(env(safe-area-inset-bottom) + 96px); }
+.desk .todo-body { padding: 11px 13px 0; }
 
 /* 完成度（主体） */
 .desk .todo-hero { padding: 13px 15px; border-width: 1px; border-radius: 15px; box-shadow: 3px 4px 0 var(--shadow); }
@@ -257,3 +257,28 @@
 
 /* 桌面下加法按钮保持静止：呼吸动画里的阴影偏移是 rpx，宽窗口会被放大成一大团深色块 */
 .desk .fab { animation: none !important; }
+
+/* ===== 独立页外壳：顶栏 + 真实内容组件 ===== */
+.todo-shell {
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--ink);
+  animation: app-page-fade .24s ease-out both;
+}
+.todo-view-slot {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.todo-view {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+.desk .todo-view-slot {
+  flex: 1 1 auto;
+  height: auto;
+}

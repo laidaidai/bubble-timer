@@ -1,0 +1,316 @@
+/* 过关斩将 · 页面基础样式
+   视觉基调沿用 neo-brutalist 工具风；颜色全部引用主程序当前主题变量。 */
+/* 批改页基础样式：主题 token 统一使用主程序当前主题 */
+/* 批改旧变量别名映射到计时器主题 token：
+   primary 跟随主题主色，accent 作为同色系强调，不再写死纸松/杏黄。 */
+.grade-root {
+  --accent: var(--primary);
+  --accent-deep: var(--primary-2);
+  --accent-soft: var(--accent-bg);
+  --amber: var(--primary);
+  --amber-deep: var(--primary-2);
+  --blue: var(--primary);
+  --blue-bg: var(--accent-bg);
+  --pink: var(--accent-bg);
+  --peach: var(--cream-2);
+  --edge-soft: var(--line-strong);
+}
+
+.page {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+  font-size: 28rpx;
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+}
+
+.page {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+  padding: 24rpx 28rpx calc(48rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+/* 批改页顶栏：结构、字号、字重直接复用主程序 .topbar，避免原生导航和自定义顶栏两种字体 */
+.grade-topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+.page.has-grade-topbar {
+  /* 固定顶栏高 176rpx；页面顶部再留 24rpx 呼吸位 */
+  padding-top: calc(176rpx + 24rpx);
+}
+
+/* ---------- 文字 ---------- */
+.num {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.mono {
+  font-family: "Courier New", "Menlo", monospace;
+  font-variant-numeric: lining-nums;
+  font-weight: 800;
+}
+.text-2 { color: var(--text-2); }
+.text-3 { color: var(--text-3); }
+.text-green { color: var(--success); }
+.text-red { color: var(--danger); }
+
+/* ---------- 卡片 ---------- */
+.card {
+  background: var(--card);
+  border: 2rpx solid var(--edge);
+  border-radius: 28rpx;
+  box-shadow: 5rpx 6rpx 0 var(--shadow-soft);
+  box-sizing: border-box;
+}
+
+/* ---------- 按钮 / 胶囊 ----------
+   原生 button 自带约 184px 默认宽度，flex 行内必须显式收窄，否则顶出容器。
+   按下反馈：按钮写 hover-class="btn-pressed"，普通可点格子写 hover-class="is-press" */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10rpx;
+  width: auto !important;
+  min-width: 0 !important;
+  flex: 0 1 auto;
+  max-width: 100% !important;
+  border: 3rpx solid var(--edge);
+  border-radius: 999rpx;
+  font-size: 28rpx;
+  font-weight: 800;
+  box-sizing: border-box;
+  min-height: 72rpx;
+  padding: 0 28rpx;
+  line-height: 1.2;
+  box-shadow: 5rpx 6rpx 0 var(--shadow);
+  transition: transform .12s cubic-bezier(.2,.8,.3,1), box-shadow .12s cubic-bezier(.2,.8,.3,1);
+}
+.btn::after { border: none; }
+
+.btn-dark {
+  background: var(--primary);
+  border-color: var(--edge-deep);
+  color: var(--on-primary);
+}
+.btn-amber {
+  background: var(--accent);
+  border-color: var(--accent-deep);
+  color: var(--on-primary);
+}
+.btn-pink {
+  background: var(--pink);
+  border-color: var(--accent-deep);
+  color: var(--ink);
+}
+.btn-outline {
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: 5rpx 6rpx 0 var(--shadow-soft);
+}
+.btn-ghost {
+  background: transparent;
+  border-color: var(--edge-soft);
+  color: var(--text-2);
+  box-shadow: none;
+}
+
+.btn-block { width: 100% !important; flex: 1 1 auto; }
+.btn-lg { min-height: 86rpx; font-size: 29rpx; }
+.btn.half { flex: 1 1 0; }
+.btn.mini { min-height: 54rpx; padding: 0 20rpx; font-size: 22rpx; gap: 6rpx; }
+.btn.disabled { opacity: .45; box-shadow: none; }
+
+/* 按下：整体下沉、投影收掉，所有按钮手感一致 */
+.btn-pressed, .btn.is-press {
+  transform: translate(3rpx, 4rpx);
+  box-shadow: 1rpx 1rpx 0 var(--shadow);
+}
+.btn-ghost.btn-pressed, .btn-ghost.is-press {
+  box-shadow: none;
+  background: var(--line-2);
+  border-color: var(--edge);
+}
+
+/* 行内小按钮：导入答案 / 历史 / 清除这类文字入口 */
+.btn-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50rpx;
+  padding: 0 18rpx;
+  border: 2rpx solid var(--edge-soft);
+  border-radius: 999rpx;
+  background: var(--card);
+  color: var(--blue);
+  font-size: 21rpx;
+  font-weight: 800;
+  box-sizing: border-box;
+  transition: transform .12s cubic-bezier(.2,.8,.3,1), background .12s ease;
+}
+
+/* 普通可点格子（选项、答题卡圆点）的按下反馈 */
+.is-press {
+  transform: translate(3rpx, 4rpx);
+}
+
+/* ---------- 分段切换 ---------- */
+.seg {
+  display: flex;
+  align-items: center;
+  background: var(--card);
+  border: 2rpx solid var(--edge);
+  border-radius: 999rpx;
+  padding: 6rpx;
+  gap: 6rpx;
+}
+.seg-item {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  padding: 14rpx 0;
+  border-radius: 999rpx;
+  font-weight: 700;
+  color: var(--text-2);
+}
+.seg-item.active {
+  background: var(--line-2);
+  color: var(--ink);
+}
+
+/* ---------- 标签胶囊 ---------- */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  border: 2rpx solid var(--edge-soft);
+  border-radius: 999rpx;
+  padding: 6rpx 20rpx;
+  font-size: 24rpx;
+  color: var(--text-2);
+  background: var(--card);
+  box-sizing: border-box;
+}
+.pill.active {
+  background: var(--accent-bg);
+  border-color: var(--blue);
+  color: var(--blue);
+  font-weight: 700;
+}
+
+/* ---------- 弹层遮罩 ---------- */
+.mask {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 100;
+}
+
+/* ---------- 动效 ----------
+   缓动统一 cubic-bezier(.2,.8,.3,1)；入场只播一次，靠 fill-mode both 停在终点。
+   同名 keyframes 备两套（a / b）：内容要重播时切 class 名，比强行重启动画稳。
+   keyframes 里不用 filter（整条会失效）。 */
+@keyframes app-rise-a {
+  from { opacity: 0; transform: translateY(18rpx); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes app-rise-b {
+  from { opacity: 0; transform: translateY(18rpx); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes app-pop-a {
+  from { opacity: 0; transform: scale(.94); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes app-pop-b {
+  from { opacity: 0; transform: scale(.94); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes app-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes app-sheet {
+  from { opacity: 0; transform: translateY(64rpx) scale(.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes app-grow {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+.anim-rise { animation: app-rise-a .34s cubic-bezier(.2,.8,.3,1) both; }
+.anim-rise-alt { animation: app-rise-b .34s cubic-bezier(.2,.8,.3,1) both; }
+.anim-pop { animation: app-pop-a .3s cubic-bezier(.2,.8,.3,1) both; }
+.anim-pop-alt { animation: app-pop-b .3s cubic-bezier(.2,.8,.3,1) both; }
+.anim-fade { animation: app-fade .26s ease both; }
+.anim-sheet { animation: app-sheet .34s cubic-bezier(.2,.8,.3,1) both; }
+.anim-grow { transform-origin: left center; animation: app-grow .5s cubic-bezier(.2,.8,.3,1) both; }
+
+/* 选中反馈：按下选项时先缩再回弹，和计时器的打卡按钮同一套手感 */
+@keyframes grade-opt-pop {
+  0% { transform: scale(.9); }
+  62% { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+
+/* ---------- 大屏：主体收窄居中，控件保持手机档 ---------- */
+.page.desk {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+/* 宽窗口里 rpx 会整体放大（1700px 下 1rpx≈2.27px），所以桌面档必须 px 化：
+   px ≈ 手机档 rpx × 0.56，这一档把全局骨架（字号、内距、按钮、卡片）先钉住 */
+@media (min-width: 700px) {
+  .page {
+    font-size: 16px;
+  }
+  .page {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 14px 16px 28px;
+  }
+  .card {
+    border-width: 2px;
+    border-radius: 16px;
+    box-shadow: 3px 4px 0 var(--shadow-soft);
+  }
+  .btn {
+    min-height: 40px;
+    padding: 0 16px;
+    font-size: 16px;
+    gap: 6px;
+    border-width: 2px;
+    box-shadow: 3px 4px 0 var(--shadow);
+  }
+  .btn-lg { min-height: 48px; font-size: 17px; }
+  .btn.mini { min-height: 30px; padding: 0 11px; font-size: 13px; gap: 4px; }
+  .btn.disabled { box-shadow: none; }
+  .btn-pressed, .btn.is-press {
+    transform: translate(2px, 3px);
+    box-shadow: 1px 1px 0 var(--shadow);
+  }
+  .btn-link {
+    min-height: 28px;
+    padding: 0 10px;
+    font-size: 12px;
+    border-width: 1px;
+  }
+  .pill {
+    font-size: 13px;
+    padding: 3px 11px;
+    border-width: 1px;
+  }
+  .seg { padding: 3px; gap: 3px; }
+  .seg-item { padding: 8px 0; }
+}
+

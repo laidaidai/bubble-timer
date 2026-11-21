@@ -9,9 +9,9 @@
     </view>
 
     <view class="dock-switch">
-      <text class="dock-switch-title">首页显示</text>
+      <text class="dock-switch-title">快捷入口</text>
       <view class="dock-switch-grid">
-        <view class="dock-switch-chip {{pinnedFeature === item.key ? 'on' : ''}} {{item.soon ? 'soon' : ''}}" wx:for="{{featureOptions}}" wx:key="key" data-key="{{item.key}}" bindtap="switchFeature">{{item.name}}</view>
+        <view class="dock-switch-chip {{item.soon ? 'soon' : ''}}" wx:for="{{navOptions}}" wx:key="key" data-key="{{item.key}}" bindtap="openFeature">{{item.name}}</view>
       </view>
     </view>
 

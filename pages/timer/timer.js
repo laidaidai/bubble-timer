@@ -47,7 +47,9 @@ Page({
     this.syncOrientation()
 
     const session = wx.getStorageSync(app.globalData.storageKey)
-    if (!session || !session.modules) {
+    if (!session || !session.modules || !session.modules.length) {
+      // 空会话会在离开页面时被再次持久化，先清掉，避免下一次误进计时页并生成空报告
+      wx.removeStorageSync(app.globalData.storageKey)
       // onLoad 里直接 redirect 会撞上「LifeCycle.load fail: Cannot set a non-pending waiting value」，
       // 延到下一拍再跳，等页面 load 落地
       setTimeout(() => this.leaveTimer(), 0)
@@ -59,7 +61,11 @@ Page({
     const mode = session.mode || wx.getStorageSync(app.globalData.modeKey) || 'countup'
     const modeInfo = (app.modes || []).find(item => item.key === mode)
 
-    this.startedAt = session.startedAt
+    const savedStartedAt = session.startedAt
+    const startedAt = typeof savedStartedAt === 'string'
+      ? new Date(savedStartedAt).getTime()
+      : Number(savedStartedAt)
+    this.startedAt = startedAt && isFinite(startedAt) ? startedAt : Date.now()
     this.totalTargetSeconds = session.totalTargetSeconds || session.modules.reduce((sum, item) => sum + (item.targetMinutes || 0) * 60, 0)
     this.pomodoroPhase = session.pomodoroPhase || 'focus'
     this.phaseRemaining = session.phaseRemaining === undefined ? FOCUS_SECONDS : session.phaseRemaining
@@ -333,7 +339,7 @@ Page({
   onHide() {
     this.clearChromeIdle()
     if (this.data.chromeIdle) this.setData({ chromeIdle: false })
-    if (!this.finished) this.persistSession()
+    if (!this.finished && this.data.runtimeModules.length) this.persistSession()
   },
 
   onUnload() {
@@ -347,8 +353,8 @@ Page({
       this.boundOrientationResize = null
       this.orientationBound = false
     }
-    // 离开前结算最后一秒，避免会话里少记一段
-    if (!this.finished) {
+    // 离开前结算最后一秒，避免会话里少记一段；空会话不再写回，避免生成 0 模块报告
+    if (!this.finished && this.data.runtimeModules.length) {
       try { this.tick() } catch (error) { /* 已销毁计时器，忽略 */ }
       this.persistSession()
     }
@@ -939,6 +945,7 @@ Page({
   },
 
   persistSession() {
+    if (!this.data.runtimeModules || !this.data.runtimeModules.length) return
     wx.setStorageSync(app.globalData.storageKey, {
       modules: clone(this.data.runtimeModules),
       startedAt: this.startedAt,
@@ -966,7 +973,16 @@ Page({
     this.stopMsTicker()
     this.stopTotalBuzz()
     this.finished = true
-    const rows = modules.map(item => {
+    const finishedModules = Array.isArray(modules) ? modules : this.data.runtimeModules
+    if (!finishedModules || !finishedModules.length) {
+      // 空会话不生成记录，直接在完成后退出
+      wx.removeStorageSync(app.globalData.storageKey)
+      this.leaveTimer()
+      return
+    }
+    const startedAt = Number(this.startedAt) || Date.now()
+    this.startedAt = startedAt
+    const rows = finishedModules.map(item => {
       const deltaSeconds = item.elapsedSeconds - item.targetMinutes * 60
       return { ...item, actualText: shortClock(item.elapsedSeconds), deltaSeconds, deltaText: deltaSeconds > 0 ? `超时 ${shortClock(deltaSeconds)}` : `提前 ${shortClock(Math.abs(deltaSeconds))}` }
     })
@@ -981,9 +997,9 @@ Page({
       : cheerPool[Math.floor(Math.random() * cheerPool.length)]
     const report = {
       id: `record-${Date.now()}`,
-      startedAt: this.startedAt,
-      startedAtText: dateTime(this.startedAt),
-      totalTarget: modules.reduce((sum, item) => sum + item.targetMinutes, 0),
+      startedAt,
+      startedAtText: dateTime(startedAt),
+      totalTarget: finishedModules.reduce((sum, item) => sum + item.targetMinutes, 0),
       totalActual: this.data.globalSeconds,
       totalActualText: shortClock(this.data.globalSeconds),
       overtimeCount,
