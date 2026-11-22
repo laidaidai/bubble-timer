@@ -15,6 +15,7 @@ Page({
     themeStyle: themeBind.themeData().themeStyle,
     isDesktop: false,
     list: [],
+    countText: '0',
     paperName: '',
     paperId: '',
   },
@@ -45,7 +46,13 @@ Page({
         accText: acc.toFixed(1),
       });
     });
-    this.setData({ list, paperId, paperName: found ? found.paper.name : '', isDesktop: app.globalData.isDesktop });
+    this.setData({
+      list,
+      countText: String(list.length),
+      paperId,
+      paperName: found ? found.paper.name : '',
+      isDesktop: app.globalData.isDesktop,
+    });
   },
 
   // 自定义顶栏返回：有上级就回上级，直接打开时回批改首页

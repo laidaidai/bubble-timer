@@ -4,6 +4,7 @@
   <view class="topbar-spacer"></view>
 </view>
 <view class="page result-page {{isDesktop ? 'desk' : ''}} {{!isDesktop ? 'has-grade-topbar' : ''}} grade-root theme-{{theme}}" style="{{themeStyle}}">
+  <scroll-view class="result-scroller" scroll-y enhanced="{{true}}" show-scrollbar="{{false}}" bounces="{{false}}">
   <view wx:if="{{missing}}" class="card empty-card anim-pop">
     <view class="empty-title">这份记录不存在</view>
     <view class="btn btn-dark empty-btn" bindtap="goHome" hover-class="btn-pressed">返回首页</view>
@@ -56,6 +57,7 @@
   <view wx:if="{{modules.length > 0}}" class="card radar-card anim-rise" style="animation-delay: 60ms;">
     <view class="radar-head">
       <view class="radar-title">能力图</view>
+      <view class="btn btn-outline mini review-btn" bindtap="openReview" hover-class="btn-pressed">答题卡</view>
     </view>
     <!-- 目标档：点哪档，绿框就画在那一档，轴尾同步显示距目标的差值 -->
     <view class="target-tabs">
@@ -68,7 +70,25 @@
         hover-class="is-press"
       >目标 {{item}} 分</view>
     </view>
-    <canvas type="2d" id="radar" class="radar-canvas"></canvas>
+    <!-- 能力图跟随正文滚动容器，容器从顶栏下方开始，滚动时直接被裁掉 -->
+    <view class="radar-canvas-stage">
+      <canvas wx:if="{{radarDrawing}}" type="2d" id="radar" class="radar-canvas radar-canvas-raw"></canvas>
+      <image
+        wx:if="{{!reviewOpen && radarBaseImage}}"
+        class="radar-canvas radar-canvas-base"
+        src="{{radarBaseImage}}"
+        mode="scaleToFill"
+        aria-hidden="true"
+      />
+      <image
+        wx:if="{{!reviewOpen && radarCurveImage}}"
+        class="radar-canvas radar-canvas-curve {{radarGrow ? 'is-growing' : 'is-hidden'}}"
+        src="{{radarCurveImage}}"
+        mode="scaleToFill"
+        bindload="onCurveLoad"
+        aria-label="本次作答能力图"
+      />
+    </view>
     <view class="radar-legend">
       <view class="legend-line is-mine"></view>
       <text>我的表现</text>
@@ -86,12 +106,8 @@
   <view wx:for="{{modules}}" wx:key="key" class="card mod-card anim-rise {{item.open ? 'opened' : ''}}" style="animation-delay: {{index * 60 + 80}}ms;">
     <view class="mod-head" data-key="{{item.key}}" bindtap="toggleModule" hover-class="is-press">
       <view class="mod-name">{{item.name}}</view>
-      <view class="mod-right">
-        <view class="mod-meta">
-          <view wx:if="{{item.pointText}}" class="mod-points num">{{item.pointText}}</view>
-        </view>
-        <view class="mod-caret {{item.open ? 'open' : ''}}"></view>
-      </view>
+      <view wx:if="{{item.pointText}}" class="mod-points num">{{item.pointText}}</view>
+      <view class="mod-caret {{item.open ? 'open' : ''}}"></view>
     </view>
     <view class="mod-bar-row">
       <view class="mod-bar"><view class="mod-bar-fill anim-grow" style="width: {{item.pctText}}%; animation-delay: {{index * 60 + 140}}ms;"></view></view>
@@ -123,5 +139,38 @@
     <view class="btn btn-dark half" bindtap="retryPaper" hover-class="btn-pressed">再练一次</view>
     <view class="btn btn-outline half" bindtap="goHome" hover-class="btn-pressed">返回首页</view>
   </view>
+
   </block>
+  </scroll-view>
+
+  <!-- 答题卡：按章节列题号与正确答案；对题浅绿、错题浅红 -->
+  <view wx:if="{{reviewOpen}}" class="mask review-mask anim-fade grade-root theme-{{theme}}" style="{{themeStyle}}" bindtap="closeReview">
+    <view class="review-sheet anim-sheet" catchtap="noop">
+      <view class="review-handle"></view>
+      <view class="review-head">
+        <view class="review-title">答题卡</view>
+        <view class="review-close" bindtap="closeReview" aria-label="关闭答题卡">×</view>
+      </view>
+      <scroll-view scroll-y enhanced="{{true}}" show-scrollbar="{{false}}" class="review-body">
+        <view wx:for="{{modules}}" wx:key="key" class="review-group">
+          <view class="review-group-head">
+            <view class="review-name">{{item.name}}</view>
+            <view class="review-count num">{{item.right}}/{{item.total}}</view>
+          </view>
+          <view class="review-grid">
+            <view
+              wx:for="{{item.rows}}"
+              wx:for-item="q"
+              wx:key="no"
+              class="review-cell {{q.tag}}"
+              aria-label="第{{q.no}}题，正确答案{{q.correct}}"
+            >
+              <view class="review-no num">{{q.no}}</view>
+              <view class="review-ans num">{{q.correct}}</view>
+            </view>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
 </view>

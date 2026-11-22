@@ -7,32 +7,74 @@
   <view class="page-title anim-rise">{{paperName || '全部历史记录'}}</view>
 
   <view wx:if="{{paperId}}" class="hist-tools anim-rise" style="animation-delay: 60ms;">
-    <view class="btn btn-dark mini" bindtap="retry" hover-class="btn-pressed">再练一次本卷</view>
-    <view class="hist-count">共 {{list.length}} 次作答</view>
+    <view class="btn btn-dark mini retry-btn" bindtap="retry" hover-class="btn-pressed" aria-label="重做本卷">
+      <text class="retry-glyph">↻</text>
+      <text class="retry-label">重做</text>
+    </view>
+    <view class="hist-count" aria-label="共 {{countText}} 次作答">
+      <view class="hist-stack" aria-hidden="true">
+        <view class="hist-line"></view>
+        <view class="hist-line"></view>
+        <view class="hist-line"></view>
+      </view>
+      <text class="hist-count-num num">{{countText}}</text>
+      <text class="hist-count-unit">次</text>
+    </view>
   </view>
 
-  <view wx:if="{{list.length === 0}}" class="empty card anim-pop">
-    <view class="empty-mark num">0</view>
+  <view wx:if="{{!list.length}}" class="empty card anim-pop">
     <view class="empty-title">暂无作答记录</view>
     <view class="empty-sub">答完一套卷，得分会存这里</view>
   </view>
 
-  <view wx:for="{{list}}" wx:key="id" class="card record-row anim-rise" style="animation-delay: {{(index > 8 ? 8 : index) * 45 + 100}}ms;">
-    <view class="record-main">
-      <view wx:if="{{!paperId}}" class="record-paper">{{item.paperName}}</view>
-      <view class="record-time">{{item.timeText}}</view>
-      <view class="record-meta">
-        <text class="meta-right">{{item.right}} 对</text>
-        <text class="meta-wrong">{{item.wrong}} 错</text>
-        <text class="meta-blank">{{item.blank}} 未做</text>
-        <text class="meta-acc num">正确率 {{item.accText}}%</text>
+  <view
+    wx:for="{{list}}"
+    wx:key="id"
+    class="card record-row anim-rise"
+    style="animation-delay: {{(index > 8 ? 8 : index) * 45 + 100}}ms;"
+    data-id="{{item.id}}"
+    bindtap="goDetail"
+    hover-class="record-pressed"
+    aria-label="查看 {{item.timeText}} 的作答详情"
+  >
+    <view wx:if="{{!paperId}}" class="record-paper">{{item.paperName}}</view>
+
+    <view class="record-head">
+      <view class="record-when">
+        <view class="record-clock" aria-hidden="true"></view>
+        <text class="record-time">{{item.timeText}}</text>
+      </view>
+      <view class="record-score num">
+        <text class="record-score-value">{{item.score}}</text>
+        <text class="record-unit">分</text>
       </view>
     </view>
-    <view class="record-right">
-      <view class="record-score num">{{item.score}}<text class="record-unit">分</text></view>
+
+    <view class="record-stats">
+      <view class="stat-chip is-right" aria-label="答对 {{item.right}} 题">
+        <text class="stat-mark">✓</text>
+        <text class="stat-value num">{{item.right}}</text>
+      </view>
+      <view class="stat-chip is-wrong" aria-label="答错 {{item.wrong}} 题">
+        <text class="stat-mark">×</text>
+        <text class="stat-value num">{{item.wrong}}</text>
+      </view>
+      <view class="stat-chip is-blank" aria-label="未做 {{item.blank}} 题">
+        <view class="stat-empty" aria-hidden="true"></view>
+        <text class="stat-value num">{{item.blank}}</text>
+      </view>
+      <view class="stat-chip is-acc" aria-label="正确率 {{item.accText}}%">
+        <view class="stat-target" aria-hidden="true"></view>
+        <text class="stat-value num">{{item.accText}}%</text>
+      </view>
+
       <view class="record-actions">
-        <view class="btn btn-dark mini" data-id="{{item.id}}" catchtap="goDetail" hover-class="btn-pressed">详情</view>
-        <view class="btn btn-outline mini del" data-id="{{item.id}}" catchtap="remove" hover-class="btn-pressed">删除</view>
+        <view class="icon-btn" data-id="{{item.id}}" catchtap="goDetail" hover-class="icon-btn-pressed" aria-label="查看详情">
+          <text class="chev">›</text>
+        </view>
+        <view class="icon-btn is-danger" data-id="{{item.id}}" catchtap="remove" hover-class="icon-btn-pressed" aria-label="删除这条记录">
+          <view class="trash" aria-hidden="true"></view>
+        </view>
       </view>
     </view>
   </view>

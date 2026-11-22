@@ -37,6 +37,8 @@ function formatStopwatch(ms) {
   const seconds = Math.floor((total % 60000) / 1000)
   const hundredths = Math.floor((total % 1000) / 10)
   return {
+    // 不足 1 小时：分:秒 + 毫秒；毫秒始终显示，默认就是 00:00.00，不会退回 5 位
+    // 满 1 小时：时:分:秒，毫秒收起，把宽度让给小时
     main: hours > 0
       ? `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`
       : `${pad(minutes)}:${pad(seconds)}`,
@@ -49,6 +51,7 @@ function formatCountdown(ms) {
   const hours = Math.floor(total / 3600)
   const minutes = Math.floor((total % 3600) / 60)
   const seconds = total % 60
+  // 不足 1 小时只显示分:秒（毫秒另挂），满 1 小时才补小时位；两档都保持三段，不回到 5 位
   return hours > 0
     ? `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`
     : `${pad(minutes)}:${pad(seconds)}`
@@ -63,6 +66,7 @@ function formatTimerParts(ms) {
   const seconds = totalSeconds % 60
   const hundredths = Math.floor((total % 1000) / 10)
   return {
+    // 与秒表同一口径：不足 1 小时显示「分:秒.毫秒」，满 1 小时显示「时:分:秒」
     main: hours > 0
       ? `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`
       : `${pad(minutes)}:${pad(seconds)}`,
@@ -82,7 +86,7 @@ Page({
     countdownStarted: false,
     sessionStarted: false,
     mainText: '00:00',
-    msText: '00',
+    msText: '',
     mainSeconds: 0,
     presets: PRESETS,
     selectedPreset: 30,
@@ -165,6 +169,7 @@ Page({
     this.syncClockBox()
     this.loadPresetRecommendation()
     if (this.data.running) this.startTicker()
+    this.syncKeepScreenOn(this.data.running)
     if (this.dockPauseRequested) {
       this.dockPauseRequested = false
       this.autoStartRequested = false
@@ -186,6 +191,7 @@ Page({
   onHide() {
     this.saveQuickState()
     this.stopTicker()
+    this.syncKeepScreenOn(false)
   },
 
   // PC 上拖窗口：重判桌面档并重算时钟的放大系数
@@ -220,6 +226,7 @@ Page({
     this._destroyed = true
     this.saveQuickState()
     this.stopTicker()
+    this.syncKeepScreenOn(false)
     if (this.finishBurstTimer) clearTimeout(this.finishBurstTimer)
     if (this.clockFitTimer) clearTimeout(this.clockFitTimer)
     if (this.clockSettleTimer) clearTimeout(this.clockSettleTimer)
@@ -502,6 +509,7 @@ Page({
     this.applyModeState(tab)
     this.scheduleClockFit()
     if (this.data.running) this.startTicker()
+    this.syncKeepScreenOn(this.data.running)
     this.saveQuickState()
     if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
   },
@@ -651,7 +659,7 @@ Page({
   setStopwatch(ms, running) {
     const text = formatStopwatch(ms)
     this.stopwatchMs = Math.max(0, ms)
-    const showMs = text.main.length <= 5 && ms > 0
+    const showMs = text.main.length <= 5
     this.noteClockShape(text.main, showMs)
     const payload = text.main !== this.lastClockText ? this.buildClockPayload(text.main, undefined, text.ms) : {}
     const msCells = showMs ? text.ms.split('').map((char, index) => ({
@@ -740,6 +748,20 @@ Page({
   },
 
 
+  // 计时中跟随「设置 → 专注 → 屏幕常亮」保持屏幕不熄；暂停 / 离开页面立即释放
+  syncKeepScreenOn(running) {
+    if (!wx.setKeepScreenOn) return
+    let allow = true
+    try {
+      const settings = app.getSettings ? app.getSettings() : null
+      if (settings && settings.keepScreenOn === false) allow = false
+    } catch (error) { /* 设置读不到时按默认常亮处理 */ }
+    const keep = !!running && allow
+    if (this._keepScreenOn === keep) return
+    this._keepScreenOn = keep
+    wx.setKeepScreenOn({ keepScreenOn: keep, fail: () => {} })
+  },
+
   toggleRun() {
     if (this.data.running) {
       this.pause()
@@ -755,12 +777,14 @@ Page({
       this.tickMode = 'stopwatch'
       this.setData({ running: true, sessionStarted: true })
       this.startTicker()
+      this.syncKeepScreenOn(true)
       return
     }
     if (this.data.tab === 'pomodoro') {
       this.pomodoroEndAt = Date.now() + Math.max(0, this.pomodoroRemaining || 0)
       this.setData({ running: true, sessionStarted: true })
       this.startTicker()
+      this.syncKeepScreenOn(true)
       return
     }
     if (!this.countdownRemaining) {
@@ -776,6 +800,7 @@ Page({
     this.recordPresetUse(this.data.selectedPreset)
     this.setData({ running: true, countdownStarted: true, sessionStarted: true })
     this.startTicker()
+    this.syncKeepScreenOn(true)
   },
 
   pause() {
@@ -788,11 +813,13 @@ Page({
       this.syncPicker(this.countdownRemaining)
     }
     this.stopTicker()
+    this.syncKeepScreenOn(false)
     if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
   },
 
   reset() {
     this.stopTicker()
+    this.syncKeepScreenOn(false)
     if (wx.vibrateShort) wx.vibrateShort({ type: 'medium', fail: () => {} })
     if (this.data.tab === 'stopwatch') {
       this.clearLaps()
@@ -846,6 +873,7 @@ Page({
     const remaining = this.countdownEndAt - Date.now()
     if (remaining <= 0) {
       this.stopTicker()
+      this.syncKeepScreenOn(false)
       this.countdownRemaining = 0
       this.setData({ mainSeconds: 0, running: false, countdownStarted: true, sessionStarted: false, ...this.buildClockPayload('00:00', undefined, '00') })
       if (wx.vibrateLong) wx.vibrateLong({ fail: () => {} })
@@ -1050,5 +1078,10 @@ Page({
 
   goBack() {
     wx.navigateBack({ fail: () => wx.switchTab({ url: '/pages/tools/tools' }) })
+  },
+
+  // 悬浮球长按：快捷页自己就是计时页，直接开始/暂停，不再 navigateTo 自己叠一层
+  toggleDockTimer() {
+    this.toggleRun()
   }
 })

@@ -99,7 +99,7 @@
 .q-shell-outline .q-ms-inline { color: transparent; -webkit-text-stroke: 4rpx var(--ink); }
 .q-shell-outline .q-ms-dot { color: var(--ink); }
 .q-shell-minimal .q-ms-inline, .q-shell-minimal .q-ms-dot { color: var(--ink); font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif; font-weight: 200; letter-spacing: 4rpx; }
-.q-ms-dot { color: var(--ink); font-family: "Courier New", Menlo, monospace; font-size: 40rpx; font-weight: 900; line-height: 1; margin: 0 2rpx; align-self: flex-end; }
+.q-ms-dot { min-width: 0; color: var(--ink); font-family: "Courier New", Menlo, monospace; font-size: 40rpx; font-weight: 900; line-height: 1; margin: 0 2rpx; align-self: flex-end; }
 .q-shell-flip .q-ms-dot { color: var(--accent-text); opacity: 1; }
 .q-ms-inline { display: inline-block; min-width: 2.1ch; text-align: center; color: var(--ink); font-family: "Courier New", Menlo, monospace; font-size: 100rpx; font-weight: 900; line-height: 1; letter-spacing: 0; font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
 .q-flip-card-ms { width: 92rpx; height: 160rpx; }
@@ -295,7 +295,7 @@
 .q-flip-card, .q-flip-card-ms { width: 100rpx; height: 176rpx; }
 .q-flip-num, .q-flip-card-ms .q-flip-num { font-size: 72rpx; line-height: 176rpx; }
 .q-plain-num { font-size: 112rpx; }
-.q-ms-inline { font-size: 108rpx; }
+.q-ms-inline { font-size: 112rpx; }
 
 /* 积木方块 / LED：与计时页、设置共用同一套样式目录 */
 .q-block-row {

@@ -263,6 +263,31 @@ App({
         return true
       })
     if (!templates.length) return
+    // 预设模板以 app.habitPresets 为准：只刷新仍带 source 标记的模板，
+    // 用户手动改过（saveTrainingModules 会去掉 source）的模板保持原样。
+    // 旧版国考 / 省考行测没有 source，用原 5 个模块名精确匹配后升级。
+    const legacyPresetNames = {
+      '国考行测': ['常识判断', '言语理解', '数量关系', '判断推理', '资料分析'],
+      '省考行测': ['常识判断', '言语理解', '数量关系', '判断推理', '资料分析']
+    }
+    const presetByName = {}
+    ;(this.habitPresets || []).forEach(preset => { presetByName[preset.name] = preset })
+    templates.forEach(template => {
+      const preset = presetByName[template.name]
+      if (!preset) return
+      const hasPresetSource = template.modules.some(moduleItem => moduleItem.source === preset.key)
+      const legacyNames = legacyPresetNames[template.name]
+      const isLegacyPreset = !hasPresetSource && legacyNames &&
+        template.modules.length === legacyNames.length &&
+        template.modules.every(moduleItem => legacyNames.indexOf(moduleItem.name) >= 0)
+      if (!hasPresetSource && !isLegacyPreset) return
+      template.modules = (preset.modules || []).map(moduleItem => ({
+        id: '',
+        name: moduleItem.name,
+        targetMinutes: Number(moduleItem.targetMinutes) || 0,
+        source: preset.key
+      }))
+    })
     const finalName = templates.some(item => item.name === currentName) ? currentName : templates[0].name
     wx.setStorageSync(this.globalData.templateKey, { currentName: finalName, templates })
   },
@@ -344,13 +369,15 @@ App({
   themes: THEMES,
   rings: RINGS,
   habitPresets: [
-    { key: 'gk', name: '国考行测', desc: '5 模块 · 120 分钟', modules: [
-      { name: '常识判断', targetMinutes: 10 }, { name: '言语理解', targetMinutes: 35 }, { name: '数量关系', targetMinutes: 10 },
-      { name: '判断推理', targetMinutes: 35 }, { name: '资料分析', targetMinutes: 30 }
+    { key: 'gk', name: '国考行测', desc: '6 模块 · 120 分钟', modules: [
+      { name: '政治理论', targetMinutes: 15 }, { name: '常识判断', targetMinutes: 10 },
+      { name: '言语理解', targetMinutes: 30 }, { name: '数量关系', targetMinutes: 10 },
+      { name: '判断推理', targetMinutes: 30 }, { name: '资料分析', targetMinutes: 25 }
     ] },
-    { key: 'sk', name: '省考行测', desc: '5 模块 · 120 分钟', modules: [
-      { name: '常识判断', targetMinutes: 10 }, { name: '言语理解', targetMinutes: 35 }, { name: '数量关系', targetMinutes: 15 },
-      { name: '判断推理', targetMinutes: 35 }, { name: '资料分析', targetMinutes: 25 }
+    { key: 'sk', name: '省考行测', desc: '6 模块 · 120 分钟', modules: [
+      { name: '政治理论', targetMinutes: 10 }, { name: '常识判断', targetMinutes: 10 },
+      { name: '言语理解', targetMinutes: 30 }, { name: '数量关系', targetMinutes: 15 },
+      { name: '判断推理', targetMinutes: 30 }, { name: '资料分析', targetMinutes: 25 }
     ] },
     { key: 'shenlun', name: '国考申论', desc: '5 模块 · 180 分钟', modules: [
       { name: '概括归纳', targetMinutes: 25 }, { name: '综合分析', targetMinutes: 25 }, { name: '提出对策', targetMinutes: 30 },

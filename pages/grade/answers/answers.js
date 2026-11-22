@@ -53,8 +53,8 @@ Page({
     letters: LETTERS,
     editorNo: 0,
     editorValue: '',
-    // 占位提示：一行一种可导入的写法（textarea 按 \n 换行显示）
-    ph: '1.A 2.B 3.C（编号）\nA B C D（按顺序）\nABCDABCD（连写）\n1-5 ABCDA（区间）',
+    // 占位提示：一行覆盖常见导入写法，不额外解释
+    ph: '1.A 2.B 3.C / A B C D / ABCD / 1-5 ABCDA',
   },
 
   onLoad(query) {

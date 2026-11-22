@@ -1,4 +1,4 @@
-<view class="brand-dock {{aboveTabbar ? 'above-tab' : ''}} {{expanded ? 'open' : ''}} {{dim ? 'soft' : ''}} {{celebrate ? 'celebrate' : ''}}" style="{{themeStyle}} {{dockStyle}}">
+<view class="brand-dock {{aboveTabbar ? 'above-tab' : ''}} {{expanded ? 'open' : ''}} {{dim ? 'soft' : ''}} {{celebrate ? 'celebrate' : ''}} {{dockReady ? 'ready' : ''}} {{dockStyle ? 'scaled' : ''}}" style="{{themeStyle}} {{dockStyle}}">
   <view class="dock-mask" wx:if="{{expanded}}" bindtap="close" catchtouchmove="noop"></view>
 
   <view class="dock-panel" wx:if="{{expanded}}">
@@ -9,9 +9,9 @@
     </view>
 
     <view class="dock-switch">
-      <text class="dock-switch-title">快捷入口</text>
+      <text class="dock-switch-title">首页显示</text>
       <view class="dock-switch-grid">
-        <view class="dock-switch-chip {{item.soon ? 'soon' : ''}}" wx:for="{{navOptions}}" wx:key="key" data-key="{{item.key}}" bindtap="openFeature">{{item.name}}</view>
+        <view class="dock-switch-chip {{pinnedFeature === item.key ? 'on' : ''}} {{item.soon ? 'soon' : ''}}" wx:for="{{featureOptions}}" wx:key="key" data-key="{{item.key}}" bindtap="switchFeature">{{item.name}}</view>
       </view>
     </view>
 

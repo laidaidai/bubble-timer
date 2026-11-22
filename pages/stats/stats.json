@@ -3,6 +3,7 @@
   "navigationStyle": "custom",
   "usingComponents": {
     "brand-dock": "/components/brand-dock/index",
+    "app-dock": "/custom-tab-bar/index",
     "stats-view": "/components/stats-view/index"
   },
   "pageOrientation": "portrait"

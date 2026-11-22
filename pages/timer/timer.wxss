@@ -93,6 +93,47 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
 .on-track { color:var(--success-text); }
 .overtime { color:var(--danger-text); }
 
+/* 进度条与「嘀嗒」之间的随机名言：零高度槽位悬浮，不参与纵向布局 */
+.quote-slot {
+  position: relative;
+  width: 100%;
+  height: 0;
+  margin: 8px 0;
+  flex: 0 0 auto;
+  pointer-events: none;
+}
+.time-quote {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 100%;
+  max-width: 760px;
+  margin: 0;
+  padding: 0 12px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6px;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+}
+.time-quote-text {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--ink);
+  font-family: "Kaiti SC", "STKaiti", "KaiTi", "Yuanti SC", "PingFang SC", sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.35;
+  letter-spacing: .3px;
+  opacity: .78;
+}
+.timer-page.compact .time-quote-text { font-size: 14px; }
+
 .controls { margin: 2rpx 0 0; display: flex; justify-content: center; gap: 16rpx; }
 .pause-button, .complete-button { flex: 0 0 64rpx; width: 64rpx; min-width: 64rpx; max-width: 64rpx; height: 64rpx; min-height: 64rpx; max-height: 64rpx; box-sizing: border-box; padding: 0; display: flex; align-items: center; justify-content: center; border:3rpx solid var(--edge); border-radius: 50%; box-shadow:3rpx 4rpx 0 var(--shadow); font-size: 28rpx; line-height: 1; text-align: center; }
 .pause-button { color:var(--ink); background:var(--primary); }
@@ -185,6 +226,8 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
 .timer-page.immersive .stage-meta,
 .timer-page.immersive .stage-progress,
 .timer-page.immersive .stage-target,
+.timer-page.immersive .quote-slot,
+.timer-page.immersive .time-quote,
 .timer-page.immersive .tick-pill,
 .timer-page.immersive .controls,
 .timer-page.immersive .module-side { display: none; }
@@ -502,6 +545,7 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
 .timer-page.normal.immersive-leaving .stage-meta { animation: immersive-out-up .16s cubic-bezier(.4, 0, .8, .4) both; }
 .timer-page.normal.immersive-leaving .progress-rail,
 .timer-page.normal.immersive-leaving .stage-target,
+.timer-page.normal.immersive-leaving .quote-slot,
 .timer-page.normal.immersive-leaving .tick-pill,
 .timer-page.normal.immersive-leaving .controls { animation: immersive-out-down .16s cubic-bezier(.4, 0, .8, .4) both; }
 .timer-page.normal.immersive-leaving .module-side,
@@ -512,6 +556,7 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
 .timer-page.normal.immersive-anim .stage-meta { animation: immersive-in-up .38s cubic-bezier(.2, .8, .3, 1) .1s backwards; }
 .timer-page.normal.immersive-anim .progress-rail,
 .timer-page.normal.immersive-anim .stage-target,
+.timer-page.normal.immersive-anim .quote-slot,
 .timer-page.normal.immersive-anim .tick-pill,
 .timer-page.normal.immersive-anim .controls { animation: immersive-in-down .38s cubic-bezier(.2, .8, .3, 1) .14s backwards; }
 .timer-page.normal.immersive-anim .module-side,
@@ -1220,6 +1265,10 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
   justify-content: center;
   overflow: visible;
 }
+/* 实际可视高度兜底：即使系统上报的 windowHeight 偏大，也不让时钟槽位挤掉顶部模块行与底部按钮 */
+.timer-page:not(.immersive) .clock-slot {
+  max-height: calc(100vh - 230px);
+}
 /* 竖屏时钟的大小不再写死 0.7，统一交给 JS 实测后写出的 --clk-fit 决定（见文件末尾） */
 .timer-page.portrait .clock-slot .clock-body {
   flex: 0 0 auto;
@@ -1231,6 +1280,8 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
   padding-bottom: 14px;
 }
 .timer-page.portrait .stage-progress { max-width: 100%; }
+.timer-page.portrait .quote-slot { margin: 0; }
+.timer-page.portrait .time-quote { width: 92%; max-width: 92%; padding: 0; margin: 0; }
 /* 第五行：两个英文标签 */
 .timer-page.portrait .stage-target {
   width: 92%;
@@ -1305,6 +1356,8 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
 .timer-page.portrait.immersive .tick-pill,
 .timer-page.portrait.immersive .stage-meta,
 .timer-page.portrait.immersive .stage-target,
+.timer-page.portrait.immersive .quote-slot,
+.timer-page.portrait.immersive .time-quote,
 .timer-page.portrait.immersive .progress-rail,
 .timer-page.portrait.immersive .controls,
 .timer-page.portrait.immersive .module-side,
@@ -1332,7 +1385,7 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
   position: absolute;
   z-index: 40;
   right: 16px;
-  bottom: calc(env(safe-area-inset-bottom) + 18px);
+  bottom: var(--fab-bottom, 18px);
   width: 52px;
   height: 52px;
   border-radius: 50%;
@@ -1343,8 +1396,12 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
   align-items: center;
   justify-content: center;
   transition: transform .26s cubic-bezier(.2, .9, .3, 1), box-shadow .26s ease;
+  will-change: transform;
 }
-.module-fab:active { transform: translate(2px, 2px); box-shadow: 2px 3px 0 var(--shadow); }
+.module-fab.dragging,
+.module-fab.settling { transition: none; }
+.module-fab.dragging { box-shadow: 2px 3px 0 var(--shadow); }
+.module-fab:active { box-shadow: 2px 3px 0 var(--shadow); }
 .module-fab.open { transform: scale(.9) rotate(-8deg); box-shadow: 2px 3px 0 var(--shadow); }
 .module-fab-logo { width: 32px; height: 32px; }
 
@@ -1366,10 +1423,11 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
   position: absolute;
   z-index: 39;
   right: 16px;
-  bottom: calc(env(safe-area-inset-bottom) + 82px);
+  bottom: var(--panel-bottom, 82px);
+  top: auto;
   width: 316px;
   max-width: 82vw;
-  max-height: 54vh;
+  max-height: var(--panel-max, 54vh);
   box-sizing: border-box;
   padding: 10px 8px 6px;
   display: flex;
@@ -1384,17 +1442,20 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
   pointer-events: none;
   transition: opacity .22s ease, transform .26s cubic-bezier(.2, .9, .3, 1);
 }
+.module-panel.up { bottom: var(--panel-bottom, 82px); top: auto; transform-origin: bottom right; }
+.module-panel.down { top: var(--panel-top, 82px); bottom: auto; transform: translateY(-12px) scale(.94); transform-origin: top right; }
+.module-panel.down.open { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
 .module-panel.open { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
 .module-panel-head { display: flex; align-items: center; justify-content: space-between; padding: 0 10px 8px; }
 .module-panel-title { font-size: 15px; font-weight: 900; color: var(--ink); }
 .module-panel-count { font-size: 13px; font-weight: 900; color: var(--text-3); }
-.module-panel-body { flex: 1 1 auto; min-height: 0; max-height: calc(54vh - 46px); }
+.module-panel-body { flex: 1 1 auto; min-height: 0; max-height: var(--panel-body-max, 200px); }
 .module-panel-body::-webkit-scrollbar { width: 0 !important; height: 0 !important; display: none !important; }
 
 /* 竖屏：球与面板贴右下，面板更宽一些，方便单手点 */
-.timer-page.portrait .module-fab { right: 14px; bottom: calc(env(safe-area-inset-bottom) + 20px); }
-.timer-page.portrait .module-panel { right: 14px; width: 86%; max-width: 340px; max-height: 48vh; }
-.timer-page.portrait .module-panel-body { max-height: calc(48vh - 46px); }
+.timer-page.portrait .module-fab { right: 14px; bottom: var(--fab-bottom, 20px); }
+.timer-page.portrait .module-panel { right: 14px; width: 86%; max-width: 340px; max-height: var(--panel-max, 48vh); }
+.timer-page.portrait .module-panel-body { max-height: var(--panel-body-max, 180px); }
 
 /* 全屏时球和面板一起收起 */
 .timer-page.immersive .module-fab,
@@ -1463,6 +1524,7 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
 .timer-page.wide .immersive-toggle { left: calc(env(safe-area-inset-left) + 22px); }
 .timer-page.wide .corner-chips { top: calc(env(safe-area-inset-top) + 14px); right: 26px; }
 .timer-page.wide .clock-stage { top: 6px; }
+.timer-page.wide:not(.immersive) .clock-slot { max-height: calc(100vh - 270px); }
 .timer-page.wide .progress-rail { width: 100%; max-width: 760px; margin: 0 auto; }
 .timer-page.wide .stage-target { width: 100%; max-width: 760px; margin: 0 auto; padding: 0 10px; }
 .timer-page.wide .controls { width: 100%; max-width: var(--slot-w, 100%); margin: 8px auto 0; padding: 0 2px; justify-content: space-between; gap: 0; }
@@ -1599,6 +1661,28 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
   .timer-page.compact .prev-button { flex: 0 0 58px; width: 58px; min-width: 58px; max-width: 58px; height: 58px; min-height: 58px; max-height: 58px; font-size: 27px; }
   .timer-page.compact .prev-button { font-size: 24px; }
   .timer-page.compact .complete-button { font-size: 29px; }
+}
+
+/* 模块名与模块时间钉在安全区顶部，脱离中央舞台的高度计算：
+   矮屏 / 不同刘海安全区下，中央内容再怎么浮动，这一行也不会被顶出屏幕。 */
+.timer-page:not(.immersive) .stage-meta {
+  position: absolute;
+  z-index: 12;
+  top: calc(env(safe-area-inset-top) + 6px);
+  left: 0;
+  right: 0;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0 12px;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+.timer-page.wide:not(.immersive) .stage-meta {
+  top: calc(env(safe-area-inset-top) + 6px);
+  margin: 0;
 }
 
 /* 描边空心没有外壳，内距会白白算进「原始尺寸」，导致 JS 把整钟缩得更小（字反而更细更小）

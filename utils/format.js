@@ -62,8 +62,8 @@ const CLOCK_STYLES = [
   { key: 'sticker', name: '贴纸数字', desc: '白色描边，清楚可爱' },
   { key: 'outline', name: '描边空心', desc: '只画轮廓，中间留空' },
   { key: 'jelly', name: '果冻叠影', desc: '糖果描边，圆润轻快' },
-  { key: 'doodle', name: '手绘涂鸦', desc: '彩铅手写字 + 主色底线，整块歪着' },
-  { key: 'stamp', name: '手绘印章', desc: '纸张印章框 + 实心墨字，像盖上去' },
+  { key: 'doodle', name: '糖果手写', desc: '手写圆体 + 墨色描边 + 糖果色错位影子' },
+  { key: 'stamp', name: '奶糖手写', desc: '深可可手写字 + 一层奶糖暖影，干净不倾斜' },
   { key: 'jellypop', name: '果冻弹跳', desc: '主色果冻 + 一道奶白高光，会轻轻弹' }
 ]
 

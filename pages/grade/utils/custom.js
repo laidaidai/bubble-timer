@@ -20,8 +20,9 @@ function writeAll(list) {
   } catch (e) {}
 }
 
-// 存储里的精简结构：{ id, name, layout: [{ key, count, points, name? }] }
-// seg.name 是用户给模块起的名字，不填就沿用标准模块名
+// 存储里的精简结构：{ id, name, layout: [{ key, count, points, name?, section? }] }
+// seg.name 是用户给模块起的名字，不填就沿用标准模块名；
+// seg.section 是模块内部小节的名称，不填则只按题号顺序显示「小节 N」。
 function toPaper(entry) {
   const layout = [];
   let total = 0;
@@ -30,6 +31,8 @@ function toPaper(entry) {
     const item = { key: seg.key, count: seg.count, points: seg.points };
     const modName = String(seg.name || '').trim();
     if (modName) item.name = modName;
+    const sectionName = String(seg.section || '').trim();
+    if (sectionName) item.section = sectionName;
     layout.push(item);
     total += seg.count;
   });

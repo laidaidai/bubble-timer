@@ -1,6 +1,15 @@
 @import "../base.wxss";
 .answer-page { padding-top: 0; }
 
+/* 逐题模式：让题卡吃掉顶栏与底栏之间的全部高度，选项不再悬在半空 */
+.answer-page.single-mode {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 0;
+}
+.answer-page.single-mode .mod-tabs,
+.answer-page.single-mode .progress-row { flex: 0 0 auto; }
+
 /* 模块 Tabs：吸顶，滚到任意题都能直接切模块，不用翻回顶部 */
 .mod-tabs {
   position: sticky;
@@ -26,16 +35,17 @@
   justify-content: center;
   gap: 6rpx;
   min-height: 50rpx;
-  border: 2rpx solid var(--edge);
+  border: 2rpx solid var(--line-strong);
   border-radius: 999rpx;
-  background: var(--accent-bg);
-  color: var(--text-warm);
+  background: var(--cream-1);
+  color: var(--text-2);
   font-weight: 900;
   font-size: 21rpx;
   letter-spacing: 1rpx;
-  padding: 0 18rpx;
+  padding: 0 16rpx;
   box-shadow: 2rpx 3rpx 0 var(--shadow-soft);
 }
+.mode-chip-glyph { color: var(--text-warm); font-size: 22rpx; font-weight: 900; }
 
 /* 模块 tab：未选是一枚带投影的浅按钮，选中反色成深底 */
 .mod-tab {
@@ -191,15 +201,27 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* 列表模式题目行 */
+/* 列表模式：恢复大号行卡，选项保持足够的点按面积 */
+.question-sheet {
+  padding: 0;
+  overflow: visible;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
 .q-row {
   display: flex;
   align-items: center;
   gap: 18rpx;
   padding: 18rpx 20rpx;
   margin-bottom: 16rpx;
+  background: var(--card);
+  border: 2rpx solid var(--edge);
   border-radius: 22rpx;
   box-shadow: 4rpx 5rpx 0 var(--shadow-soft);
+  box-sizing: border-box;
 }
 
 .q-no {
@@ -260,6 +282,59 @@
 /* 底部操作 */
 .footer { margin-top: 8rpx; }
 
+/* 下一章：列表填完后一眼就能切到下一个模块，最后一章循环回第一章 */
+.chapter-nav {
+  display: flex;
+  gap: 12rpx;
+  margin: 18rpx 0 12rpx;
+}
+
+.chapter-step {
+  flex: 1;
+  min-width: 0;
+  min-height: 78rpx;
+  padding: 0 18rpx;
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  box-sizing: border-box;
+  background: var(--cream-1);
+  border: 2rpx solid var(--line-strong);
+  border-radius: 999rpx;
+  box-shadow: 3rpx 4rpx 0 var(--shadow-soft);
+  transition: transform .12s cubic-bezier(.2,.8,.3,1), box-shadow .12s cubic-bezier(.2,.8,.3,1);
+}
+
+.chapter-step.prev { justify-content: flex-start; }
+.chapter-step.next { justify-content: flex-end; }
+
+.chapter-step-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--ink);
+  font-size: 23rpx;
+  font-weight: 900;
+}
+
+.chapter-step.prev .chapter-step-label { text-align: left; }
+.chapter-step.next .chapter-step-label { text-align: right; }
+
+.chapter-step-arrow {
+  flex: 0 0 auto;
+  color: var(--text-warm);
+  font-size: 28rpx;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.chapter-next-press {
+  transform: translate(3rpx, 4rpx);
+  box-shadow: 1rpx 1rpx 0 var(--shadow-soft);
+}
+
 
 .btn.half {
   flex: 1;
@@ -274,7 +349,9 @@
 .single-view {
   display: flex;
   flex-direction: column;
-  /* 底栏固定后，给最后一张题卡留出不被按钮压住的呼吸区 */
+  flex: 1 1 auto;
+  min-height: 0;
+  /* 底栏固定后，给题卡留出不被按钮压住的呼吸区 */
   padding-bottom: calc(132rpx + env(safe-area-inset-bottom));
 }
 
@@ -282,7 +359,7 @@
    两张卡同一屏高、同一速度，滑到一半时正好各占半屏，不会先空一拍再闪出来 */
 .single-stage {
   position: relative;
-  flex: 0 0 auto;
+  flex: 1 1 auto;
   min-height: 0;
   display: flex;
   /* 只露舞台内的卡片，推拉时不会让两张卡同时铺到页面外再回弹 */
@@ -290,11 +367,19 @@
 }
 
 .single-card {
-  position: relative;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 2;
   overflow: hidden;
   padding: 0;
-  flex: 0 0 auto;
+  flex: none;
+  height: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   width: 100%;
   min-width: 0;
   background: var(--card);
@@ -406,13 +491,14 @@
 .sheen-prev-b { animation: sheen-prev-b 0.3s cubic-bezier(0.2, 0.8, 0.3, 1) both; }
 
 .single-head {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 14rpx;
   padding: 20rpx 26rpx 17rpx;
   background: var(--accent-bg);
-  border-bottom: 2rpx dashed var(--line-strong);
+  border-bottom: 2rpx solid var(--line-strong);
 }
 
 .single-no-wrap {
@@ -461,6 +547,23 @@
   border-color: var(--edge);
 }
 
+.single-layout-chip {
+  min-height: 48rpx;
+  padding: 0 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-3);
+  background: var(--cream-1);
+  border: 2rpx solid var(--line-strong);
+  border-radius: 999rpx;
+  font-size: 19rpx;
+  font-weight: 900;
+  line-height: 1;
+  box-sizing: border-box;
+}
+.single-layout-chip-press { opacity: .58; }
+
 .single-point {
   padding: 3rpx 10rpx;
   color: var(--ink);
@@ -473,20 +576,34 @@
 }
 
 .single-opts {
+  flex: 1 1 auto;
+  min-height: 0;
   display: flex;
   flex-direction: column;
+  gap: 12rpx;
+  padding: 18rpx 24rpx 22rpx;
+  box-sizing: border-box;
+}
+
+/* 2×2 只在用户切换后启用，默认四项竖排，单手点选更顺手 */
+.single-stage.single-layout-grid .single-opts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
   gap: 16rpx;
-  padding: 24rpx 26rpx 30rpx;
+  padding: 22rpx 24rpx 26rpx;
 }
 
 .single-opt {
-  height: 104rpx;
+  flex: 1 1 0;
+  min-height: 0;
+  height: auto;
   border: 3rpx solid var(--edge);
-  border-radius: 20rpx;
+  border-radius: 24rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 34rpx;
+  font-size: 46rpx;
   font-weight: 900;
   background: var(--card);
   box-shadow: 5rpx 6rpx 0 var(--shadow-soft);
@@ -521,6 +638,12 @@
   box-shadow: 0 -4rpx 0 var(--shadow-soft);
 }
 
+.submit-strong {
+  background: var(--primary-3);
+  border-color: var(--edge-deep);
+  color: var(--on-primary);
+  box-shadow: 4rpx 5rpx 0 var(--shadow);
+}
 .single-bar-card {
   flex: 0 0 auto;
   min-width: 190rpx;
@@ -657,9 +780,19 @@
 /* 桌面档：rpx 会随窗口放大，这里统一 px 化（px ≈ rpx × 0.56） */
 @media (min-width: 700px) {
   .answer-page { padding-top: 0; }
+
+/* 逐题模式：让题卡吃掉顶栏与底栏之间的全部高度，选项不再悬在半空 */
+.answer-page.single-mode {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 0;
+}
+.answer-page.single-mode .mod-tabs,
+.answer-page.single-mode .progress-row { flex: 0 0 auto; }
   .mod-tabs { top: 0; z-index: 60; margin: 0 -16px 10px; padding: 9px 16px; border-bottom-width: 1px; box-shadow: 0 2px 0 var(--shadow-soft); }
   .mod-tabs-inner { gap: 7px; }
   .mode-chip { min-height: 28px; padding: 0 10px; font-size: 12px; box-shadow: 1px 2px 0 var(--shadow-soft); }
+  .mode-chip-glyph { font-size: 12px; }
   .mod-tab { min-height: 28px; padding: 0 11px; font-size: 13px; box-shadow: 1px 2px 0 var(--shadow-soft); }
   .progress-row { gap: 8px; margin: 0 0 10px; padding: 8px 10px 9px; border-width: 2px; border-radius: 12px; box-shadow: 2px 2px 0 var(--shadow-soft); }
   .progress-label { font-size: 11px; }
@@ -672,11 +805,17 @@
   .section-head { margin: 2px 2px 11px; gap: 7px; }
   .section-title { font-size: 22px; padding: 0 6px; }
   .section-count { padding: 2px 6px; font-size: 11px; border-width: 1px; box-shadow: 1px 1px 0 var(--shadow-soft); }
-  .q-row { gap: 10px; padding: 10px 11px; margin-bottom: 9px; border-radius: 12px; box-shadow: 2px 3px 0 var(--shadow-soft); }
-  .q-no { width: 36px; height: 36px; border-width: 2px; border-radius: 9px; font-size: 18px; box-shadow: 1px 2px 0 var(--shadow-soft); }
+  .question-sheet { padding: 0; overflow: visible; background: transparent; border: 0; border-radius: 0; box-shadow: none; }
+  .q-row { gap: 10px; padding: 10px 11px; margin-bottom: 9px; background: var(--card); border: 2px solid var(--edge); border-radius: 12px; box-shadow: 2px 3px 0 var(--shadow-soft); }
+  .q-no { width: 36px; height: 36px; justify-content: center; color: var(--ink); background: var(--accent-bg); border: 2px solid var(--edge); border-radius: 9px; font-size: 18px; box-shadow: 1px 2px 0 var(--shadow-soft); }
   .opts { gap: 7px; }
   .opt { height: 42px; font-size: 15px; border-radius: 8px; border-width: 2px; box-shadow: 2px 2px 0 var(--shadow-soft); }
-  .single-view { min-height: 0; padding-bottom: 78px; }
+  .opt.selected { box-shadow: 3px 4px 0 var(--shadow); }
+  .chapter-nav { gap: 7px; margin: 10px 0 7px; }
+  .chapter-step { min-height: 44px; padding: 0 11px; gap: 5px; border-width: 1px; border-radius: 999px; box-shadow: 2px 2px 0 var(--shadow-soft); }
+  .chapter-step-label { font-size: 12px; }
+  .chapter-step-arrow { font-size: 15px; }
+  .single-view { flex: 1 1 auto; min-height: 0; padding-bottom: 78px; }
   .single-card { padding: 0; border-width: 2px; border-radius: 17px; box-shadow: 4px 5px 0 var(--shadow); }
   .single-head { padding: 11px 15px 10px; gap: 8px; border-bottom-width: 1px; }
   .single-rule { width: 30px; height: 4px; border-width: 1px; }
@@ -684,10 +823,17 @@
   .single-total { font-size: 14px; margin-left: 4px; }
   .single-meta { gap: 5px; }
   .single-picked, .single-point { padding: 2px 7px; font-size: 11px; border-width: 1px; }
-  .single-opts { gap: 9px; padding: 13px 15px 17px; }
-  .single-opt { height: 58px; font-size: 19px; border-radius: 11px; border-width: 2px; box-shadow: 3px 4px 0 var(--shadow-soft); }
+  .single-opts { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 8px; padding: 10px 13px 13px; }
+  .single-stage.single-layout-grid .single-opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 11px 13px 14px; }
+  .single-opt { height: auto; min-height: 0; font-size: 24px; border-radius: 13px; border-width: 2px; box-shadow: 3px 4px 0 var(--shadow-soft); }
   .single-bar { max-width: 688px; gap: 9px; margin: 0; padding: 9px 16px 9px; border-top-width: 1px; box-shadow: 0 -3px 0 var(--shadow-soft); }
-  .single-bar-card { min-width: 110px; min-height: 46px; }
+  .submit-strong {
+  background: var(--primary-3);
+  border-color: var(--edge-deep);
+  color: var(--on-primary);
+  box-shadow: 4rpx 5rpx 0 var(--shadow);
+}
+.single-bar-card { min-width: 110px; min-height: 46px; }
   .single-submit { min-height: 46px; }
   /* 桌面档关掉整卡高光，减少大幅面渐变重绘，优先换题帧率 */
   .glass-sheen { display: none; }

@@ -1,3 +1,5 @@
+const { pinnedUrl, readPinnedFeature } = require('../../utils/home-pin')
+
 const MODULE_LIMIT = 8
 const DEFAULT_MODULES = [
   { name: '课程学习', targetMinutes: 30 },
@@ -112,6 +114,13 @@ Page({
     incentiveReveal: false,
     homeReveal: false,
     dockDim: false,
+    // 首页固定显示哪一项；pinnedQuickTab 非空时首页直接嵌快捷计时的真实面板
+    pinnedFeature: 'timer',
+    pinnedTodos: [],
+    pinnedTodoTotal: 0,
+    pinnedTodoDone: 0,
+    pinnedStats: {},
+    pinnedQuickTab: '',
     homeImportantPreview: [],
     // 首页只看最近 3 个倒计时
     homeCountdowns: [],
@@ -164,7 +173,10 @@ Page({
       templateName: savedTemplate && savedTemplate.name ? savedTemplate.name : '常规',
       templates: templatesForView
     }, this.refreshConfig)
-    if (savedSession && savedSession.modules && savedSession.startedAt) {
+    // 固定了非「训练计时」的功能时，首页直接显示该功能，不再用恢复训练弹窗拦住；
+    // 未完成训练仍留在 storage，切回训练计时时可以继续。
+    const launchPin = (app.getSettings ? app.getSettings().pinnedFeature : 'timer') || 'timer'
+    if (savedSession && savedSession.modules && savedSession.startedAt && launchPin === 'timer') {
       wx.showModal({
         title: '发现未完成训练',
         content: '是否恢复上次的计时进度？',
@@ -331,6 +343,27 @@ Page({
       wx.removeStorageSync('exam-timer-pending-modules')
       this.setData({ modules: this.withIds(pendingModules), templateName: '我的习惯', view: 'config' }, this.refreshConfig)
     }
+    this.goPinnedHome()
+  },
+
+  // 首页固定项：快捷计时三项由首页内的 quick-panel 直接渲染；
+  // 待办 / 重要日子 / 打卡仍打开真实独立页。
+  goPinnedHome() {
+    const pinned = readPinnedFeature()
+    if (pinned === 'timer' || this.data.view !== 'config') return false
+    // 快捷计时三项由首页自己渲染 quick-panel，不再 reLaunch 到快捷页，否则会丢 dock
+    if (pinned.indexOf('quick-') === 0) return false
+    // 固定首页优先于未完成训练：用户点「首页」就必须看到固定内容，
+    // 训练会话仍保留在 storage，回到训练计时可从原进度继续。
+    if (wx.getStorageSync('exam-timer-pending-report')) return false
+    const now = Date.now()
+    if (this._pinnedHomeAt && now - this._pinnedHomeAt < 700) return true
+    this._pinnedHomeAt = now
+    wx.reLaunch({
+      url: pinnedUrl(pinned),
+      fail: () => { this._pinnedHomeAt = 0 }
+    })
+    return true
   },
 
   // 首页主体每次出现都重新播放入场动效
@@ -397,7 +430,104 @@ Page({
   // ---- 重要日子倒计时 ----
   loadHomeSettings() {
     const settings = app.getSettings ? app.getSettings() : {}
-    this.setData({ incentiveType: settings.incentiveType || 'tomato' })
+    const pinned = settings.pinnedFeature || 'timer'
+    this.setData({
+      incentiveType: settings.incentiveType || 'tomato',
+      pinnedFeature: pinned,
+      pinnedQuickTab: pinned.indexOf('quick-') === 0 ? pinned.slice(6) : ''
+    })
+    this.refreshPinnedData(pinned)
+  },
+
+  // 首页固定成待办 / 重要日子 / 打卡时，分别去读各自真实数据（不另建页面，直接复用存储与统计口径）
+  refreshPinnedData(pinned) {
+    const key = pinned || this.data.pinnedFeature
+    if (key === 'todo') this.loadPinnedTodos()
+    else if (key === 'stats') this.loadPinnedStats()
+  },
+
+  loadPinnedTodos() {
+    const raw = wx.getStorageSync(app.globalData.todoKey) || []
+    const list = Array.isArray(raw) ? raw : []
+    const pending = list.filter(item => !item.done)
+    const sorted = pending.slice().sort((a, b) => {
+      const av = a.dueAt || Number.MAX_SAFE_INTEGER
+      const bv = b.dueAt || Number.MAX_SAFE_INTEGER
+      return av - bv
+    })
+    const rows = sorted.slice(0, 4).map(item => ({
+      id: item.id,
+      text: item.text || '',
+      dueText: this.pinnedDueText(item.dueAt)
+    }))
+    this.setData({
+      pinnedTodos: rows,
+      pinnedTodoTotal: list.length,
+      pinnedTodoDone: list.filter(item => item.done).length
+    })
+  },
+
+  pinnedDueText(dueAt) {
+    if (!dueAt) return ''
+    const target = new Date(dueAt)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const thatDay = new Date(target.getFullYear(), target.getMonth(), target.getDate())
+    const dayDiff = Math.round((thatDay - today) / 86400000)
+    if (dayDiff === 0) return '今天'
+    if (dayDiff === 1) return '明天'
+    if (dayDiff === -1) return '昨天'
+    return `${target.getMonth() + 1}月${target.getDate()}日`
+  },
+
+  loadPinnedStats() {
+    if (!app.dailyStats) return
+    const stats = app.dailyStats()
+    this.setData({
+      pinnedStats: {
+        todayMinutes: Math.floor((stats.todaySeconds || 0) / 60),
+        todayPercent: stats.todayPercent || 0,
+        weekMinutes: Math.floor((stats.weekSeconds || 0) / 60),
+        streak: stats.streak || 0,
+        totalDays: stats.totalDays || 0
+      }
+    })
+  },
+
+  // 固定面板里勾一下即可完成待办，写回同一份存储
+  togglePinnedTodo(event) {
+    const id = event && event.currentTarget && event.currentTarget.dataset && event.currentTarget.dataset.id
+    if (!id) return
+    const raw = wx.getStorageSync(app.globalData.todoKey) || []
+    const list = (Array.isArray(raw) ? raw : []).map(item => (item.id === id ? { ...item, done: !item.done, doneAt: !item.done ? Date.now() : 0 } : item))
+    wx.setStorageSync(app.globalData.todoKey, list)
+    if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
+    this.loadPinnedTodos()
+  },
+
+  // 固定面板右上角箭头：进对应的真实页面
+  openPinnedFeature() {
+    const map = {
+      todo: '/pages/todo/todo',
+      important: '/pages/important/important',
+      stats: '/pages/stats/stats?tab=overview'
+    }
+    const url = map[this.data.pinnedFeature]
+    if (url) wx.navigateTo({ url })
+  },
+
+  // 悬浮球点某个模块＝把它固定到首页（不是跳一个新页面）
+  applyPinnedFeature(key) {
+    const pinned = key || 'timer'
+    const quickTab = pinned.indexOf('quick-') === 0 ? pinned.slice(6) : ''
+    const nameMap = { timer: '训练计时', 'quick-stopwatch': '秒表', 'quick-countdown': '计时器', 'quick-pomodoro': '番茄钟', todo: '待办', important: '重要日子', stats: '打卡' }
+    app.saveSettings && app.saveSettings({ pinnedFeature: pinned })
+    this.setData({ pinnedFeature: pinned, pinnedQuickTab: quickTab }, () => {
+      setTimeout(() => this.measureConfigScroll(), 60)
+    })
+    this.refreshPinnedData(pinned)
+    if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
+    wx.showToast({ title: `已固定：${nameMap[pinned] || pinned}`, icon: 'none', duration: 1200 })
   },
 
   // 顶栏返回：任何首页子页面都回到首页主视图

@@ -2113,3 +2113,65 @@
 
 /* 首页待办 / 重要日子预览：大屏改单列通栏，行不摊成两张卡片 */
 .desk .home-feature .home-feature-list { grid-template-columns: minmax(0, 1fr); gap: 5px; }
+
+/* 首页固定面板：真实页面嵌进来的外壳 */
+.pinned-panel { width: 100%; margin: 0 0 18rpx; }
+.pinned-head { display: flex; align-items: center; justify-content: space-between; gap: 10rpx; margin: 0 0 10rpx; }
+.pinned-title { color: var(--ink); font-size: 28rpx; font-weight: 900; }
+.pinned-side { display: flex; align-items: center; gap: 6rpx; }
+.pinned-count { color: var(--text-2); font-size: 22rpx; font-weight: 800; }
+.pinned-more { color: var(--text-3); font-size: 28rpx; font-weight: 900; line-height: 1; }
+.pinned-board {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+  padding: 12rpx 14rpx;
+  background: var(--card);
+  border: 3rpx solid var(--edge);
+  border-radius: 22rpx;
+  box-shadow: 5rpx 6rpx 0 var(--shadow-soft);
+}
+.pinned-row { display: flex; align-items: center; gap: 10rpx; padding: 10rpx 6rpx; border-radius: 12rpx; }
+.pinned-row:active { background: var(--cream-2); }
+.pinned-check { flex: 0 0 26rpx; width: 26rpx; height: 26rpx; box-sizing: border-box; border: 2rpx solid var(--edge); border-radius: 50%; }
+.pinned-dot { flex: 0 0 12rpx; width: 12rpx; height: 12rpx; border-radius: 50%; background: var(--primary); }
+.pinned-row.past .pinned-dot { background: var(--text-3); }
+.pinned-row-text { flex: 1; min-width: 0; color: var(--ink); font-size: 24rpx; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pinned-row-meta { flex: 0 0 auto; color: var(--text-2); font-size: 20rpx; font-weight: 700; }
+.pinned-row.past .pinned-row-meta { color: var(--text-3); }
+.pinned-empty { color: var(--text-3); font-size: 22rpx; font-weight: 700; padding: 14rpx 6rpx; text-align: center; }
+.pinned-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6rpx; padding: 4rpx 0 8rpx; }
+.pinned-stat { display: flex; flex-direction: column; align-items: center; gap: 2rpx; }
+.pinned-stat-num { color: var(--ink); font-size: 34rpx; font-weight: 900; }
+.pinned-stat-label { color: var(--text-2); font-size: 18rpx; font-weight: 700; }
+.pinned-progress { height: 12rpx; box-sizing: border-box; background: var(--track); border: 2rpx solid var(--edge); border-radius: 999rpx; overflow: hidden; }
+.pinned-progress-fill { height: 100%; background: var(--primary); border-radius: 999rpx; transition: width .3s ease; }
+.desk .pinned-panel { margin-bottom: 10px; }
+.desk .pinned-head { margin-bottom: 6px; gap: 8px; }
+.desk .pinned-title { font-size: 15px; }
+.desk .pinned-count { font-size: 12px; }
+.desk .pinned-more { font-size: 15px; }
+.desk .pinned-board { padding: 8px 9px; border-width: 2px; border-radius: 12px; box-shadow: 3px 3px 0 var(--shadow-soft); }
+.desk .pinned-row { padding: 6px 4px; gap: 6px; }
+.desk .pinned-check { flex: 0 0 14px; width: 14px; height: 14px; border-width: 1px; }
+.desk .pinned-row-text { font-size: 13px; }
+.desk .pinned-row-meta { font-size: 11px; }
+.desk .pinned-empty { font-size: 12px; padding: 8px 4px; }
+.desk .pinned-stat-num { font-size: 18px; }
+.desk .pinned-stat-label { font-size: 10px; }
+.desk .pinned-progress { height: 7px; border-width: 1px; }
+
+/* 固定快捷项：面板占满首页除顶栏 / dock 之外的可用高度，时钟在中间居中；
+ * 操作条是 fixed 的，不再靠 page-content 的大底距给它让位。 */
+.quick-home-scroll .page-content {
+  height: 100%;
+  min-height: 100%;
+  box-sizing: border-box;
+  padding: 12rpx 20rpx 0;
+}
+.desk .quick-home-scroll .page-content {
+  height: 100%;
+  min-height: 100%;
+  box-sizing: border-box;
+  padding: 9px 11px 0;
+}

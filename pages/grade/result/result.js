@@ -25,7 +25,124 @@ function signedPoint(v) {
   return signedNum(v) + ' 分';
 }
 
+// 模块距目标的分差（分）＝该模块实得分 − 该模块满分 × 目标百分比。
+// 绘制轴尾、底部提示都调这一个函数，切 60 / 70 / 80 时按同一口径实时重算。
+function moduleDiff(item, target) {
+  if (!item || !(item.full > 0)) return null;
+  const diff = item.got - (item.full * target) / 100;
+  return Math.round(diff * 10) / 10;
+}
+
 // 逐题对错：四格 A/B/C/D，只标「正解」与「你选」；跨用户的选项人数/占比需要服务端统计，本地不做
+
+// 能力图拆成两层静止图：底图（网格 / 轴 / 轴名）和曲线层（目标框 / 我的曲线 / 顶点）。
+// 曲线层是透明 PNG，展示时绕圆心从 1.5% 放大到 100%，就是每个顶点从中心点往四周扩。
+function radarGeometry(cfg) {
+  const { w, h, items } = cfg;
+  const n = items.length;
+  const cx = w / 2;
+  const cy = h / 2;
+  const R = Math.max(34, Math.min(w, h) / 2 - 34);
+  const angle = (i) => -Math.PI / 2 + (i * 2 * Math.PI) / n;
+  const pt = (i, k) => ({
+    x: cx + Math.cos(angle(i)) * R * k,
+    y: cy + Math.sin(angle(i)) * R * k,
+  });
+  return { n, cx, cy, R, angle, pt };
+}
+
+function drawRadarBase(ctx, cfg) {
+  const { w, h, items, target, colors, dense } = cfg;
+  const { n, cx, cy, R, angle, pt } = radarGeometry(cfg);
+  ctx.clearRect(0, 0, w, h);
+
+  // 网格：四圈淡线，只当坐标参考
+  [0.25, 0.5, 0.75, 1].forEach((k) => {
+    ctx.beginPath();
+    for (let i = 0; i < n; i++) {
+      const q = pt(i, k);
+      if (i === 0) ctx.moveTo(q.x, q.y); else ctx.lineTo(q.x, q.y);
+    }
+    ctx.closePath();
+    ctx.strokeStyle = colors.grid;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  });
+
+  // 轴线
+  for (let i = 0; i < n; i++) {
+    const q = pt(i, 1);
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(q.x, q.y);
+    ctx.strokeStyle = colors.grid;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  // 轴名 + 距目标的分差：固定不动，曲线在它上面扩
+  ctx.textBaseline = 'middle';
+  for (let i = 0; i < n; i++) {
+    const it = items[i];
+    const dirX = Math.cos(angle(i));
+    const dirY = Math.sin(angle(i));
+    const ax = cx + dirX * (R + (dense ? 8 : 12));
+    const ay = cy + dirY * (R + (dense ? 8 : 12));
+    const diff = moduleDiff(it, target);
+    ctx.textAlign = dirX > 0.3 ? 'left' : (dirX < -0.3 ? 'right' : 'center');
+    const name = dense || it.name.length > 6 ? it.label : it.name;
+    ctx.font = dense ? 'bold 9px sans-serif' : 'bold 11px sans-serif';
+    ctx.fillStyle = colors.ink;
+    ctx.fillText(name, ax, ay - (dense ? 6 : 8));
+    if (diff !== null) {
+      ctx.font = dense ? 'bold 9px sans-serif' : 'bold 12px sans-serif';
+      ctx.fillStyle = diff >= 0 ? colors.success : colors.danger;
+      ctx.fillText(signedNum(diff), ax, ay + (dense ? 5 : 9));
+    }
+  }
+}
+
+function drawRadarCurve(ctx, cfg) {
+  const { w, h, items, target, colors } = cfg;
+  const { n, pt } = radarGeometry(cfg);
+  ctx.clearRect(0, 0, w, h);
+
+  // 目标外框
+  ctx.beginPath();
+  for (let i = 0; i < n; i++) {
+    const q = pt(i, Math.max(0.01, Math.min(1, target / 100)));
+    if (i === 0) ctx.moveTo(q.x, q.y); else ctx.lineTo(q.x, q.y);
+  }
+  ctx.closePath();
+  ctx.strokeStyle = colors.success;
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  // 我的表现：杏色填充 + 深杏描边
+  ctx.beginPath();
+  for (let i = 0; i < n; i++) {
+    const q = pt(i, Math.max(0.015, Math.min(1, items[i].value / 100)));
+    if (i === 0) ctx.moveTo(q.x, q.y); else ctx.lineTo(q.x, q.y);
+  }
+  ctx.closePath();
+  ctx.fillStyle = colors.accent;
+  ctx.globalAlpha = 0.22;
+  ctx.fill();
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = colors.accentDeep;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // 顶点
+  for (let i = 0; i < n; i++) {
+    const q = pt(i, Math.max(0.015, Math.min(1, items[i].value / 100)));
+    ctx.beginPath();
+    ctx.arc(q.x, q.y, 3.5, 0, Math.PI * 2);
+    ctx.fillStyle = colors.accentDeep;
+    ctx.fill();
+  }
+}
+
 const LETTERS = ['A', 'B', 'C', 'D'];
 function buildCells(q) {
   return LETTERS.map((label) => {
@@ -42,27 +159,36 @@ function buildCells(q) {
 // 老记录可能没有模块级 points / got；逐题明细里通常还留着每题 point，
 // 没有 point 就按当前卷的逐题分值补，把模块满分 / 得分算回来，
 // 能力图才能算「距目标多少分」
-function fillModulePoints(list, questions, paperPoints) {
+function fillModulePoints(list, questions, paperPoints, paperFull) {
   return (list || []).map((m) => {
-    if (typeof m.points === 'number' && m.points > 0 && typeof m.got === 'number') return m;
     let qs = (questions || []).filter((q) => q.moduleKey === m.key);
     // 更老的记录可能只有模块里的 questions 副本
     if (!qs.length) qs = m.questions || [];
-    let full = 0;
-    let got = 0;
+    // 有答案的题才算分：分母缩水后按同一比例折算回模块满分（与 score.js 同口径）
+    let modPoints = 0;
+    let modEarned = 0;
     qs.forEach((q) => {
-      if (!q.scored) return;
-      const point = typeof q.point === 'number' ? q.point : ((paperPoints && paperPoints[q.no - 1]) || 0);
+      if (!q.scored || q.status === 'nostd') return;
+      // 优先按当前卷面的每题分值重算；老记录自带的 point 只作兜底
+      const point = (paperPoints && paperPoints[q.no - 1]) || (typeof q.point === 'number' ? q.point : 0);
       if (point <= 0) return;
-      full += point;
-      if (q.status === 'right') got += point;
+      modPoints += point;
+      if (q.status === 'right') modEarned += point;
     });
-    const fullPoints = full > 0 ? full : (typeof m.points === 'number' ? m.points : 0);
+    // 模块满分以当前卷面 layout 为准（例如资料分析从 24 修正为 20），
+    // 这样旧记录不会继续沿用作废的分值
+    const layoutPoints = paperFull && paperFull[m.key] > 0 ? paperFull[m.key] : 0;
+    const savedPoints = typeof m.points === 'number' && m.points > 0 ? m.points : 0;
+    const fullPoints = layoutPoints || savedPoints || modPoints;
     if (fullPoints <= 0) return m;
+    // 能逐题重算就一定重算，记录里存的老值只作兜底，避免能力图沿用过期的 got
+    const got = modPoints > 0
+      ? Math.round((modEarned / modPoints) * fullPoints * 100) / 100
+      : (typeof m.got === 'number' ? m.got : 0);
     return Object.assign({}, m, {
       points: Math.round(fullPoints * 100) / 100,
-      pointTotal: Math.round(fullPoints * 100) / 100,
-      got: typeof m.got === 'number' ? m.got : Math.round(got * 100) / 100,
+      pointTotal: Math.round(modPoints * 100) / 100,
+      got,
     });
   });
 }
@@ -84,8 +210,13 @@ Page({
     detail: null,
     modules: [],
     targets: [60, 70, 80],
-    radarTarget: 60, // 目标档位：60 / 70 / 80，能力图按这个画目标外框
+    radarTarget: 60,
+    reviewOpen: false, // 答题卡浮层
     radarTip: null,
+    radarBaseImage: '',
+    radarCurveImage: '',
+    radarGrow: false,
+    radarDrawing: false,
   },
 
   onLoad(query) {
@@ -103,7 +234,11 @@ Page({
     // 旧记录的逐题明细可能没有 point，用当前卷的逐题分值兜底
     const found = data.getPaper(record.paperId);
     const paperPoints = found ? data.questionPoints(found.paper) : [];
-    const moduleStats = fillModulePoints(d.moduleStats || [], questions, paperPoints);
+    const paperFull = {};
+    if (found) {
+      data.paperModules(found.paper).forEach((m) => { paperFull[m.key] = m.points; });
+    }
+    const moduleStats = fillModulePoints(d.moduleStats || [], questions, paperPoints, paperFull);
     const modules = moduleStats.map((m) => {
       const rows = (m.questions || []).map((q) => {
         return {
@@ -148,7 +283,9 @@ Page({
     const radarTarget = this.data.radarTarget;
     const radarItems = radarMods.map((m) => {
       const def = MODULE_DEFS[m.key];
-      const full = typeof m.points === 'number' ? m.points : 0;
+      const full = typeof m.points === 'number' && m.points > 0
+        ? m.points
+        : (typeof m.pointTotal === 'number' ? m.pointTotal : 0);
       return {
         // 自定义卷的模块名可能改过，优先用卷面自己的简称
         label: m.short || (def && def.short) || m.name,
@@ -178,22 +315,50 @@ Page({
       modules: modules.filter((m) => m.scored !== false),
       radarTip: tip,
     }, () => {
+      // 首帧可能拿不到 canvas 节点/尺寸；onReady、onShow 和这里都会补画，
+      // drawRadar 内部再按次数退避重试，避免页面渲染慢时只试一次就留下空白。
       this.drawRadar();
-      // 首帧偶发拿不到 canvas 尺寸（同页 setData 刚渲染完），稍后再试一次；成功则跳过
-      setTimeout(() => {
-        if (!this._radarDrawn) this.drawRadar();
-      }, 160);
     });
   },
 
-  // 能力图：六边形雷达。绿框＝当前目标档（各模块按分值折算的「0 分差」线），
-  // 轴末端写模块简称 + 距目标的分差，比原来那三个小刻度直观得多。
-  drawRadar() {
+  onReady() {
+    if (this._radar) this.drawRadar();
+  },
+
+  onShow() {
+    // 从后台回到结果页时 canvas 可能被系统释放，可见后再补一次
+    if (this._radar) this.drawRadar();
+  },
+
+  // 能力图：六边形雷达。底图和曲线分两次导出，曲线用 CSS 从中心向外放大。
+  // 绿框＝当前目标档，杏色＝我的表现；轴末端写模块简称 + 距目标的分差。
+  drawRadar(retry = 0) {
     const radar = this._radar;
     if (!radar || !radar.items.length) return;
+    // 画布始终在图表区左侧的离屏层，导出 PNG 后移除；不在滚动区里显示原生画布，
+    // 否则原生层不跟随 scroll-view 滚动，会浮在模块卡上。
+    if (!this.data.radarDrawing) {
+      this.setData({
+        radarDrawing: true,
+        radarBaseImage: '',
+        radarCurveImage: '',
+        radarGrow: false,
+      }, () => this.drawRadar(retry));
+      return;
+    }
+    // 只让最后一次查询落地，避免多个生命周期同时补画时旧回调把新画布覆盖
+    const seq = this._radarSeq = (this._radarSeq || 0) + 1;
     wx.createSelectorQuery().in(this).select('#radar').fields({ node: true, size: true }).exec((res) => {
+      if (seq !== this._radarSeq) return;
       const item = res && res[0];
-      if (!item || !item.node || !item.width) return;
+      if (!item || !item.node || !item.width || !item.height) {
+        this._radarDrawn = false;
+        if (retry < 4) {
+          clearTimeout(this._radarTimer);
+          this._radarTimer = setTimeout(() => this.drawRadar(retry + 1), 90 + retry * 120);
+        }
+        return;
+      }
       const canvas = item.node;
       const w = item.width;
       const h = item.height;
@@ -201,109 +366,82 @@ Page({
       canvas.width = Math.round(w * dpr);
       canvas.height = Math.round(h * dpr);
       const ctx = canvas.getContext('2d');
-      this._radarDrawn = true;
       ctx.scale(dpr, dpr);
-      ctx.clearRect(0, 0, w, h);
 
       const colors = theme.getCanvasColors();
       const n = radar.items.length;
-      const target = radar.target || 60;
-      const cx = w / 2;
-      const cy = h / 2;
-      const R = Math.max(34, Math.min(w, h) / 2 - 34);
-      // 自定义卷最多 13 个模块：轴多时用简称 + 更小字号，但差值不能省
-      const dense = n > 8;
-      const angle = (i) => -Math.PI / 2 + (i * 2 * Math.PI) / n;
-      const pt = (i, k) => ({
-        x: cx + Math.cos(angle(i)) * R * k,
-        y: cy + Math.sin(angle(i)) * R * k,
-      });
-      const dataPt = (i) => {
-        const k = Math.max(0.015, Math.min(1, radar.items[i].value / 100));
-        return pt(i, k);
+      const cfg = {
+        w,
+        h,
+        items: radar.items,
+        target: radar.target || 60,
+        colors,
+        dense: n > 8,
       };
 
-      // 网格：四圈淡线，只当坐标参考；档位由绿框和轴尾差值表达，不再靠小数字
-      [0.25, 0.5, 0.75, 1].forEach((k) => {
-        ctx.beginPath();
-        for (let i = 0; i < n; i++) {
-          const p = pt(i, k);
-          if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
-        }
-        ctx.closePath();
-        ctx.strokeStyle = colors.grid;
-        ctx.lineWidth = 1;
-        ctx.stroke();
+      // 先导出静态底图，再清空画布导出只剩曲线的透明层
+      drawRadarBase(ctx, cfg);
+      this.exportRadarPart(canvas, seq, (basePath) => {
+        if (seq !== this._radarSeq) return;
+        this.setData({ radarBaseImage: basePath });
+        ctx.clearRect(0, 0, w, h);
+        drawRadarCurve(ctx, cfg);
+        this.exportRadarPart(canvas, seq, (curvePath) => {
+          if (seq !== this._radarSeq) return;
+          this._radarDrawn = true;
+          this._radarExportFails = 0;
+          this.setData({
+            radarCurveImage: curvePath,
+            radarDrawing: false,
+            radarGrow: false,
+          }, () => {
+            // bindload 正常会触发；这里再兜一层，临时文件很快就能读到
+            clearTimeout(this._radarGrowTimer);
+            this._radarGrowTimer = setTimeout(() => {
+              if (seq !== this._radarSeq) return;
+              if (!this.data.radarGrow) this.setData({ radarGrow: true });
+            }, 90);
+          });
+        });
       });
-
-      // 轴线
-      for (let i = 0; i < n; i++) {
-        const p = pt(i, 1);
-        ctx.beginPath();
-        ctx.moveTo(cx, cy);
-        ctx.lineTo(p.x, p.y);
-        ctx.strokeStyle = colors.grid;
-        ctx.lineWidth = 1;
-        ctx.stroke();
-      }
-
-      // 目标外框：各模块刚好达到目标分的连线（0 分差）
-      ctx.beginPath();
-      for (let i = 0; i < n; i++) {
-        const p = pt(i, Math.max(0.01, Math.min(1, target / 100)));
-        if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
-      }
-      ctx.closePath();
-      ctx.strokeStyle = colors.success;
-      ctx.lineWidth = 2.5;
-      ctx.stroke();
-
-      // 我的表现：杏色填充 + 深杏描边
-      ctx.beginPath();
-      for (let i = 0; i < n; i++) {
-        const p = dataPt(i);
-        if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
-      }
-      ctx.closePath();
-      ctx.fillStyle = colors.accent;
-      ctx.globalAlpha = 0.22;
-      ctx.fill();
-      ctx.globalAlpha = 1;
-      ctx.strokeStyle = colors.accentDeep;
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      // 顶点
-      for (let i = 0; i < n; i++) {
-        const p = dataPt(i);
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, 3.5, 0, Math.PI * 2);
-        ctx.fillStyle = colors.accentDeep;
-        ctx.fill();
-      }
-
-      // 轴名 + 距目标的分差：+ 绿色领先 / − 红色落后
-      ctx.textBaseline = 'middle';
-      for (let i = 0; i < n; i++) {
-        const it = radar.items[i];
-        const dirX = Math.cos(angle(i));
-        const dirY = Math.sin(angle(i));
-        const ax = cx + dirX * (R + (dense ? 8 : 12));
-        const ay = cy + dirY * (R + (dense ? 8 : 12));
-        const diff = it.full > 0 ? it.got - (it.full * target) / 100 : null;
-        ctx.textAlign = dirX > 0.3 ? 'left' : (dirX < -0.3 ? 'right' : 'center');
-        // 6 轴放得下全称，和参考图一致；13 轴退回简称，避免左右互相压
-        const name = dense || it.name.length > 6 ? it.label : it.name;
-        ctx.font = dense ? 'bold 9px sans-serif' : 'bold 11px sans-serif';
-        ctx.fillStyle = colors.ink;
-        ctx.fillText(name, ax, ay - (dense ? 6 : 8));
-        if (diff !== null) {
-          ctx.font = dense ? 'bold 9px sans-serif' : 'bold 12px sans-serif';
-          ctx.fillStyle = diff >= 0 ? colors.success : colors.danger;
-          ctx.fillText(signedNum(diff), ax, ay + (dense ? 5 : 9));
-        }
-      }
     });
+  },
+
+  // 曲线图加载完再启动放大，避免先闪一下终态再缩回去
+  onCurveLoad() {
+    if (!this.data.radarCurveImage || this.data.radarGrow) return;
+    clearTimeout(this._radarGrowTimer);
+    this.setData({ radarGrow: true });
+  },
+
+  // 单次导出；失败时整张重画，最多重试 2 次
+  exportRadarPart(canvas, seq, onDone) {
+    if (!canvas || !wx.canvasToTempFilePath) return;
+    wx.canvasToTempFilePath({
+      canvas,
+      fileType: 'png',
+      success: (res) => {
+        if (seq !== this._radarSeq) return;
+        if (!res || !res.tempFilePath) return;
+        if (onDone) onDone(res.tempFilePath);
+      },
+      fail: () => {
+        if (seq !== this._radarSeq) return;
+        this._radarExportFails = (this._radarExportFails || 0) + 1;
+        if (this._radarExportFails > 2) {
+          this.setData({
+            radarDrawing: false,
+            radarBaseImage: '',
+            radarCurveImage: '',
+            radarGrow: false,
+          });
+          return;
+        }
+        this._radarDrawn = false;
+        clearTimeout(this._radarTimer);
+        this._radarTimer = setTimeout(() => this.drawRadar(), 120);
+      },
+    }, this);
   },
 
   // 切 60 / 70 / 80 目标档：只重算差值和重画 canvas，不整页 setData
@@ -324,8 +462,8 @@ Page({
     let weak = null;
     let lead = null;
     items.forEach((it) => {
-      if (!(it.full > 0)) return;
-      const diff = it.got - (it.full * target) / 100;
+      const diff = moduleDiff(it, target);
+      if (diff === null) return;
       if (!weak || diff < weak.diff) weak = { name: it.name, diff };
       if (!lead || diff > lead.diff) lead = { name: it.name, diff };
     });
@@ -428,6 +566,20 @@ Page({
     this.setData(fin);
     if (this._busy) this._busy[key] = false;
   },
+
+  openReview() {
+    this.setData({ reviewOpen: true })
+  },
+
+  closeReview() {
+    if (!this.data.reviewOpen) return
+    this.setData({ reviewOpen: false }, () => {
+      // canvas 在浮层期间移除，避免原生画布盖在遮罩上；收起后重新查询节点补画
+      setTimeout(() => this.drawRadar(), 80)
+    })
+  },
+
+  noop() {},
 
   // 离开页面时清掉未跑完的高度过渡定时器
   onUnload() {

@@ -58,11 +58,8 @@
   text-shadow: 4rpx 5rpx 0 var(--clk-glow), 7rpx 8rpx 0 var(--clk-ink);
 }
 
-/* 毫秒读数：跟主数字同一族，只是小一号，颜色/发光/描边保持一致 */
-.quick-page .q-shell-outline .q-ms-inline { color: transparent; -webkit-text-stroke: 3rpx var(--clk-ink); }
-.quick-page .q-shell-outline .q-ms-dot { color: var(--clk-ink); }
-.quick-page .q-shell-jelly .q-ms-inline { color: var(--clk-fill, var(--primary)); -webkit-text-stroke: 2rpx var(--clk-ink); text-shadow: 3rpx 4rpx 0 var(--clk-glow), 5rpx 6rpx 0 var(--clk-ink); }
-.quick-page .q-shell-jelly .q-ms-dot { color: var(--clk-ink); }
+/* 毫秒读数：直接复用 q-plain-num 皮肤样式，只由 q-ms-inline 控制字号，
+ * 不再单独写颜色/描边/投影，避免毫秒和主体看起来像两套字。 */
 
 /* 积木方块：牌面底色 / 描边 / 投影两端共用 */
 .timer-page .block-tile,
@@ -129,8 +126,7 @@
   letter-spacing: 0 !important;
   text-shadow: 2px 3px 0 var(--clk-glow) !important;
 }
-.quick-page .q-shell-sticker .q-ms-inline,
-.quick-page .q-shell-sticker .q-ms-dot { color: var(--clk-ink); -webkit-text-stroke: 1px var(--clk-ink); }
+/* 贴纸数字的毫秒跟随 q-plain-num，无需单独配色。 */
 
 /* ==========================================================================
  * FINAL：8 种时钟样式在三页的唯一定义（基准 = 设置页预览）
@@ -229,15 +225,7 @@
   -webkit-background-clip: border-box !important;
   background-clip: border-box !important;
 }
-.quick-page .q-clock-shell.q-shell-outline .q-ms-inline {
-  color: transparent !important;
-  -webkit-text-fill-color: transparent !important;
-  -webkit-text-stroke: 1.5rpx var(--ink) !important;
-  background-image: none !important;
-  -webkit-background-clip: border-box !important;
-  background-clip: border-box !important;
-}
-.quick-page .q-clock-shell.q-shell-outline .q-ms-dot { color: var(--ink) !important; }
+/* 描边空心的毫秒沿用 q-plain-num 的透明填充与同宽描边，不另写一套。 */
 
 /* 桌面：字距/描边按 px 收，别被 rpx 放大（描边过粗会把空心填死）
  * 注意：计时页根节点不带 desk（它恒为 compact），所以计时页这批走媒体查询。 */
@@ -247,7 +235,6 @@
 .desk.quick-page .q-clock-shell.q-shell-outline .q-plain-num,
 .desk.settings-page .clock-preview .clock-preview-card.q-shell-outline .q-plain-num,
 .desk.settings-page .clock-style-card .clock-style-sample.q-shell-outline .q-plain-num { -webkit-text-stroke-width: 1.5px !important; letter-spacing: 1px !important; }
-.desk.quick-page .q-clock-shell.q-shell-outline .q-ms-inline { -webkit-text-stroke-width: 1px !important; }
 
 /* ---------- 8 果冻叠影 jelly：糖果色填充 + 深墨描边 + 双层错位投影 ---------- */
 .timer-page.clock-jelly .plain-clock,
@@ -274,34 +261,9 @@
   letter-spacing: 2rpx !important;
   text-shadow: 4rpx 5rpx 0 var(--primary-2), 7rpx 8rpx 0 var(--edge) !important;
 }
-.quick-page .q-clock-shell.q-shell-jelly .q-ms-inline {
-  color: var(--primary) !important;
-  -webkit-text-stroke: 2rpx var(--edge) !important;
-  text-shadow: 3rpx 4rpx 0 var(--primary-2), 5rpx 6rpx 0 var(--edge) !important;
-}
-.quick-page .q-clock-shell.q-shell-jelly .q-ms-dot { color: var(--ink) !important; }
+/* 果冻叠影的毫秒沿用 q-plain-num 的双层错位投影，不再单独减配。 */
 
-/* ===== 快捷计时毫秒读数：与主数字同一套外观，只是字号由页面收小 =====
- * 数字、小数点、字体、字重、字距、描边、投影全部跟主数字一致，
- * 避免「主时间带描边、毫秒却是纯色」这种两张皮。
- */
-.quick-page .q-clock-shell.q-shell-sticker .q-ms-inline {
-  color: var(--card) !important;
-  -webkit-text-fill-color: var(--card) !important;
-  -webkit-text-stroke: 1.5px var(--ink) !important;
-  background-image: none !important;
-  -webkit-background-clip: border-box !important;
-  background-clip: border-box !important;
-  font-family: "Arial Rounded MT Bold", "Yuanti SC", "PingFang SC", "Hiragino Sans GB", sans-serif !important;
-  font-weight: 900 !important;
-  letter-spacing: 0 !important;
-  text-shadow: 1.5px 2px 0 var(--primary) !important;
-}
-.quick-page .q-clock-shell.q-shell-sticker .q-ms-dot {
-  color: var(--ink) !important;
-  -webkit-text-stroke: 0 !important;
-  text-shadow: none !important;
-}
+/* 贴纸数字的毫秒沿用 q-plain-num 的奶白字 + 深墨描边 + 主色投影。 */
 /* ===== 桌面 / 大屏：果冻叠影的错位阴影改成 px =====
  * 原来错位量是 rpx（4/5 与 7/8），1700px 窗口下 1rpx≈2.3px，
  * 54px 的数字后面跟着 16px 的深色影子，看着像三份数字叠在一起。
@@ -314,68 +276,65 @@
   -webkit-text-stroke-width: 1px !important;
   text-shadow: 2px 2px 0 var(--primary-2), 3px 4px 0 var(--edge) !important;
 }
-.desk.quick-page .q-clock-shell.q-shell-jelly .q-ms-inline {
-  -webkit-text-stroke-width: 1px !important;
-  text-shadow: 1px 1px 0 var(--primary-2), 2px 3px 0 var(--edge) !important;
-}
 
 /* ==========================================================================
  * 新增三种手绘 / 果冻向皮肤（no frame：外壳一律透明无边框）
  * ========================================================================== */
 
-/* ---------- 手绘涂鸦 doodle：彩色铅笔字 + 墨色勾线 + 手绘底线，整块轻轻歪 ---------- */
+/* ---------- 糖果手写 doodle：手写圆体 + 墨色描边 + 糖果色错位影子，不倾斜 ---------- */
 .timer-page.clock-doodle .plain-clock,
 .quick-page .q-clock-shell.q-shell-doodle,
 .settings-page .clock-preview .clock-preview-card.q-shell-doodle,
 .settings-page .clock-style-card .clock-style-sample.q-shell-doodle {
   background: transparent !important;
+  background-image: none !important;
   border: 0 !important;
-  border-bottom: 3rpx solid var(--primary) !important;
   border-radius: 0 !important;
   box-shadow: none !important;
-  padding-bottom: 7rpx !important;
-  transform: rotate(-4deg) !important;
+  padding: 0 !important;
+  transform: none !important;
 }
 .timer-page.clock-doodle .plain-num,
 .quick-page .q-clock-shell.q-shell-doodle .q-plain-num,
 .settings-page .clock-preview .clock-preview-card.q-shell-doodle .q-plain-num,
 .settings-page .clock-style-card .clock-style-sample.q-shell-doodle .q-plain-num {
-  color: var(--primary-2) !important;
-  -webkit-text-fill-color: var(--primary-2) !important;
-  -webkit-text-stroke: 2rpx var(--ink) !important;
+  color: var(--primary) !important;
+  -webkit-text-fill-color: var(--primary) !important;
+  -webkit-text-stroke: 3rpx var(--edge) !important;
   background-image: none !important;
   -webkit-background-clip: border-box !important;
   background-clip: border-box !important;
-  font-family: "Kaiti SC", "STKaiti", "KaiTi", "Yuanti SC", "PingFang SC", sans-serif !important;
-  font-weight: 800 !important;
-  letter-spacing: 4rpx !important;
-  text-shadow: 4rpx 4rpx 0 var(--primary) !important;
+  font-family: "Chalkboard SE", "Comic Sans MS", "Yuanti SC", "Arial Rounded MT Bold", "PingFang SC", sans-serif !important;
+  font-weight: 900 !important;
+  letter-spacing: 1rpx !important;
+  text-shadow: 5rpx 6rpx 0 var(--primary-3) !important;
   display: inline-block !important;
-  transform: rotate(-1deg) !important;
+  transform: none !important;
 }
+/* 糖果手写的毫秒沿用 q-plain-num 的蓝字、墨色描边与错位影子。 */
+.quick-page .q-clock-shell.q-shell-doodle .q-clock-ms { flex: 0 0 auto; min-width: 0; }
 .quick-page .q-clock-shell.q-shell-doodle .q-ms-inline {
-  color: var(--primary-2) !important;
-  -webkit-text-fill-color: var(--primary-2) !important;
-  -webkit-text-stroke: 1rpx var(--ink) !important;
-  text-shadow: 2rpx 2rpx 0 var(--primary) !important;
-  font-family: "Kaiti SC", "STKaiti", "KaiTi", "PingFang SC", sans-serif !important;
-  font-weight: 800 !important;
-  transform: rotate(-1deg) !important;
-  display: inline-block !important;
+  flex: 0 0 auto;
+  min-width: 2.1ch;
+  color: var(--primary) !important;
+  -webkit-text-fill-color: var(--primary) !important;
+  background-image: none !important;
+  -webkit-text-stroke: 3rpx var(--edge) !important;
+  text-shadow: 3rpx 4rpx 0 var(--primary-3) !important;
 }
-.quick-page .q-clock-shell.q-shell-doodle .q-ms-dot { color: var(--ink) !important; }
 
-/* ---------- 手绘印章 stamp：实心墨字 + 双线印章框 + 主色硬投影 ---------- */
+/* ---------- 奶糖手写 stamp：深可可手写字 + 单层奶糖暖影，无外壳不倾斜 ---------- */
 .timer-page.clock-stamp .plain-clock,
 .quick-page .q-clock-shell.q-shell-stamp,
 .settings-page .clock-preview .clock-preview-card.q-shell-stamp,
 .settings-page .clock-style-card .clock-style-sample.q-shell-stamp {
-  background: var(--card) !important;
-  border: 3rpx solid var(--primary-2) !important;
-  border-radius: 12rpx !important;
-  box-shadow: inset 0 0 0 3rpx var(--primary), 6rpx 7rpx 0 var(--shadow) !important;
-  padding: 7rpx 20rpx !important;
-  transform: rotate(-1.4deg) !important;
+  background: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  transform: none !important;
 }
 .timer-page.clock-stamp .plain-num,
 .quick-page .q-clock-shell.q-shell-stamp .q-plain-num,
@@ -387,24 +346,15 @@
   background-image: none !important;
   -webkit-background-clip: border-box !important;
   background-clip: border-box !important;
-  font-family: "Arial Black", "Arial Rounded MT Bold", "PingFang SC", "Hiragino Sans GB", sans-serif !important;
-  font-weight: 900 !important;
-  letter-spacing: 2rpx !important;
-  text-shadow: 4rpx 5rpx 0 var(--primary) !important;
+  font-family: "Chalkboard SE", "Comic Sans MS", "Yuanti SC", "Arial Rounded MT Bold", "PingFang SC", sans-serif !important;
+  font-weight: 800 !important;
+  letter-spacing: 3rpx !important;
+  text-shadow: 2rpx 2rpx 0 rgba(255, 255, 255, .55), 4rpx 5rpx 0 var(--primary-3) !important;
   display: inline-block !important;
-  transform: rotate(1.2deg) !important;
+  transform: none !important;
 }
-.quick-page .q-clock-shell.q-shell-stamp .q-ms-inline {
-  color: var(--ink) !important;
-  -webkit-text-fill-color: var(--ink) !important;
-  -webkit-text-stroke: 0 !important;
-  text-shadow: 2rpx 3rpx 0 var(--primary) !important;
-  font-family: "Arial Black", "Arial Rounded MT Bold", "PingFang SC", sans-serif !important;
-  font-weight: 900 !important;
-  transform: rotate(1.2deg) !important;
-  display: inline-block !important;
-}
-.quick-page .q-clock-shell.q-shell-stamp .q-ms-dot { color: var(--ink) !important; }
+/* 奶糖手写的毫秒沿用 q-plain-num 的深可可字与暖影。 */
+.quick-page .q-clock-shell.q-shell-stamp .q-clock-ms { flex: 0 0 auto; min-width: 0; gap: 2rpx; }
 
 /* 设置页预览框是整宽固定卡，旋转外壳会切角；这里只让字歪，边框保持水平 */
 .settings-page .clock-preview .clock-preview-card.q-shell-doodle,
@@ -442,20 +392,7 @@
   transform-origin: 50% 100% !important;
   animation: clk-jellypop 2.8s ease-in-out infinite !important;
 }
-.quick-page .q-clock-shell.q-shell-jellypop .q-ms-inline {
-  color: transparent !important;
-  -webkit-text-fill-color: transparent !important;
-  background-image: linear-gradient(168deg, var(--primary) 0%, var(--primary) 36%, rgba(255, 255, 255, .92) 47%, var(--primary) 60%, var(--primary-2) 100%) !important;
-  -webkit-background-clip: text !important;
-  background-clip: text !important;
-  -webkit-text-stroke: 1rpx var(--edge) !important;
-  font-family: "Arial Rounded MT Bold", "Yuanti SC", "PingFang SC", sans-serif !important;
-  font-weight: 800 !important;
-  display: inline-block !important;
-  transform-origin: 50% 100% !important;
-  animation: clk-jellypop 2.8s ease-in-out infinite !important;
-}
-.quick-page .q-clock-shell.q-shell-jellypop .q-ms-dot { color: var(--ink) !important; }
+/* 果冻弹跳的毫秒沿用 q-plain-num 的渐变填充、描边和弹动。 */
 
 @keyframes clk-jellypop {
   0%, 100% { transform: scale(1, 1); }
@@ -465,17 +402,12 @@
 
 
 /* ---------- 设置页深色预览卡（--panel 底）里换成浅色墨，否则深字压在深底上看不见 ---------- */
-.settings-page .clock-preview .clock-preview-card.q-shell-doodle .q-plain-num {
-  color: var(--primary) !important;
-  -webkit-text-fill-color: var(--primary) !important;
-  -webkit-text-stroke: 2rpx var(--on-panel) !important;
-  text-shadow: 3rpx 3rpx 0 var(--on-panel-warm) !important;
-}
+/* 设置页大预览与列表小卡统一走基础配色，避免同一皮肤两处颜色不一致 */
 .settings-page .clock-preview .clock-preview-card.q-shell-stamp .q-plain-num {
-  color: var(--on-panel) !important;
-  -webkit-text-fill-color: var(--on-panel) !important;
-  -webkit-text-stroke: 4rpx var(--on-panel-warm) !important;
-  text-shadow: 6rpx 7rpx 0 var(--primary) !important;
+  color: var(--ink) !important;
+  -webkit-text-fill-color: var(--ink) !important;
+  -webkit-text-stroke: 0 !important;
+  text-shadow: 3rpx 4rpx 0 var(--primary-3) !important;
 }
 .settings-page .clock-preview .clock-preview-card.q-shell-jellypop .q-plain-num {
   -webkit-text-stroke: 2rpx var(--on-panel) !important;
@@ -487,42 +419,41 @@
 /* 桌面 / 宽窗口：描边与投影改成 px，别被 rpx 放大成粗黑边 */
 @media (min-width: 700px) {
   .timer-page.clock-doodle .plain-num {
-    -webkit-text-stroke-width: 1px !important;
-    text-shadow: 2px 2px 0 var(--primary-2), -1px 2px 0 var(--primary) !important;
+    -webkit-text-stroke-width: 2px !important;
+    text-shadow: 4px 5px 0 var(--primary-3) !important;
   }
   .timer-page.clock-stamp .plain-num {
-    -webkit-text-stroke-width: 2px !important;
-    text-shadow: 3px 4px 0 var(--primary) !important;
+    -webkit-text-stroke-width: 0 !important;
+    text-shadow: 2px 3px 0 var(--primary-3) !important;
   }
   .timer-page.clock-jellypop .plain-num { -webkit-text-stroke-width: 1px !important; }
   .timer-page.clock-doodle .plain-clock,
   .desk.quick-page .q-clock-shell.q-shell-doodle,
   .desk.settings-page .clock-preview .clock-preview-card.q-shell-doodle,
   .desk.settings-page .clock-style-card .clock-style-sample.q-shell-doodle {
-    border-bottom-width: 2px !important;
-    padding-bottom: 4px !important;
+    padding: 0 !important;
   }
   .timer-page.clock-stamp .plain-clock,
   .desk.quick-page .q-clock-shell.q-shell-stamp,
   .desk.settings-page .clock-preview .clock-preview-card.q-shell-stamp,
   .desk.settings-page .clock-style-card .clock-style-sample.q-shell-stamp {
-    border-width: 2px !important;
-    border-radius: 8px !important;
-    box-shadow: inset 0 0 0 2px var(--primary), 4px 5px 0 var(--shadow) !important;
-    padding: 4px 12px !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
   }
 }
 .desk.quick-page .q-clock-shell.q-shell-doodle .q-plain-num,
 .desk.settings-page .clock-preview .clock-preview-card.q-shell-doodle .q-plain-num,
 .desk.settings-page .clock-style-card .clock-style-sample.q-shell-doodle .q-plain-num {
-  -webkit-text-stroke-width: 1px !important;
-  text-shadow: 2px 2px 0 var(--primary-2), -1px 2px 0 var(--primary) !important;
+  -webkit-text-stroke-width: 2px !important;
+  text-shadow: 4px 5px 0 var(--primary-3) !important;
 }
 .desk.quick-page .q-clock-shell.q-shell-stamp .q-plain-num,
 .desk.settings-page .clock-preview .clock-preview-card.q-shell-stamp .q-plain-num,
 .desk.settings-page .clock-style-card .clock-style-sample.q-shell-stamp .q-plain-num {
-  -webkit-text-stroke-width: 2px !important;
-  text-shadow: 3px 4px 0 var(--primary) !important;
+  -webkit-text-stroke-width: 0 !important;
+  text-shadow: 2px 3px 0 var(--primary-3) !important;
 }
 .desk.quick-page .q-clock-shell.q-shell-jellypop .q-plain-num,
 .desk.settings-page .clock-preview .clock-preview-card.q-shell-jellypop .q-plain-num,

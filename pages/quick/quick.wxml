@@ -54,8 +54,8 @@
     </view>
 
     <view class="q-clock-ms {{clockStyle}}" wx:if="{{msShow && clockStyle !== 'flip' && clockStyle !== 'blocks' && clockStyle !== 'led'}}">
-      <text class="q-ms-dot">.</text>
-      <text class="q-ms-inline">{{msText}}</text>
+      <text class="q-plain-num q-ms-dot">.</text>
+      <text class="q-plain-num q-ms-inline">{{msText}}</text>
     </view>
   </view>
 </template>

@@ -52,24 +52,31 @@
     </view>
   </view>
 
-  <!-- 分组试卷列表 -->
-  <view wx:for="{{groups}}" wx:key="id" class="card group-card" style="animation-delay: {{index * 60 + 130}}ms;">
-    <view class="group-head" bindtap="toggleGroup" data-id="{{item.id}}" hover-class="group-press">
-      <view class="group-name">{{item.name}}</view>
+  <!-- 分组试卷列表：分组只做标题，试卷各自成卡，展开时逐张入场 -->
+  <view wx:for="{{groups}}" wx:for-index="gIndex" wx:key="id" class="group-block" style="animation-delay: {{gIndex * 55}}ms;">
+    <view class="group-head {{collapsed[item.id] ? 'is-closed' : 'is-open'}}" bindtap="toggleGroup" data-id="{{item.id}}" hover-class="group-press" aria-label="{{collapsed[item.id] ? '展开' : '收起'}}{{item.name}}">
+      <view class="group-mark">
+        <text class="group-mark-num num">0{{gIndex + 1}}</text>
+      </view>
+      <view class="group-copy">
+        <view class="group-name">{{item.name}}</view>
+        <view class="group-sub">共 {{item.totalQuestions}} 题</view>
+      </view>
       <view class="group-tail">
         <text class="group-count num">{{item.papers.length}} 套</text>
-        <view class="group-arrow {{collapsed[item.id] ? 'rot' : ''}}">→</view>
+        <view class="group-arrow {{collapsed[item.id] ? '' : 'rot'}}">›</view>
       </view>
     </view>
 
-    <view wx:if="{{!collapsed[item.id]}}" class="paper-list anim-fade">
-      <view wx:for="{{item.papers}}" wx:for-item="p" wx:key="id" class="paper-row" style="animation-delay: {{index * 35}}ms;">
+    <view wx:if="{{!collapsed[item.id]}}" class="paper-list">
+      <view wx:for="{{item.papers}}" wx:for-item="p" wx:for-index="pIndex" wx:key="id" class="paper-card" style="animation-delay: {{pIndex * 38}}ms;">
         <navigator class="paper-open" url="/pages/grade/answer/answer?paperId={{p.id}}" hover-class="paper-open-press">
           <view class="paper-main">
             <view class="paper-name">{{p.name}}</view>
             <view class="paper-meta">
               <text class="meta-text">{{p.meta}}</text>
-              <text wx:if="{{p.draftCount > 0}}" class="pill draft-tag num">未交卷 {{p.draftCount}}/{{p.size}}</text>
+              <text wx:if="{{p.edited}}" class="pill edit-tag">已自定义</text>
+              <text wx:if="{{p.draftCount > 0}}" class="pill draft-tag num">未交卷 {{p.draftCount}} 题</text>
             </view>
           </view>
           <view class="paper-tail">
@@ -80,11 +87,20 @@
             <view class="paper-go">›</view>
           </view>
         </navigator>
-        <view class="paper-links">
-          <view class="btn-link" data-id="{{p.id}}" bindtap="goAnswers" hover-class="is-press">导入答案</view>
-          <view wx:if="{{p.draftCount > 0}}" class="btn-link link-reset" data-id="{{p.id}}" data-name="{{p.name}}" bindtap="restartPaper" hover-class="is-press">重做</view>
-          <view wx:if="{{p.custom}}" class="btn-link" data-id="{{p.id}}" bindtap="editCustom" hover-class="is-press">编辑</view>
-          <view class="btn-link" data-id="{{p.id}}" bindtap="goHistory" hover-class="is-press">历史</view>
+        <view class="paper-actions">
+          <view class="paper-action-buttons">
+            <view class="paper-btn" data-id="{{p.id}}" bindtap="goAnswers" hover-class="paper-btn-press">导入答案</view>
+            <view wx:if="{{!p.custom}}" class="paper-btn" data-id="{{p.id}}" bindtap="editPaper" hover-class="paper-btn-press">自定义</view>
+            <view wx:if="{{p.custom}}" class="paper-btn" data-id="{{p.id}}" bindtap="editCustom" hover-class="paper-btn-press">编辑</view>
+          </view>
+          <view class="paper-action-icons">
+            <view wx:if="{{p.draftCount > 0}}" class="paper-icon-btn is-danger" data-id="{{p.id}}" data-name="{{p.name}}" aria-label="清空重做 {{p.name}}" bindtap="restartPaper" hover-class="paper-icon-press">
+              <text class="paper-icon-glyph">↺</text>
+            </view>
+            <view class="paper-icon-btn" data-id="{{p.id}}" aria-label="查看 {{p.name}} 的答题历史" bindtap="goHistory" hover-class="paper-icon-press">
+              <view class="paper-icon paper-icon-clock"></view>
+            </view>
+          </view>
         </view>
       </view>
     </view>

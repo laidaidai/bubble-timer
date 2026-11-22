@@ -1,0 +1,59 @@
+/* 首页「固定」面板：直接复用快捷计时页的整份样式，不另写一套 */
+@import "../../pages/quick/quick.wxss";
+
+/* 嵌进首页时不要占满整屏，也不抢背景 */
+.quick-page.qp-embed {
+  height: 62vh;
+  min-height: 320px;
+  max-height: 620px;
+  background: transparent;
+  overflow: visible;
+}
+.quick-page.qp-embed .quick-tabs { margin: 0 0 12rpx; }
+.quick-page.qp-embed .quick-body { padding: 0 0 8rpx; }
+.quick-page.qp-embed.desk { height: 100%; max-height: none; }
+.qp-embed.desk .quick-tabs { margin: 0 0 10px; }
+.qp-embed.desk .quick-body { padding: 0 0 95px !important; }
+.qp-embed.desk .quick-body.picker-body { padding-bottom: 6px !important; }
+
+/* 嵌进首页后不再按内容高度顶在上面：占满首页给的可用高度，
+ * 有钟面的状态由 body / card / stage 三层 flex 一起把时钟压到竖直中间。 */
+.quick-page.qp-embed { height: 100%; min-height: 0; max-height: none; }
+.qp-embed .quick-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0 0 140rpx !important;
+}
+.qp-embed .quick-body.picker-body { overflow-y: auto; padding-bottom: 8rpx !important; }
+.qp-embed .quick-clock-card { flex: 1 1 auto; min-height: 0; }
+.qp-embed .quick-clock-card.picker-mode { flex: 0 0 auto; }
+.qp-embed .quick-clock-stage { flex: 1 1 auto; min-height: 0; }
+.qp-embed .time-picker { max-height: 30vh; }
+/* 首页里操作按钮悬在原生 dock 正上方，不再紧跟时钟、也不再被内容顶高 */
+.qp-embed .quick-actions {
+  position: fixed;
+  left: 24rpx;
+  right: 24rpx;
+  bottom: calc(env(safe-area-inset-bottom) + 114rpx);
+  width: auto;
+  max-width: none;
+  z-index: 90;
+  padding: 0;
+  margin: 0;
+}
+.qp-embed.desk .quick-actions {
+  left: 26px;
+  right: 26px;
+  width: auto;
+  max-width: none;
+  bottom: calc(env(safe-area-inset-bottom) + 62px);
+}
+/* 时钟本体也不许越出面板：夹在面板宽度内，超出就裁在面板里而不是溢出屏幕 */
+.qp-embed .quick-clock-stage { width: 100%; overflow: hidden; }
+.qp-embed .clock-display { max-width: 100%; }
+.qp-embed .clock-style-hint { display: none; }
+/* 量尺寸时不要先用 max-width 把外壳夹窄，否则反推出来的原始宽度偏小、字号会被放大到溢出 */
+.qp-embed .q-clock-shell { max-width: none; max-height: none; }

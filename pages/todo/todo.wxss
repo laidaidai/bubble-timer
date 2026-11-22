@@ -39,7 +39,7 @@
 .todo-foot { margin: 40rpx 0 20rpx; color: var(--text-4); text-align: center; font-size: 19rpx; }
 
 /* 唯一添加按钮 */
-.fab { position: fixed; right: 40rpx; bottom: calc(48rpx + env(safe-area-inset-bottom)); box-sizing: border-box; width: 108rpx; height: 108rpx; display: flex; align-items: center; justify-content: center; color: var(--on-primary); background: var(--primary); border: 3rpx solid var(--edge); border-radius: 999rpx; box-shadow: 7rpx 8rpx 0 var(--shadow); z-index: 20; }
+.fab { position: fixed; right: 40rpx; bottom: calc(128rpx + env(safe-area-inset-bottom)); box-sizing: border-box; width: 108rpx; height: 108rpx; display: flex; align-items: center; justify-content: center; color: var(--on-primary); background: var(--primary); border: 3rpx solid var(--edge); border-radius: 999rpx; box-shadow: 7rpx 8rpx 0 var(--shadow); z-index: 20; }
 .fab-plus { display: block; color: var(--on-primary); font-size: 46rpx; font-weight: 900; line-height: 1; text-align: center; }
 
 /* 月度日程 */
@@ -189,7 +189,7 @@
 /* 悬浮 +（控件，不放大，贴右下留边距） */
 .desk .fab {
   right: 22px;
-  bottom: calc(27px + env(safe-area-inset-bottom));
+  bottom: calc(72px + env(safe-area-inset-bottom));
   width: 60px;
   height: 60px;
   border-width: 2px;

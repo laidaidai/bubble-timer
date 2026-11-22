@@ -1,6 +1,6 @@
 const themeBind = require('../utils/theme-bind.js');
 const theme = require('../utils/theme.js');
-const { BANKS } = require('../utils/data.js');
+const { BANKS, getPaper } = require('../utils/data.js');
 const store = require('../utils/store.js');
 const custom = require('../utils/custom.js');
 
@@ -42,7 +42,7 @@ Page({
       app.globalData.revealCustom = false;
       const bank = BANKS.find((b) => b.id === 'bank-custom');
       if (bank) {
-        const collapsed = this.allCollapsed(bank);
+        const collapsed = this.defaultCollapsed(bank);
         collapsed['group-custom'] = false;
         this.setData({ bankId: 'bank-custom', collapsed });
       }
@@ -87,21 +87,27 @@ Page({
     });
     const groups = bank.groups.map((g) => {
       const papers = g.papers.map((p) => {
+        // 预设卷可能被用户改过题量 / 分值，列表要显示改后的卷面，而不是内置原始值
+        const found = getPaper(p.id);
+        const paper = found ? found.paper : p;
         const last = store.getLastScore(p.id);
         const lastScore = last === null ? p.lastScore : last;
-        const meta = `共 ${p.total} 题`;
+        const meta = `共 ${paper.total} 题`;
         // 有草稿就在卡片上说明「上次没交卷、已答多少」，否则用户不知道为什么点进去是半套答案
         const draft = store.getDraft(p.id) || {};
         const draftCount = Object.keys(draft).filter((k) => draft[k]).length;
-        return Object.assign({}, p, {
+        return Object.assign({}, paper, {
           lastScore: lastScore,
           meta: meta,
           hasScore: lastScore !== null,
           draftCount: draftCount,
-          size: p.total,
+          size: paper.total,
         });
       });
-      return Object.assign({}, g, { papers: papers });
+      return Object.assign({}, g, {
+        papers: papers,
+        totalQuestions: papers.reduce((sum, p) => sum + (Number(p.total) || 0), 0),
+      });
     });
 
     const stored = store.getRecords();
@@ -126,17 +132,17 @@ Page({
     });
   },
 
-  // 首页默认把分组收起来：先看题库与分组标题，点哪组再展开
-  allCollapsed(bank) {
+  // 首页默认展开第一组，进入页面即可看到试卷卡；其余分组保持收起
+  defaultCollapsed(bank) {
     const map = {};
-    for (let i = 0; i < bank.groups.length; i += 1) map[bank.groups[i].id] = true;
+    for (let i = 0; i < bank.groups.length; i += 1) map[bank.groups[i].id] = i > 0;
     return map;
   },
 
   switchBank(e) {
     const id = e.currentTarget.dataset.id;
     const bank = BANKS.find((b) => b.id === id) || BANKS[0];
-    this.setData({ bankId: bank.id, collapsed: this.allCollapsed(bank) });
+    this.setData({ bankId: bank.id, collapsed: this.defaultCollapsed(bank) });
     this.refreshGroups();
   },
 
@@ -169,6 +175,12 @@ Page({
   editCustom(e) {
     const { id } = e.currentTarget.dataset;
     wx.navigateTo({ url: `/pages/grade/custom/custom?id=${id}` });
+  },
+
+  // 预设卷也允许改题量 / 分值：同一个表单页，用 paperId 区分，不动内置题库文件
+  editPaper(e) {
+    const { id } = e.currentTarget.dataset;
+    wx.navigateTo({ url: `/pages/grade/custom/custom?paperId=${id}` });
   },
 
   goHistory(e) {

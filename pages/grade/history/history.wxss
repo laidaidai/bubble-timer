@@ -9,161 +9,358 @@
   letter-spacing: -1rpx;
 }
 
-/* 顶部工具条：再练一次做成主按钮，次数收进胶囊 */
+/* 顶部工具条：一个短动作 + 一个计数胶囊 */
 .hist-tools {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 14rpx;
   margin: 0 0 20rpx;
-  padding: 12rpx 16rpx;
-  background: var(--cream-1);
-  border: 2rpx solid var(--edge-soft);
-  border-radius: 20rpx;
-  box-shadow: 3rpx 3rpx 0 var(--shadow-soft);
   box-sizing: border-box;
 }
-.hist-count {
-  flex: 0 0 auto;
-  padding: 4rpx 11rpx;
-  color: var(--text-3);
-  background: var(--card);
-  border: 2rpx solid var(--line-strong);
-  border-radius: 999rpx;
-  font-size: 20rpx;
-  font-weight: 800;
-}
-
-/* 空状态：大号 0 当一张标签，不再只放两行小字 */
-.empty {
-  padding: 56rpx 28rpx;
-  text-align: center;
-  border-style: dashed;
-  border-color: var(--edge-soft);
-  box-shadow: 5rpx 6rpx 0 var(--shadow-soft);
-}
-.empty-mark {
-  width: 96rpx;
-  height: 96rpx;
-  margin: 0 auto 18rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-warm);
-  background: var(--accent-bg);
-  border: 3rpx solid var(--edge);
-  border-radius: 50%;
-  box-shadow: 4rpx 5rpx 0 var(--shadow-soft);
-  font-size: 48rpx;
+.retry-btn { padding: 0 18rpx; }
+.retry-glyph {
+  color: inherit;
+  font-size: 27rpx;
   font-weight: 900;
   line-height: 1;
-  transform: rotate(-6deg);
 }
-.empty-title { font-size: 30rpx; font-weight: 900; }
-.empty-sub { font-size: 23rpx; color: var(--text-3); margin-top: 10rpx; }
+.retry-label { font-size: 21rpx; font-weight: 900; }
 
-/* 记录卡：左侧一条主色书签，右侧大分数 */
+.hist-count {
+  flex: 0 0 auto;
+  min-height: 44rpx;
+  padding: 0 12rpx;
+  display: inline-flex;
+  align-items: center;
+  gap: 6rpx;
+  box-sizing: border-box;
+  color: var(--text-2);
+  background: var(--cream-1);
+  border: 2rpx solid var(--line);
+  border-radius: 999rpx;
+  font-size: 19rpx;
+  font-weight: 800;
+}
+.hist-count-num { color: var(--ink); font-size: 22rpx; font-weight: 900; }
+.hist-count-unit { font-size: 19rpx; }
+.hist-stack {
+  width: 18rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 2rpx;
+  margin-right: 1rpx;
+}
+.hist-line {
+  height: 2rpx;
+  background: var(--text-3);
+  border-radius: 2rpx;
+}
+
+/* 空状态：只留一句结论和一句去向 */
+.empty {
+  padding: 34rpx 28rpx 36rpx;
+  text-align: center;
+  border-color: var(--line);
+  box-shadow: 4rpx 5rpx 0 var(--shadow-soft);
+}
+.empty-title { font-size: 28rpx; font-weight: 900; }
+.empty-sub { font-size: 22rpx; color: var(--text-3); margin-top: 8rpx; }
+
+/* 记录卡：日期 + 得分 → 四项图标统计 → 查看 / 删除图标 */
 .record-row {
-  position: relative;
+  width: 100%;
+  margin-bottom: 14rpx;
+  padding: 18rpx 20rpx;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  overflow: hidden;
+  background: var(--card);
+  border: 2rpx solid var(--line-strong);
+  border-radius: 22rpx;
+  box-shadow: 3rpx 4rpx 0 var(--shadow-soft);
+  transition: transform .12s cubic-bezier(.2,.8,.3,1), box-shadow .12s cubic-bezier(.2,.8,.3,1), background .12s ease;
+}
+.record-pressed {
+  transform: translate(1rpx, 2rpx);
+  box-shadow: none;
+  background: var(--cream-1);
+}
+
+.record-paper {
+  margin-bottom: 6rpx;
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 27rpx;
+  font-weight: 900;
+  line-height: 1.25;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.record-head {
+  display: flex;
+  align-items: flex-end;
+  gap: 12rpx;
+}
+.record-when {
+  flex: 1;
+  min-width: 0;
+  padding-bottom: 4rpx;
   display: flex;
   align-items: center;
-  gap: 18rpx;
-  padding: 20rpx 22rpx 20rpx 28rpx;
-  margin-bottom: 18rpx;
-  overflow: hidden;
-  border-radius: 26rpx;
-  box-shadow: 5rpx 6rpx 0 var(--shadow-soft);
+  gap: 8rpx;
 }
-.record-row::before {
+.record-clock {
+  position: relative;
+  flex: 0 0 auto;
+  width: 22rpx;
+  height: 22rpx;
+  box-sizing: border-box;
+  color: var(--text-3);
+  border: 2rpx solid currentColor;
+  border-radius: 50%;
+}
+.record-clock::before {
   content: "";
   position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 8rpx;
-  background: var(--primary);
-  border-right: 2rpx solid var(--edge);
+  left: 9rpx;
+  top: 4rpx;
+  width: 2rpx;
+  height: 8rpx;
+  background: currentColor;
+  border-radius: 2rpx;
 }
-.record-main { flex: 1; min-width: 0; }
+.record-clock::after {
+  content: "";
+  position: absolute;
+  left: 10rpx;
+  top: 10rpx;
+  width: 7rpx;
+  height: 2rpx;
+  background: currentColor;
+  border-radius: 2rpx;
+  transform-origin: left center;
+  transform: rotate(32deg);
+}
+.record-time {
+  overflow: hidden;
+  color: var(--text-3);
+  font-size: 22rpx;
+  font-weight: 800;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.record-score {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: baseline;
+  gap: 3rpx;
+  color: var(--ink);
+  font-size: 52rpx;
+  font-weight: 900;
+  line-height: .9;
+  letter-spacing: -2rpx;
+}
+.record-score-value { color: inherit; }
+.record-unit {
+  color: var(--text-3);
+  font-size: 20rpx;
+  font-weight: 800;
+  letter-spacing: 0;
+}
 
-.record-paper { overflow: hidden; font-size: 29rpx; font-weight: 900; white-space: nowrap; text-overflow: ellipsis; }
-.record-time { font-size: 21rpx; color: var(--text-3); margin-top: 5rpx; }
-.record-meta {
+.record-stats {
+  margin-top: 10rpx;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 7rpx;
-  margin-top: 9rpx;
-  color: var(--text-2);
-  font-size: 20rpx;
 }
-.meta-right {
-  padding: 2rpx 9rpx;
+.stat-chip {
+  min-height: 44rpx;
+  padding: 0 10rpx;
+  display: inline-flex;
+  align-items: center;
+  gap: 5rpx;
+  box-sizing: border-box;
+  border: 2rpx solid var(--line);
+  border-radius: 999rpx;
+  font-size: 24rpx;
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+}
+.stat-mark {
+  width: 24rpx;
+  color: inherit;
+  font-size: 26rpx;
+  font-weight: 900;
+  line-height: 1;
+  text-align: center;
+}
+.stat-value { color: inherit; font-size: 24rpx; font-weight: 900; }
+.stat-empty {
+  flex: 0 0 auto;
+  width: 22rpx;
+  height: 22rpx;
+  box-sizing: border-box;
+  border: 2rpx solid currentColor;
+  border-radius: 5rpx;
+}
+.is-right {
   color: var(--success-text);
   background: var(--success-bg);
-  border: 2rpx solid var(--success);
-  border-radius: 999rpx;
-  font-weight: 800;
+  border-color: var(--success-line);
 }
-.meta-wrong {
-  padding: 2rpx 9rpx;
+.is-wrong {
   color: var(--danger-text);
   background: var(--danger-bg);
-  border: 2rpx solid var(--danger);
-  border-radius: 999rpx;
-  font-weight: 800;
+  border-color: var(--danger-line);
 }
-.meta-blank {
-  padding: 2rpx 9rpx;
+.is-blank {
   color: var(--text-3);
+  background: var(--chip-neutral);
+  border-color: var(--line);
+}
+.is-acc {
+  color: var(--primary-3);
   background: var(--cream-2);
-  border: 2rpx solid var(--line-strong);
-  border-radius: 999rpx;
-  font-weight: 800;
+  border-color: var(--line-strong);
 }
-.meta-acc { margin-left: auto; color: var(--text-3); font-weight: 800; font-variant-numeric: tabular-nums; }
-
-.record-right {
+.stat-target {
+  position: relative;
   flex: 0 0 auto;
+  width: 22rpx;
+  height: 22rpx;
+  box-sizing: border-box;
+  border: 2rpx solid currentColor;
+  border-radius: 50%;
+}
+.stat-target::after {
+  content: "";
+  position: absolute;
+  inset: 4rpx;
+  box-sizing: border-box;
+  border: 2rpx solid currentColor;
+  border-radius: 50%;
+}
+
+.record-actions {
+  flex: 0 0 auto;
+  margin-left: auto;
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 10rpx;
+  align-items: center;
+  gap: 8rpx;
 }
-
-.record-score {
-  color: var(--ink);
-  font-size: 54rpx;
+.icon-btn {
+  width: 56rpx;
+  height: 56rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  color: var(--text-2);
+  background: var(--card);
+  border: 2rpx solid var(--line-strong);
+  border-radius: 14rpx;
+  transition: transform .12s cubic-bezier(.2,.8,.3,1), background .12s ease;
+}
+.icon-btn.is-danger {
+  color: var(--danger-text);
+  border-color: var(--danger-line);
+}
+.icon-btn-pressed {
+  transform: translate(2rpx, 3rpx);
+  background: var(--cream-3);
+}
+.chev {
+  color: inherit;
+  font-size: 31rpx;
   font-weight: 900;
-  line-height: .95;
-  letter-spacing: -2rpx;
+  line-height: 1;
+  transform: translateY(-1rpx);
 }
-.record-unit { font-size: 21rpx; font-weight: 800; margin-left: 3rpx; color: var(--text-3); }
+.trash {
+  position: relative;
+  width: 22rpx;
+  height: 24rpx;
+  box-sizing: border-box;
+  color: inherit;
+  border: 2rpx solid currentColor;
+  border-top: 0;
+  border-radius: 0 0 6rpx 6rpx;
+  background:
+    linear-gradient(currentColor, currentColor) 7rpx 5rpx / 2rpx 11rpx no-repeat,
+    linear-gradient(currentColor, currentColor) 13rpx 5rpx / 2rpx 11rpx no-repeat;
+}
+.trash::before {
+  content: "";
+  position: absolute;
+  left: -4rpx;
+  top: -5rpx;
+  width: 26rpx;
+  height: 2rpx;
+  background: currentColor;
+  border-radius: 2rpx;
+}
+.trash::after {
+  content: "";
+  position: absolute;
+  left: 5rpx;
+  top: -9rpx;
+  width: 8rpx;
+  height: 4rpx;
+  box-sizing: border-box;
+  border: 2rpx solid currentColor;
+  border-bottom: 0;
+  border-radius: 2rpx 2rpx 0 0;
+}
 
-.record-actions { display: flex; gap: 8rpx; }
-.record-actions .btn { min-height: 46rpx; padding: 0 14rpx; font-size: 19rpx; box-shadow: 2rpx 2rpx 0 var(--shadow-soft); }
-.del { color: var(--danger-text); border-color: var(--danger); }
-
-/* 桌面档：rpx 随窗口放大，这里统一 px 化（px ≈ rpx × 0.56） */
+/* 桌面档：rpx 随窗口放大，这里统一 px 化 */
 @media (min-width: 700px) {
   .history-page { padding-top: 15px; }
   .page-title { font-size: 22px; margin-bottom: 13px; }
-  .hist-tools { margin-bottom: 11px; padding: 7px 9px; border-width: 2px; border-radius: 11px; box-shadow: 2px 2px 0 var(--shadow-soft); }
-  .hist-count { padding: 2px 6px; font-size: 11px; border-width: 1px; }
+  .hist-tools { margin-bottom: 11px; gap: 8px; }
+  .retry-btn { padding: 0 10px; }
+  .retry-glyph { font-size: 15px; }
+  .retry-label { font-size: 12px; }
+  .hist-count { min-height: 25px; padding: 0 8px; gap: 4px; border-width: 1px; font-size: 11px; }
+  .hist-count-num { font-size: 12px; }
+  .hist-count-unit { font-size: 11px; }
+  .hist-stack { width: 10px; gap: 1px; margin-right: 1px; }
+  .hist-line { height: 1px; }
+
   .empty { padding: 32px 16px; box-shadow: 3px 4px 0 var(--shadow-soft); }
-  .empty-mark { width: 54px; height: 54px; margin-bottom: 10px; border-width: 2px; border-radius: 50%; box-shadow: 2px 3px 0 var(--shadow-soft); font-size: 27px; }
   .empty-title { font-size: 17px; }
   .empty-sub { font-size: 13px; margin-top: 6px; }
-  .record-row { gap: 10px; padding: 11px 12px 11px 16px; margin-bottom: 10px; border-radius: 15px; box-shadow: 3px 4px 0 var(--shadow-soft); }
-  .record-row::before { width: 5px; border-right-width: 1px; }
-  .record-paper { font-size: 17px; }
-  .record-time { font-size: 12px; margin-top: 3px; }
-  .record-meta { gap: 4px; margin-top: 5px; font-size: 11px; }
-  .meta-right, .meta-wrong, .meta-blank { padding: 1px 5px; border-width: 1px; }
-  .meta-acc { font-size: 11px; }
-  .record-right { gap: 6px; }
-  .record-score { font-size: 30px; letter-spacing: -1px; }
-  .record-unit { font-size: 12px; }
-  .record-actions { gap: 4px; }
-  .record-actions .btn { min-height: 26px; padding: 0 8px; font-size: 11px; box-shadow: 1px 1px 0 var(--shadow-soft); }
+
+  .record-row { margin-bottom: 9px; padding: 11px 12px; border-width: 1px; border-radius: 13px; box-shadow: 2px 3px 0 var(--shadow-soft); }
+  .record-paper { margin-bottom: 3px; font-size: 17px; }
+  .record-head { gap: 8px; }
+  .record-when { padding-bottom: 2px; gap: 5px; }
+  .record-clock { width: 12px; height: 12px; border-width: 1px; }
+  .record-clock::before { left: 5px; top: 2px; width: 1px; height: 4px; }
+  .record-clock::after { left: 5px; top: 5px; width: 4px; height: 1px; }
+  .record-time { font-size: 13px; }
+  .record-score { gap: 2px; font-size: 30px; letter-spacing: -1px; }
+  .record-unit { font-size: 11px; }
+
+  .record-stats { margin-top: 6px; gap: 4px; }
+  .stat-chip { min-height: 26px; padding: 0 7px; gap: 3px; border-width: 1px; font-size: 14px; }
+  .stat-mark { width: 13px; font-size: 15px; }
+  .stat-value { font-size: 14px; }
+  .stat-empty { width: 13px; height: 13px; border-width: 1px; border-radius: 3px; }
+  .stat-target { width: 13px; height: 13px; border-width: 1px; }
+  .stat-target::after { inset: 2px; border-width: 1px; }
+
+  .record-actions { gap: 5px; }
+  .icon-btn { width: 32px; height: 32px; border-width: 1px; border-radius: 8px; }
+  .chev { font-size: 18px; }
+  .trash { width: 12px; height: 14px; border-width: 1px; border-radius: 0 0 3px 3px; background: none; }
+  .trash::before { left: -2px; top: -3px; width: 15px; height: 1px; }
+  .trash::after { left: 3px; top: -6px; width: 4px; height: 3px; border-width: 1px; }
 }

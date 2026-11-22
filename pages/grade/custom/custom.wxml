@@ -1,6 +1,6 @@
 <view class="topbar grade-topbar theme-{{theme}}" style="{{themeStyle}}" wx:if="{{!isDesktop}}">
   <view class="back-icon" bindtap="goBack" aria-label="返回">‹</view>
-  <view class="topbar-title">{{editingId ? '编辑自定义卷' : '新建自定义卷'}}</view>
+  <view class="topbar-title">{{isPreset ? '编辑卷面' : (editingId ? '编辑自定义卷' : '新建自定义卷')}}</view>
   <view class="topbar-spacer"></view>
 </view>
 <view class="page custom-page {{isDesktop ? 'desk' : ''}} {{!isDesktop ? 'has-grade-topbar' : ''}} grade-root theme-{{theme}}" style="{{themeStyle}}">
@@ -15,24 +15,27 @@
       bindinput="onName"
     />
 
-    <view class="preset-block">
-      <view class="preset-label">模板</view>
-      <view class="presets">
-        <view
-          wx:for="{{presets}}"
-          wx:key="id"
-          class="preset"
-          data-id="{{item.id}}"
-          bindtap="applyPreset"
-          hover-class="preset-press"
-        >{{item.label}}</view>
-      </view>
+    <view wx:if="{{!isPreset}}" class="presets">
+      <view
+        wx:for="{{presets}}"
+        wx:key="id"
+        class="preset"
+        data-id="{{item.id}}"
+        style="animation-delay: {{index * 26}}ms;"
+        bindtap="applyPreset"
+        hover-class="preset-press"
+      >{{item.label}}</view>
     </view>
   </view>
 
   <view class="mod-list">
-    <view wx:for="{{modules}}" wx:key="key" class="card mod-card anim-rise" style="animation-delay: {{index * 40 + 60}}ms;">
-      <view class="mod-body">
+    <view
+      wx:for="{{modules}}"
+      wx:key="key"
+      class="card mod-card grade-card-in {{dragging && dragIndex === index ? 'is-drag' : ''}}"
+      style="{{dragIndex === index ? dragStyle : (dragStyles[index] || '')}} animation-delay: {{index * 45}}ms;"
+    >
+      <view class="mod-head">
         <input
           class="mod-name-input"
           value="{{item.nameText}}"
@@ -44,28 +47,132 @@
           bindinput="onModName"
           bindblur="normalizeName"
         />
-        <view wx:if="{{item.perText}}" class="mod-per num">{{item.perText}}</view>
-        <view class="mod-fields">
-          <view class="stepper">
-            <view class="step" data-key="{{item.key}}" data-delta="-1" aria-label="减少题量" bindtap="step" hover-class="step-press">−</view>
-            <view class="step-mid">
-              <input
-                class="step-num num"
-                type="number"
-                value="{{item.countText}}"
-                data-key="{{item.key}}"
-                data-field="count"
-                aria-label="题量"
-                bindinput="edit"
-                bindblur="normalize"
-              />
-              <text class="unit">题</text>
-            </view>
-            <view class="step" data-key="{{item.key}}" data-delta="1" aria-label="增加题量" bindtap="step" hover-class="step-press">+</view>
+        <view class="mod-tools">
+          <view
+            class="mod-sub {{item.hasParts ? 'has-parts' : ''}}"
+            data-index="{{index}}"
+            aria-label="{{item.hasParts ? (item.subOpen ? '收起小节' : '展开小节') : '细分小节'}}"
+            bindtap="toggleSub"
+            hover-class="mod-sub-press"
+          >
+            <text class="mod-sub-plus">+</text>
+            <text wx:if="{{item.hasParts}}" class="mod-sub-badge num">{{item.parts.length}}</text>
           </view>
-          <view class="point-box">
+          <view class="mod-del" data-key="{{item.key}}" aria-label="移除 {{item.displayName}}" bindtap="removeModule" hover-class="mod-del-press">×</view>
+          <view
+            class="drag-handle"
+            data-index="{{index}}"
+            aria-label="按住拖动 {{item.displayName}}"
+            bindtouchstart="touchStart"
+            bindlongpress="activateDrag"
+            catchtouchmove="touchMove"
+            bindtouchend="touchEnd"
+            bindtouchcancel="touchEnd"
+          >☰</view>
+        </view>
+      </view>
+
+      <view wx:if="{{item.perText || item.hasParts}}" class="mod-subline">
+        <view class="mod-meta">
+          <text wx:if="{{item.perText}}" class="mod-per num">{{item.perText}}</text>
+          <text wx:if="{{item.hasParts}}" class="mod-total num">{{item.count}} 题 · {{item.pointsText}} 分</text>
+        </view>
+      </view>
+
+      <view wx:if="{{item.subOpen && item.hasParts}}" class="sub-list">
+        <view wx:for="{{item.parts}}" wx:for-item="part" wx:for-index="partIndex" wx:key="uid" class="sub-row" style="animation-delay: {{partIndex * 35}}ms;">
+          <view class="sub-top">
             <input
-              class="point-num num"
+              class="sub-name"
+              value="{{part.labelText}}"
+              maxlength="12"
+              placeholder="{{part.displayLabel}}"
+              placeholder-class="sub-name-ph"
+              data-index="{{index}}"
+              data-pi="{{partIndex}}"
+              aria-label="小节名"
+              bindinput="onSubName"
+              bindblur="normalizeSubName"
+            />
+            <text class="sub-range num">{{part.rangeText}}</text>
+            <view class="sub-del" data-index="{{index}}" data-pi="{{partIndex}}" aria-label="删除这个小节" bindtap="removeSub" hover-class="sub-del-press">×</view>
+          </view>
+
+          <view class="mod-stats sub-stats">
+            <view class="stat-row">
+              <text class="stat-label">题量</text>
+              <view class="stat-value">
+                <input
+                  class="stat-num num"
+                  type="number"
+                  value="{{part.countText}}"
+                  data-index="{{index}}"
+                  data-pi="{{partIndex}}"
+                  data-field="count"
+                  aria-label="小节题量"
+                  bindinput="editSub"
+                  bindblur="normalizeSub"
+                />
+              </view>
+              <view class="stat-steps">
+                <view class="stat-step" data-index="{{index}}" data-pi="{{partIndex}}" data-field="count" data-delta="-1" aria-label="减少小节题量" bindtap="stepSub" hover-class="stat-step-press">−</view>
+                <view class="stat-step is-plus" data-index="{{index}}" data-pi="{{partIndex}}" data-field="count" data-delta="1" aria-label="增加小节题量" bindtap="stepSub" hover-class="stat-step-press">+</view>
+              </view>
+            </view>
+            <view class="stat-row">
+              <text class="stat-label">分值</text>
+              <view class="stat-value">
+                <input
+                  class="stat-num num"
+                  type="digit"
+                  value="{{part.pointsText}}"
+                  data-index="{{index}}"
+                  data-pi="{{partIndex}}"
+                  data-field="points"
+                  aria-label="小节分值"
+                  bindinput="editSub"
+                  bindblur="normalizeSub"
+                />
+              </view>
+              <view class="stat-steps">
+                <view class="stat-step" data-index="{{index}}" data-pi="{{partIndex}}" data-field="points" data-delta="-0.5" aria-label="减少小节分值" bindtap="stepSub" hover-class="stat-step-press">−</view>
+                <view class="stat-step is-plus" data-index="{{index}}" data-pi="{{partIndex}}" data-field="points" data-delta="0.5" aria-label="增加小节分值" bindtap="stepSub" hover-class="stat-step-press">+</view>
+              </view>
+            </view>
+          </view>
+        </view>
+
+        <view class="sub-actions">
+          <view class="sub-add" data-index="{{index}}" aria-label="新增小节" bindtap="addSub" hover-class="sub-add-press">+</view>
+          <view class="sub-merge" data-index="{{index}}" bindtap="mergeSub" hover-class="sub-press">合并</view>
+        </view>
+      </view>
+
+      <view wx:if="{{!item.hasParts}}" class="mod-stats">
+        <view class="stat-row">
+          <text class="stat-label">题量</text>
+          <view class="stat-value">
+            <input
+              class="stat-num num"
+              type="number"
+              value="{{item.countText}}"
+              data-key="{{item.key}}"
+              data-field="count"
+              aria-label="题量"
+              bindinput="edit"
+              bindblur="normalize"
+            />
+          </view>
+          <view class="stat-steps">
+            <view class="stat-step" data-key="{{item.key}}" data-field="count" data-delta="-1" aria-label="减少题量" bindtap="step" hover-class="stat-step-press">−</view>
+            <view class="stat-step is-plus" data-key="{{item.key}}" data-field="count" data-delta="1" aria-label="增加题量" bindtap="step" hover-class="stat-step-press">+</view>
+          </view>
+        </view>
+        <view class="stat-row">
+          <text class="stat-label">分值</text>
+          <view class="stat-value">
+            <input
+              class="stat-num num"
               type="digit"
               value="{{item.pointsText}}"
               data-key="{{item.key}}"
@@ -74,14 +181,12 @@
               bindinput="edit"
               bindblur="normalize"
             />
-            <text class="unit">分</text>
+          </view>
+          <view class="stat-steps">
+            <view class="stat-step" data-key="{{item.key}}" data-field="points" data-delta="-0.5" aria-label="减少分值" bindtap="step" hover-class="stat-step-press">−</view>
+            <view class="stat-step is-plus" data-key="{{item.key}}" data-field="points" data-delta="0.5" aria-label="增加分值" bindtap="step" hover-class="stat-step-press">+</view>
           </view>
         </view>
-      </view>
-      <view class="mod-acts">
-        <view class="mod-act {{index === 0 ? 'off' : ''}}" data-index="{{index}}" data-delta="-1" aria-label="上移 {{item.displayName}}" bindtap="moveModule" hover-class="act-press">↑</view>
-        <view class="mod-act {{index === modules.length - 1 ? 'off' : ''}}" data-index="{{index}}" data-delta="1" aria-label="下移 {{item.displayName}}" bindtap="moveModule" hover-class="act-press">↓</view>
-        <view class="mod-act del" data-key="{{item.key}}" aria-label="移除 {{item.displayName}}" bindtap="removeModule" hover-class="del-press">×</view>
       </view>
     </view>
   </view>
@@ -91,14 +196,15 @@
     <text>添加模块</text>
   </view>
 
-  <view wx:if="{{editingId}}" class="delete-row" aria-label="删除这卷" bindtap="deleteCurrent" hover-class="delete-press">删除这卷</view>
+  <view wx:if="{{canDelete}}" class="delete-row" aria-label="删除这卷" bindtap="deleteCurrent" hover-class="delete-press">删除这卷</view>
+  <view wx:if="{{isPreset}}" class="reset-row" aria-label="恢复默认题量和分值" bindtap="resetPreset" hover-class="reset-press">恢复默认分值</view>
 
   <view class="save-bar">
     <view class="bar-info">
       <view class="bar-total num">共 {{totalCount}} 题 · {{sumText}} / 100 分</view>
-      <view class="bar-diff {{valid ? 'ok' : 'bad'}}">{{valid ? '分值已配满' : diffText}}</view>
+      <view class="bar-diff bad" wx:if="{{!valid}}">{{diffText}}</view>
     </view>
     <view wx:if="{{!valid && totalCount > 0}}" class="bar-fix" aria-label="补齐差额" bindtap="fillRest" hover-class="bar-fix-press">补齐</view>
-    <view class="btn btn-amber bar-save {{valid ? '' : 'is-off'}}" aria-label="保存自定义卷" bindtap="save" hover-class="btn-pressed">保存</view>
+    <view class="btn bar-save bar-save-strong {{valid ? '' : 'is-off'}}" aria-label="{{isPreset ? '保存卷面修改' : '保存自定义卷'}}" bindtap="save" hover-class="btn-pressed">保存</view>
   </view>
 </view>

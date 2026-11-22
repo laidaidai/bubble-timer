@@ -1,0 +1,6 @@
+{
+  "component": true,
+  "usingComponents": {
+    "flip-clock": "../flip-clock/index"
+  }
+}

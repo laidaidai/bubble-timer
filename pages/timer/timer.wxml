@@ -1,4 +1,4 @@
-<view class="timer-page theme-{{theme}} clock-{{clockStyle}} {{compact ? 'compact' : ''}} {{immersive ? 'immersive' : 'normal'}} {{immersiveAnim ? 'immersive-anim' : ''}} {{immersiveLeaving ? 'immersive-leaving' : ''}} {{clockMorph ? 'clock-morphing' : ''}} {{moduleOpen ? 'module-open' : ''}} {{timerReveal ? 'reveal' : ''}} {{chromeIdle ? 'chrome-idle' : ''}} {{portrait ? 'portrait' : 'landscape'}} {{wide ? 'wide' : ''}} {{isPaused ? 'paused' : 'running'}} {{orientAnim ? 'orient-anim' : ''}}" style="{{themeStyle}} {{slotVars}} {{stageVars}} {{immersiveVars}} {{clockFitVars}}" bindtap="handlePageTap">
+<view class="timer-page theme-{{theme}} clock-{{clockStyle}} {{compact ? 'compact' : ''}} {{immersive ? 'immersive' : 'normal'}} {{immersiveAnim ? 'immersive-anim' : ''}} {{immersiveLeaving ? 'immersive-leaving' : ''}} {{clockMorph ? 'clock-morphing' : ''}} {{moduleOpen ? 'module-open' : ''}} {{timerReveal ? 'reveal' : ''}} {{chromeIdle ? 'chrome-idle' : ''}} {{portrait ? 'portrait' : 'landscape'}} {{wide ? 'wide' : ''}} {{isPaused ? 'paused' : 'running'}} {{orientAnim ? 'orient-anim' : ''}}" style="{{themeStyle}} {{slotVars}} {{stageVars}} {{immersiveVars}} {{clockFitVars}} {{moduleFabVars}}" bindtap="handlePageTap">
 
   <!-- ================= 横屏一套：当前成品，位置/尺寸一律不动 ================= -->
   <block wx:if="{{!portrait}}">
@@ -19,13 +19,13 @@
               <text class="mode-phase" wx:if="{{phaseLabel}}">{{phaseLabel}}</text>
             </view>
     </view>
+    <view class="stage-meta">
+      <text class="meta-module">{{currentModule.name || '训练完成'}}</text>
+      <text class="meta-total"><text class="num">{{moduleTimeText}}</text></text>
+      <text class="meta-ms" wx:if="{{msShow}}">{{msText}}ms</text>
+    </view>
     <view class="clock-stage" style="{{orientStyle}}">
 
-      <view class="stage-meta">
-        <text class="meta-module">{{currentModule.name || '训练完成'}}</text>
-        <text class="meta-total"><text class="num">{{moduleTimeText}}</text></text>
-        <text class="meta-ms" wx:if="{{msShow}}">{{msText}}ms</text>
-      </view>
       <view class="clock-slot">
       <!-- 翻页时钟：抽到 components/flip-clock，timer 仅透传状态 -->
       <flip-clock class="clock-body clock-flip-host" wx:if="{{clockStyle === 'flip'}}"
@@ -78,8 +78,13 @@
       </view>
 
       <view class="stage-target">
-        <text class="target-left">TARGET: <text class="num">{{currentModule.targetMinutes}}</text> 分</text>
+        <text class="target-left">TARGET: <text class="num">{{targetText}}</text></text>
         <text class="target-right {{isOvertime ? 'overtime' : 'on-track'}}">{{isOvertime ? 'OVERTIME' : 'ON TRACK'}}</text>
+      </view>
+      <view class="quote-slot" wx:if="{{quoteText}}">
+        <view class="time-quote">
+          <text class="time-quote-text">{{quoteText}}</text>
+        </view>
       </view>
       <view class="tick-pill {{tickMuted ? 'muted' : ''}}" catchtap="toggleTick">
         <text class="tick-icon">♪</text>
@@ -116,13 +121,12 @@
             <text class="mode-phase" wx:if="{{phaseLabel}}">{{phaseLabel}}</text>
           </view>
     </view>
+    <view class="stage-meta">
+      <text class="meta-module">{{currentModule.name || '训练完成'}}</text>
+      <text class="meta-total"><text class="num">{{moduleTimeText}}</text></text>
+      <text class="meta-ms" wx:if="{{msShow}}">{{msText}}ms</text>
+    </view>
     <view class="portrait-stage">
-      <view class="stage-meta">
-        <text class="meta-module">{{currentModule.name || '训练完成'}}</text>
-        <text class="meta-total"><text class="num">{{moduleTimeText}}</text></text>
-        <text class="meta-ms" wx:if="{{msShow}}">{{msText}}ms</text>
-      </view>
-
       <view class="clock-stage" style="{{orientStyle}}">
         <view class="clock-slot">
           <flip-clock class="clock-body clock-flip-host" wx:if="{{clockStyle === 'flip'}}"
@@ -171,12 +175,17 @@
         </view>
       </view>
 
+      <view class="quote-slot" wx:if="{{quoteText}}">
+        <view class="time-quote">
+          <text class="time-quote-text">{{quoteText}}</text>
+        </view>
+      </view>
         <view class="tick-pill {{tickMuted ? 'muted' : ''}}" catchtap="toggleTick">
           <text class="tick-icon">♪</text>
           <text>{{tickMuted ? '滴答 · 静音' : '滴答 · 开'}}</text>
         </view>
       <view class="stage-target">
-        <text class="target-left">TARGET: <text class="num">{{currentModule.targetMinutes}}</text> 分</text>
+        <text class="target-left">TARGET: <text class="num">{{targetText}}</text></text>
         <text class="target-right {{isOvertime ? 'overtime' : 'on-track'}}">{{isOvertime ? 'OVERTIME' : 'ON TRACK'}}</text>
       </view>
       <view class="controls">
@@ -193,13 +202,22 @@
   <view class="style-hint {{styleHint ? 'show' : ''}}">{{styleHint}}</view>
 
   <!-- ================= 选择模块：logo 悬浮球 + 弹出面板（横竖屏共用一份） ================= -->
-  <view class="module-fab {{moduleOpen ? 'open' : ''}}" catchtap="toggleModuleFab" aria-label="{{moduleOpen ? '收起模块列表' : '选择模块'}}">
+  <view
+    class="module-fab {{moduleOpen ? 'open' : ''}} {{moduleMenuDown ? 'at-top' : 'at-bottom'}} {{fabDragging ? 'dragging' : ''}} {{fabSettling ? 'settling' : ''}}"
+    style="{{fabDragging ? 'transform: translate3d(0,' + fabDragY + 'px,0) scale(1.04)' : ''}}"
+    catchtap="toggleModuleFab"
+    bindtouchstart="onModuleFabStart"
+    catchtouchmove="onModuleFabMove"
+    bindtouchend="onModuleFabEnd"
+    bindtouchcancel="onModuleFabEnd"
+    aria-label="{{moduleOpen ? '收起模块列表' : '选择模块，可上下拖动'}}"
+  >
     <image class="module-fab-logo" src="/assets/brand/logo-mark.png" mode="aspectFit"></image>
   </view>
 
   <view class="module-mask {{moduleOpen ? 'show' : ''}}" catchtap="closeModuleFab"></view>
 
-  <view class="module-panel {{moduleOpen ? 'open' : ''}}">
+  <view class="module-panel {{moduleMenuDown ? 'down' : 'up'}} {{moduleOpen ? 'open' : ''}}">
     <view class="module-panel-head">
       <text class="module-panel-title">选择模块</text>
       <text class="module-panel-count num">{{currentIndex + 1}} / {{runtimeModules.length}}</text>

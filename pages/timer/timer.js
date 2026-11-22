@@ -1,6 +1,7 @@
 const app = getApp()
 const { pad, clockFull: clock, clock: shortClock, dateTimeText: dateTime, dateKey, clone, CLOCK_STYLES, LED_PATTERNS, resolveClockStyle } = require('../../utils/format')
 const { CLOCK_BASE, computeSlotSize, fitScale } = require('../../utils/clock-layout')
+const { pickTimerQuote } = require('../../utils/quotes')
 
 // 七段数码管：a, b, c, d, e, f, g（段码表已收到 utils/format 共享）
 const FOCUS_SECONDS = 25 * 60
@@ -8,6 +9,16 @@ const REST_SECONDS = 5 * 60
 const LONG_REST_SECONDS = 15 * 60
 const LONG_REST_EVERY = 4
 const RECORD_LIMIT = 20
+
+// 计时页目标时长的英文缩写：45min / 1h / 1h 30min
+function targetUnitText(minutes) {
+  const total = Math.max(0, Math.round(Number(minutes) || 0))
+  if (!total) return '0min'
+  if (total < 60) return `${total}min`
+  const hours = Math.floor(total / 60)
+  const rest = total % 60
+  return rest ? `${hours}h ${rest}min` : `${hours}h`
+}
 
 // 全屏时各时钟样式的放大倍率，需与 timer.wxss 里的 --immersive-clock-scale 保持一致
 const IMMERSIVE_CLOCK_SCALE = {
@@ -23,6 +34,7 @@ Page({
     // 首帧就按当前设备与主题渲染，避免桌面上先闪一下手机版顶栏 / 默认配色
     isDesktop: !!(getApp() && getApp().globalData && getApp().globalData.isDesktop),
     runtimeModules: [], currentModule: {}, currentIndex: 0, moduleScrollTarget: 'module-0',
+    targetText: '0min', quoteText: '',
     globalSeconds: 0, moduleSeconds: 0,
     globalTimeText: '00:00:00', moduleTimeText: '00:00:00', mainTimeText: '00:00:00',
     progressPercent: 0, isPaused: false, isOvertime: false, isHolding: false,
@@ -34,17 +46,26 @@ Page({
     celebrating: false, celebrationBubbles: [], celebrationMessage: '',
     timerReveal: false, immersiveAnim: false, immersiveLeaving: false,
     clockMorph: false, clockMorphStyle: '',
-    stageVars: '', slotVars: '', styleHint: '', clockFitVars: ''
+    stageVars: '', slotVars: '', styleHint: '', clockFitVars: '',
+    moduleFabBottom: 20, moduleMenuDown: false, moduleFabVars: '',
+    fabDragging: false, fabDragY: 0, fabSettling: false
   },
 
   onLoad() {
     this.setData({ isDesktop: !!(getApp().globalData && getApp().globalData.isDesktop) })
     const theme = app.getTheme ? app.getTheme() : { key: 'rose' }
     const settings = app.getSettings ? app.getSettings() : {}
+    const quote = pickTimerQuote()
     this.tickAudioFlip = false
-    this.setData({ theme: theme.key, themeStyle: theme.style || '', tickMuted: settings.tickSound !== true, compact: true })
+    this.setData({ theme: theme.key, themeStyle: theme.style || '', tickMuted: settings.tickSound !== true, compact: true, quoteText: quote.text })
     if (app.applyNavBar) app.applyNavBar()
     this.syncOrientation()
+    try {
+      const savedFab = Number(wx.getStorageSync('exam-timer-module-fab-bottom'))
+      if (isFinite(savedFab) && savedFab > 0) {
+        this.setData({ moduleFabBottom: savedFab }, () => this.syncModuleFabLayout())
+      }
+    } catch (error) {}
 
     const session = wx.getStorageSync(app.globalData.storageKey)
     if (!session || !session.modules || !session.modules.length) {
@@ -93,6 +114,10 @@ Page({
       }
       this.setupFocusGuard(settings)
     })
+  },
+
+  onReady() {
+    this.measureModuleFabPage()
   },
 
   onShow() {
@@ -216,6 +241,7 @@ Page({
       this.boundOrientationResize = () => this.syncOrientation()
       wx.onWindowResize(this.boundOrientationResize)
     }
+    this.syncModuleFabLayout()
   },
 
   // 全屏中窗口尺寸/朝向变了：按新窗口重算倍率，避免沿用旧的倍率顶出边界
@@ -347,6 +373,10 @@ Page({
     if (this.styleHintTimer) {
       clearTimeout(this.styleHintTimer)
       this.styleHintTimer = null
+    }
+    if (this.fabSettleTimer) {
+      clearTimeout(this.fabSettleTimer)
+      this.fabSettleTimer = null
     }
     if (this.boundOrientationResize && wx.offWindowResize) {
       wx.offWindowResize(this.boundOrientationResize)
@@ -624,6 +654,7 @@ Page({
 
     const patch = {
       currentModule,
+      targetText: targetUnitText(currentModule.targetMinutes),
       globalTimeText: globalText,
       moduleTimeText: moduleText,
       mainTimeText,
@@ -668,7 +699,127 @@ Page({
     this.scheduleChromeIdle()
   },
 
+  // 模块球：右侧上下拖动，面板根据球在屏幕上半/下半自动向上或向下展开
+  // 计时页固定为 landscape，短边才是页面高度；getWindowInfo 在某些环境会返回竖屏尺寸，
+  // 这里直接取短边，既避开朝向动画中的缩放测量，也能跟着窗口尺寸变化重算。
+  syncModuleFabLayout() {
+    let info = null
+    try {
+      info = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync()
+    } catch (error) {
+      info = null
+    }
+    if (!info || !info.windowWidth || !info.windowHeight) return
+    const winH = this._moduleFabPageH || Math.min(info.windowWidth, info.windowHeight)
+    if (!this._moduleFabPageH) this._moduleFabPageH = winH
+    // 右上角胶囊必须让开，否则球拖到顶部会压住系统菜单
+    let menuBottom = 56
+    try {
+      const menu = wx.getMenuButtonBoundingClientRect
+        ? wx.getMenuButtonBoundingClientRect()
+        : null
+      if (menu && menu.bottom > 0) menuBottom = Math.min(96, menu.bottom)
+    } catch (error) {}
+    const topSafe = Math.min(120, Math.max(80, menuBottom + 48))
+    const safeBottom = 6
+    const min = safeBottom + 16
+    const max = Math.max(min, winH - topSafe - 56)
+    this._moduleFabMin = min
+    this._moduleFabMax = max
+    let bottom = Number(this.data.moduleFabBottom)
+    if (!isFinite(bottom)) bottom = 20 + safeBottom
+    bottom = Math.max(min, Math.min(max, bottom))
+    // 球心在屏幕上半区时向下弹，下半区时向上弹
+    const down = winH - bottom - 26 < winH * 0.52
+    const panelBottom = bottom + 78
+    const panelTop = winH - bottom + 10
+    const available = down
+      ? winH - panelTop - safeBottom - 12
+      : winH - panelBottom - topSafe - 12
+    const panelMax = Math.max(140, Math.min(winH * 0.54, available))
+    const bodyMax = Math.max(96, panelMax - 46)
+    const vars = `--fab-bottom: ${bottom}px; --panel-bottom: ${panelBottom}px; --panel-top: ${panelTop}px; --panel-max: ${panelMax}px; --panel-body-max: ${bodyMax}px;`
+    this.setData({ moduleFabBottom: bottom, moduleMenuDown: down, moduleFabVars: vars })
+    this.measureModuleFabPage()
+  },
+
+  // wx.getWindowInfo 在横屏页仍可能返回竖屏尺寸；页面 rect 才是实际可视高度
+  measureModuleFabPage() {
+    if (this._fabPageQuerying) return
+    this._fabPageQuerying = true
+    try {
+      wx.createSelectorQuery().in(this).select('.timer-page').boundingClientRect().exec((res) => {
+        this._fabPageQuerying = false
+        const rect = res && res[0]
+        const h = rect ? Math.round(rect.height) : 0
+        if (!h || Math.abs(h - (this._moduleFabPageH || 0)) < 2) return
+        this._moduleFabPageH = h
+        this.syncModuleFabLayout()
+      })
+    } catch (error) {
+      this._fabPageQuerying = false
+    }
+  },
+
+  onModuleFabStart(e) {
+    const t = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0])
+    if (!t) return
+    this._fabDrag = {
+      startY: t.clientY,
+      startBottom: Number(this.data.moduleFabBottom) || 20,
+      lastBottom: Number(this.data.moduleFabBottom) || 20,
+      moved: false,
+    }
+    this.fabJustDragged = false
+  },
+
+  onModuleFabMove(e) {
+    const d = this._fabDrag
+    if (!d) return
+    const t = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0])
+    if (!t) return
+    const dy = d.startY - t.clientY
+    if (!d.moved && Math.abs(dy) < 5) return
+    if (!d.moved) {
+      d.moved = true
+      this.closeModuleFab()
+    }
+    const min = this._moduleFabMin || 22
+    const max = this._moduleFabMax || Math.max(min, (this._moduleFabPageH || 402) - 8 - 74)
+    const next = Math.max(min, Math.min(max, d.startBottom + dy))
+    // 拖动期间只做 translate，不改 bottom；避免每帧触发页面布局和 CSS 过渡，跟手更顺
+    const offset = Math.round((next - d.startBottom) * 2) / 2
+    if (Math.abs(offset - (d.lastOffset || 0)) < .5) return
+    d.lastBottom = next
+    d.lastOffset = offset
+    this.setData({ fabDragging: true, fabDragY: -offset })
+  },
+
+  onModuleFabEnd() {
+    const d = this._fabDrag
+    this._fabDrag = null
+    if (!d) return
+    if (!d.moved) return
+    const finalBottom = d.lastBottom
+    this.fabJustDragged = true
+    clearTimeout(this.fabTapTimer)
+    this.fabTapTimer = setTimeout(() => { this.fabJustDragged = false }, 420)
+    // 松手时一次性落到最终位置并清掉拖动位移；settling 让这一次渲染禁用 transform 过渡，
+    // 否则 bottom 已更新、位移还在过渡，球会先向上跳再落下来
+    this.setData({ moduleFabBottom: finalBottom, fabDragging: false, fabDragY: 0, fabSettling: true }, () => {
+      try { wx.setStorageSync('exam-timer-module-fab-bottom', finalBottom) } catch (error) {}
+      this.syncModuleFabLayout()
+      clearTimeout(this.fabSettleTimer)
+      this.fabSettleTimer = setTimeout(() => {
+        this.setData({ fabSettling: false })
+      }, 40)
+    })
+  },
+
   toggleModuleFab() {
+    // 刚拖完球，系统随后补发的 tap 不应顺手把面板打开
+    if (this.fabJustDragged) return
+    this.syncModuleFabLayout()
     this.setData({ moduleOpen: !this.data.moduleOpen })
     if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
   },
@@ -691,7 +842,7 @@ Page({
   // 量出「时钟中心 → 页面中心」的位移，切换布局前后用同一段 transform 衔接，避免尺寸/位置跳变
   // 全屏倍率：用非全屏时量到的「原始尺寸」算，而不是查表估算。
   // 之前按 CLOCK_BASE 估算：翻页、积木的基准接近真实尺寸，看着正好；
-  // 印章/手绘/果冻这些文字皮肤的基准比真实尺寸大，算出来的倍率偏小，全屏反而显得很小。
+  // 奶糖手写 / 糖果手写 / 果冻这些文字皮肤的基准比真实尺寸大，算出来的倍率偏小，全屏反而显得很小。
   // 现在统一用 natural × scale ≈ 可用宽高，左右留 3%、上下留 14%（退出键 + 安全区）。
   computeImmersiveScale(natural) {
     const info = (wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync()) || {}

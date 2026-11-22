@@ -528,13 +528,18 @@ Page({
   },
 
   buildPresets(selected) {
-    return (app.habitPresets || []).map(item => ({
-      key: item.key,
-      name: item.name,
-      desc: item.desc,
-      short: (item.desc || '').split('·').pop().trim(),
-      checked: selected.indexOf(item.key) >= 0
-    }))
+    return (app.habitPresets || []).map(item => {
+      const modules = item.modules || []
+      const minutes = modules.reduce((sum, moduleItem) => sum + (Number(moduleItem.targetMinutes) || 0), 0)
+      const desc = `${modules.length} 模块 · ${minutes} 分钟`
+      return {
+        key: item.key,
+        name: item.name,
+        desc,
+        short: desc,
+        checked: selected.indexOf(item.key) >= 0
+      }
+    })
   },
 
   toggleExpand() {

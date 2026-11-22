@@ -24,8 +24,14 @@ Page({
     activeKey: '',
     activeModule: null,
     mode: 'list', // list | single
+    singleLayout: 'vertical', // vertical | grid：逐题默认竖排，可切 2×2
     currentNo: 1,
     current: null,
+    prevModule: null,
+    prevModuleLabel: '',
+    tabScrollId: '',
+    nextModule: null,
+    nextModuleLabel: '',
     qFlip: false, // 逐题模式换题时切一下，让题目卡片重新播入场动画
     flipDir: 'next', // next | prev：新卡片从哪一侧推入
     ghostNo: 0, // 离场卡：上一题题号（换题时短暂渲染，滑出后清 0）
@@ -134,12 +140,24 @@ Page({
       moduleKey: activeModule ? activeModule.key : activeKey,
       pointText: fmtPoint(this.pointOf(currentNo)),
     };
+    // 上一章 / 下一章只在存在相邻模块时出现，不在首尾循环，避免误触跳回另一端
+    const modIndex = modules.findIndex((m) => m.key === (activeModule ? activeModule.key : activeKey));
+    const nextSource = modIndex >= 0 && modIndex < modules.length - 1 ? modules[modIndex + 1] : null;
+    const prevSource = modIndex > 0 ? modules[modIndex - 1] : null;
+    const nextModule = nextSource ? { key: nextSource.key, name: nextSource.short || nextSource.name } : null;
+    const prevModule = prevSource ? { key: prevSource.key, name: prevSource.short || prevSource.name } : null;
+    const nextModuleLabel = nextSource ? '下一章' : '';
+    const prevModuleLabel = prevSource ? '上一章' : '';
     const derived = Object.assign({}, source, {
       activeModule,
       answeredCount,
       answeredInModule,
       progressPct,
       current,
+      prevModule,
+      prevModuleLabel,
+      nextModule,
+      nextModuleLabel,
       canPrev: currentNo > 1,
       canNext: currentNo < this.data.total,
     });
@@ -241,12 +259,19 @@ Page({
     if (!t) return;
     const dx = t.clientX - s.x;
     const dy = t.clientY - s.y;
-    if (Math.abs(dx) < 50 || Math.abs(dx) <= Math.abs(dy)) return;
+    const threshold = this.data.mode === 'list' ? 64 : 50;
+    if (Math.abs(dx) < threshold || Math.abs(dx) <= Math.abs(dy)) return;
     // 滑动结束紧跟着的 tap 不应被当成选答案
     this.suppressTap = true;
     setTimeout(() => { this.suppressTap = false; }, 350);
-    if (dx < 0) this.nextQuestion();
-    else this.prevQuestion();
+    if (this.data.mode === 'list') {
+      // 列表页横向滑动换章节；逐题页才是上一题 / 下一题
+      this.switchModuleStep(dx < 0 ? 1 : -1);
+    } else if (dx < 0) {
+      this.nextQuestion();
+    } else {
+      this.prevQuestion();
+    }
   },
 
   onTouchMove(e) {
@@ -270,12 +295,38 @@ Page({
 
   switchModule(e) {
     const { key } = e.currentTarget.dataset;
+    this.applyModule(key);
+  },
+
+  // 切章统一入口：点顶部 tab、滑动手势、底部上一章/下一章都走这里
+  applyModule(key) {
     const mod = this.data.modules.find((m) => m.key === key);
     if (!mod) return;
     this.clearAdvance();
-    const patch = { activeKey: key, currentNo: mod.questions[0].no };
-    this.refreshDerived(patch);
+    this.refreshDerived({ activeKey: key, currentNo: mod.questions[0].no, tabScrollId: 'tab-' + key });
     this.scrollTop();
+  },
+
+  // 列表模式左右滑动切章：左滑下一章，右滑上一章
+  switchModuleStep(delta) {
+    if (this.data.modules.length < 2) return;
+    const target = delta > 0 ? this.data.nextModule : this.data.prevModule;
+    if (!target) return;
+    this.applyModule(target.key);
+  },
+
+  // 列表模式底部的「下一章」；最后一章循环回第一章
+  goNextModule() {
+    this.switchModuleStep(1);
+  },
+
+  // 列表模式底部的「上一章」；第一章循环回最后一章
+  goPrevModule() {
+    this.switchModuleStep(-1);
+  },
+
+  toggleSingleLayout() {
+    this.setData({ singleLayout: this.data.singleLayout === 'grid' ? 'vertical' : 'grid' });
   },
 
   toggleMode() {

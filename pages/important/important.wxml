@@ -5,9 +5,11 @@
     <view class="topbar-spacer"></view>
   </view>
 
-  <brand-dock theme-style="{{themeStyle}}" dim="{{dockDim}}"></brand-dock>
+  <brand-dock theme-style="{{themeStyle}}" above-tabbar="{{true}}" dim="{{dockDim}}"></brand-dock>
 
   <view class="imp-view-slot">
     <important-view id="importantView" class="imp-view" bind:dockdim="onDockDim"></important-view>
   </view>
+
+  <app-dock />
 </view>

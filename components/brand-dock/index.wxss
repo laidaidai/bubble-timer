@@ -5,7 +5,13 @@
   z-index: 130;
   transition: opacity .3s ease, transform .3s ease;
 }
+/* 桌面反缩的 scale 必须瞬时落位，不能在首帧从 1 动画到 k，看起来就是「先巨大再缩小」 */
+.brand-dock.scaled {
+  transition: opacity .3s ease;
+}
 .brand-dock.above-tab { bottom: calc(126rpx + env(safe-area-inset-bottom)); }
+/* 首帧尺寸算好之前不画出来，避免大屏冷启动先闪一下超大悬浮球 */
+.brand-dock:not(.ready) { visibility: hidden; }
 
 /* 浏览 / 报告 / 沉浸时自动半隐，仍然可点，不彻底消失 */
 .brand-dock.soft {
