@@ -62,18 +62,14 @@ Component({
         }, 500)
       ]
 
-      // PC 上拖动窗口大小不会触发 pageLifetimes.show，靠窗口尺寸事件重算反缩倍率。
-      // 监听必须延后注册：attached 阶段页面 load 还没结束，立刻注册容易在首帧就回调、在
-      // 生命周期未落地时 setData，触发基础库的 "LifeCycle ... non-pending waiting value" 报错。
-      if (wx.onWindowResize) {
-        this._onWinResize = () => this.syncDeskScale()
-        this._winResizeTimer = setTimeout(() => {
-          this._winResizeTimer = null
-          if (this._destroyed) return
-          wx.onWindowResize(this._onWinResize)
-          this._winResizeListening = true
-        }, 600)
-      }
+      // PC 上拖动窗口大小不会触发 pageLifetimes.show，改由组件 pageLifetimes.resize
+      // 重算反缩倍率。不使用 wx.onWindowResize：macOS 基础库暴露了这个接口但调用即报
+      // “SDK 暂不支持此API”，会污染控制台。
+      this._winResizeTimer = setTimeout(() => {
+        this._winResizeTimer = null
+        if (this._destroyed) return
+        this.syncDeskScale()
+      }, 600)
     },
     detached() {
       this._destroyed = true
@@ -81,17 +77,15 @@ Component({
       if (this.longPressTimer) clearTimeout(this.longPressTimer)
       if (this._scaleTimers) this._scaleTimers.forEach(clearTimeout)
       if (this._winResizeTimer) clearTimeout(this._winResizeTimer)
-      if (this._winResizeListening && this._onWinResize && wx.offWindowResize) {
-        wx.offWindowResize(this._onWinResize)
-      }
-      this._onWinResize = null
-      this._winResizeListening = false
     }
   },
   pageLifetimes: {
     show() {
       this.syncDeskScale()
       this.refreshContext()
+    },
+    resize() {
+      this.syncDeskScale()
     }
   },
   methods: {

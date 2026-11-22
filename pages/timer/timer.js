@@ -236,11 +236,8 @@ Page({
     if (portrait !== this.data.portrait) this.switchOrientation(portrait)
     else if (winChanged && this.data.immersive) this.refreshImmersiveScale()
     this.scheduleFitClock()
-    if (wx.onWindowResize && !this.orientationBound) {
-      this.orientationBound = true
-      this.boundOrientationResize = () => this.syncOrientation()
-      wx.onWindowResize(this.boundOrientationResize)
-    }
+    // 窗口尺寸变化由页面 onResize 生命周期统一处理；macOS 基础库虽然暴露了
+    // wx.onWindowResize，但调用会直接报“SDK 暂不支持此API”，不能再依赖它。
     this.syncModuleFabLayout()
   },
 
@@ -377,11 +374,6 @@ Page({
     if (this.fabSettleTimer) {
       clearTimeout(this.fabSettleTimer)
       this.fabSettleTimer = null
-    }
-    if (this.boundOrientationResize && wx.offWindowResize) {
-      wx.offWindowResize(this.boundOrientationResize)
-      this.boundOrientationResize = null
-      this.orientationBound = false
     }
     // 离开前结算最后一秒，避免会话里少记一段；空会话不再写回，避免生成 0 模块报告
     if (!this.finished && this.data.runtimeModules.length) {
