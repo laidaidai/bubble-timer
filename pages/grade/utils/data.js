@@ -236,6 +236,8 @@ const MODULES = paperModules({ layout: DEFAULT_LAYOUT });
 //   id(全局唯一) / name(试卷名称) / total(题量)
 //   layout: [{ key, count }] 模块排布，key 取自 MODULE_DEFS；数组顺序即卷面章节顺序
 //   lastScore(上次得分，无则填 null)
+// 判断推理细分口径：以 2025/2026 公开题型表与抖音题型分布为准，只拆有题量依据的子题型；
+// 没有统一官方细分的选调卷保持整块，避免误拆导致题号错位。
 const BANKS = [
   {
     id: 'bank-a',
@@ -251,17 +253,18 @@ const BANKS = [
             name: '国考 · 副省级卷',
             total: 135,
             lastScore: null,
+            // 135 题满分 100（抖音分值表）：政治 20×0.5=10、常识 15×0.5=7.5、
+            // 言语 30×0.8=24、数量 15×1=15、判断 23.5（图形 10×0.6 /
+            // 定义 10×0.7 / 类比 5×0.5 / 逻辑 10×0.8）、资料 20×1=20
             layout: [
-              // 135 题满分 100（抖音分值表）：政治 20×0.5=10、常识 15×0.5=7.5、
-              // 言语 30×0.8=24、数量 15×1=15、判断 23.5、资料 20×1=20
               { key: 'politics', count: 20, per: 0.5 },
               { key: 'common', count: 15, per: 0.5 },
               { key: 'verbal', count: 30, per: 0.8 },
               { key: 'quant', count: 15, per: 1 },
-              { key: 'logic', count: 10, per: 0.6 },
-              { key: 'logic', count: 10, per: 0.7 },
-              { key: 'logic', count: 5, per: 0.5 },
-              { key: 'logic', count: 10, per: 0.8 },
+              { key: 'logic', count: 10, per: 0.6, section: '图形推理' },
+              { key: 'logic', count: 10, per: 0.7, section: '定义判断' },
+              { key: 'logic', count: 5, per: 0.5, section: '类比推理' },
+              { key: 'logic', count: 10, per: 0.8, section: '逻辑判断' },
               { key: 'data', count: 20, per: 1 },
             ],
           },
@@ -277,10 +280,10 @@ const BANKS = [
               { key: 'common', count: 15, per: 0.6 },
               { key: 'verbal', count: 30, per: 0.8 },
               { key: 'quant', count: 10, per: 1 },
-              { key: 'logic', count: 10, per: 0.8 },
-              { key: 'logic', count: 10, per: 0.7 },
-              { key: 'logic', count: 5, per: 0.6 },
-              { key: 'logic', count: 10, per: 0.9 },
+              { key: 'logic', count: 10, per: 0.8, section: '图形推理' },
+              { key: 'logic', count: 10, per: 0.7, section: '定义判断' },
+              { key: 'logic', count: 5, per: 0.6, section: '类比推理' },
+              { key: 'logic', count: 10, per: 0.9, section: '逻辑判断' },
               { key: 'data', count: 20, per: 1 },
             ],
           },
@@ -295,10 +298,10 @@ const BANKS = [
               { key: 'common', count: 15, per: 0.6 },
               { key: 'verbal', count: 30, per: 0.8 },
               { key: 'quant', count: 10, per: 1 },
-              { key: 'logic', count: 10, per: 0.8 },
-              { key: 'logic', count: 10, per: 0.7 },
-              { key: 'logic', count: 5, per: 0.6 },
-              { key: 'logic', count: 10, per: 0.9 },
+              { key: 'logic', count: 10, per: 0.8, section: '图形推理' },
+              { key: 'logic', count: 10, per: 0.7, section: '定义判断' },
+              { key: 'logic', count: 5, per: 0.6, section: '类比推理' },
+              { key: 'logic', count: 10, per: 0.9, section: '逻辑判断' },
               { key: 'data', count: 20, per: 1 },
             ],
           },
@@ -315,11 +318,15 @@ const BANKS = [
             lastScore: null,
             // 河南 2025：120 题满分 100（抖音 @雨菲老师 按粉笔近两年真题整理）：
             // 政治 15×0.8、常识 15×0.8、言语 30×0.8、数量 15×1、
-            // 判断 30 题 22 分（图推 10×0.7 / 定义 5×0.6 / 类比 5×0.6 / 逻辑 10×0.9）、资料 15×1
+            // 判断 30 题 22 分，题号顺序：图形 10×0.7 / 类比 5×0.6 /
+            // 逻辑 10×0.9 / 定义 5×0.6；资料 15×1
             layout: [
               { key: 'verbal', count: 30, per: 0.8 },
               { key: 'quant', count: 15, per: 1 },
-              { key: 'logic', count: 30, points: 22 },
+              { key: 'logic', count: 10, per: 0.7, section: '图形推理' },
+              { key: 'logic', count: 5, per: 0.6, section: '类比推理' },
+              { key: 'logic', count: 10, per: 0.9, section: '逻辑判断' },
+              { key: 'logic', count: 5, per: 0.6, section: '定义判断' },
               { key: 'politics', count: 15, per: 0.8 },
               { key: 'common', count: 15, per: 0.8 },
               { key: 'data', count: 15, per: 1 },
@@ -331,13 +338,17 @@ const BANKS = [
             total: 125,
             lastScore: null,
             // 湖北 2025：125 题满分 100（抖音多条视频用 3 万多份成绩反推，每题 0.8 分，
-            // 125×0.8=100）：政治 12、常识 8、言语 24、数量 12、判断 28、资料 16
+            // 125×0.8=100）：政治 12、常识 8、言语 24、数量 12、判断 28（35 题=
+            // 图推 5+定义 10+类比 10+逻辑 10，每 0.8）、资料 16
             layout: [
               { key: 'politics', count: 15, per: 0.8 },
               { key: 'common', count: 10, per: 0.8 },
               { key: 'verbal', count: 30, per: 0.8 },
               { key: 'quant', count: 15, per: 0.8 },
-              { key: 'logic', count: 35, per: 0.8 },
+              { key: 'logic', count: 5, per: 0.8, section: '图形推理' },
+              { key: 'logic', count: 10, per: 0.8, section: '定义判断' },
+              { key: 'logic', count: 10, per: 0.8, section: '类比推理' },
+              { key: 'logic', count: 10, per: 0.8, section: '逻辑判断' },
               { key: 'data', count: 20, per: 0.8 },
             ],
           },
@@ -348,13 +359,16 @@ const BANKS = [
             lastScore: null,
             // 江西 2026 抖音口径：130 题（数量从 15 减到 10），满分 100：
             // 政治 20×0.6、常识 15×0.6、言语 30×0.8、数量 10×0.8、
-            // 判断 35 题 27 分、资料 20×1
+            // 判断 35 题 27 分（图推 5+定义 10+类比 10+逻辑 10 = 4+7+8+8）、资料 20×1
             layout: [
               { key: 'politics', count: 20, per: 0.6 },
               { key: 'common', count: 15, per: 0.6 },
               { key: 'verbal', count: 30, per: 0.8 },
               { key: 'quant', count: 10, per: 0.8 },
-              { key: 'logic', count: 35, points: 27 },
+              { key: 'logic', count: 5, per: 0.8, section: '图形推理' },
+              { key: 'logic', count: 10, per: 0.7, section: '定义判断' },
+              { key: 'logic', count: 10, per: 0.8, section: '类比推理' },
+              { key: 'logic', count: 10, per: 0.8, section: '逻辑判断' },
               { key: 'data', count: 20, per: 1 },
             ],
           },
@@ -369,17 +383,17 @@ const BANKS = [
             name: '山东省考卷',
             total: 120,
             lastScore: null,
-            // 山东 120 题满分 100：政治/常识 0.7、言语 0.8、数量 1.0、
-            // 判断（图形 0.6 / 定义 0.8 / 类比 0.6 / 逻辑 1.0）、资料 1.0
+            // 山东 120 题满分 100（2027 新口径）：政治/常识 0.7、言语 0.8、数量 1.0、
+            // 判断 40=图形/定义/类比/逻辑各 10（合计 32 分）、资料 1.0
             layout: [
               { key: 'politics', count: 10, per: 0.7 },
               { key: 'common', count: 10, per: 0.7 },
               { key: 'verbal', count: 30, per: 0.8 },
               { key: 'quant', count: 10, per: 1 },
-              { key: 'logic', count: 5, per: 0.6 },
-              { key: 'logic', count: 10, per: 0.8 },
-              { key: 'logic', count: 10, per: 0.6 },
-              { key: 'logic', count: 15, per: 1 },
+              { key: 'logic', count: 10, per: 0.8, section: '图形推理' },
+              { key: 'logic', count: 10, per: 0.8, section: '定义判断' },
+              { key: 'logic', count: 10, per: 0.8, section: '类比推理' },
+              { key: 'logic', count: 10, per: 0.8, section: '逻辑判断' },
               { key: 'data', count: 20, per: 1 },
             ],
           },
@@ -389,13 +403,16 @@ const BANKS = [
             total: 120,
             lastScore: null,
             // 浙江 2026 A 卷（抖音口径）：120 题、均分制，满分 100：
-            // 政治 10、常识 10、言语 25、数量 20、判断 40、资料 15
+            // 政治 10、常识 10、言语 25、数量 20、判断 40（四类各 10）、资料 15
             layout: [
               { key: 'politics', count: 10, points: 8.34 },
               { key: 'common', count: 10, points: 8.33 },
               { key: 'verbal', count: 25, points: 20.83 },
               { key: 'quant', count: 20, points: 16.67 },
-              { key: 'logic', count: 40, points: 33.33 },
+              { key: 'logic', count: 10, points: 8.33, section: '图形推理' },
+              { key: 'logic', count: 10, points: 8.33, section: '定义判断' },
+              { key: 'logic', count: 10, points: 8.33, section: '类比推理' },
+              { key: 'logic', count: 10, points: 8.34, section: '逻辑判断' },
               { key: 'data', count: 15, points: 12.5 },
             ],
           },
@@ -404,13 +421,17 @@ const BANKS = [
             name: '江苏省考卷（A 类）',
             total: 135,
             lastScore: null,
-            // 江苏 A 类 135 题满分 100：政治 0.8、常识 0.6、言语 23 分、数量 0.8、判断 0.6、资料 1.0
+            // 江苏 A 类 135 题满分 100：政治 0.8、常识 0.6、言语 23 分、数量 0.8、
+            // 判断 45=图推 10+定义 10+类比 10+逻辑 15（每 0.6）、资料 1.0
             layout: [
               { key: 'politics', count: 10, per: 0.8 },
               { key: 'common', count: 10, per: 0.6 },
               { key: 'verbal', count: 30, points: 23 },
               { key: 'quant', count: 20, per: 0.8 },
-              { key: 'logic', count: 45, per: 0.6 },
+              { key: 'logic', count: 10, per: 0.6, section: '图形推理' },
+              { key: 'logic', count: 10, per: 0.6, section: '定义判断' },
+              { key: 'logic', count: 10, per: 0.6, section: '类比推理' },
+              { key: 'logic', count: 15, per: 0.6, section: '逻辑判断' },
               { key: 'data', count: 20, per: 1 },
             ],
           },
@@ -420,13 +441,16 @@ const BANKS = [
             total: 90,
             lastScore: null,
             // 广东 2025 起 90 题满分 100：政治 10、常识 5、言语 15、数量 15、
-            // 判断 25 题 30 分、资料 20 题 25 分（旧版 100 题分值已不适用）
+            // 判断 25 题 30 分=图推 5+逻辑 15+科学推理 5（无定义/类比）；
+            // 资料 20 题 25 分（旧版 100 题分值已不适用）
             layout: [
               { key: 'politics', count: 10, per: 1 },
               { key: 'common', count: 5, per: 1 },
               { key: 'verbal', count: 15, per: 1 },
               { key: 'quant', count: 15, per: 1 },
-              { key: 'logic', count: 25, points: 30 },
+              { key: 'logic', count: 5, per: 1.2, section: '图形推理' },
+              { key: 'logic', count: 15, per: 1.2, section: '逻辑判断' },
+              { key: 'logic', count: 5, per: 1.2, section: '科学推理' },
               { key: 'data', count: 20, points: 25 },
             ],
           },
@@ -435,13 +459,17 @@ const BANKS = [
             name: '四川省考卷',
             total: 100,
             lastScore: null,
-            // 四川 100 题满分 100，每题 1 分
+            // 四川 100 题满分 100，每题 1 分；
+            // 判断 30=图推 8+定义 9+类比 5+逻辑 8
             layout: [
               { key: 'politics', count: 10, per: 1 },
               { key: 'common', count: 10, per: 1 },
               { key: 'verbal', count: 25, per: 1 },
               { key: 'quant', count: 10, per: 1 },
-              { key: 'logic', count: 30, per: 1 },
+              { key: 'logic', count: 8, per: 1, section: '图形推理' },
+              { key: 'logic', count: 9, per: 1, section: '定义判断' },
+              { key: 'logic', count: 5, per: 1, section: '类比推理' },
+              { key: 'logic', count: 8, per: 1, section: '逻辑判断' },
               { key: 'data', count: 15, per: 1 },
             ],
           },
@@ -457,13 +485,17 @@ const BANKS = [
             total: 100,
             lastScore: null,
             // 卷面参照 2025 年 10 月 25 日联考职测 A 类（总分 150）：
-            // 常识 20×1 / 言语 25×1.6 / 数量 5×2 / 判断 35 题 / 资料 15×2，
+            // 常识 20×1 / 言语 25×1.6 / 数量 5×2 / 判断 35 题（图推 5+定义 10+
+            // 类比 10+逻辑 10）/ 资料 15×2，
             // 按模块权重折算到本站统一的 100 分制
             layout: [
               { key: 'common', count: 20, points: 13.3 },
               { key: 'verbal', count: 25, points: 26.7 },
               { key: 'quant', count: 5, points: 6.7 },
-              { key: 'logic', count: 35, points: 33.3 },
+              { key: 'logic', count: 5, points: 4, section: '图形推理' },
+              { key: 'logic', count: 10, points: 9.3, section: '定义判断' },
+              { key: 'logic', count: 10, points: 8, section: '类比推理' },
+              { key: 'logic', count: 10, points: 12, section: '逻辑判断' },
               { key: 'data', count: 15, points: 20 },
             ],
           },
@@ -472,13 +504,17 @@ const BANKS = [
             name: '事业单位联考 · B 类（社科专技）',
             total: 100,
             lastScore: null,
-            // B 类职测：常识 20 / 言语 25 / 数量 5 / 判断 35 / 资料 10 / 综合分析 5，
+            // B 类职测：常识 20 / 言语 25 / 数量 5 / 判断 35（5+10+10+10）/
+            // 资料 10 / 综合分析 5，
             // 150 分口径折算 100（资料 20 分、综合 7.5 分，其余同 A 类题型分值）
             layout: [
               { key: 'common', count: 20, points: 13.6 },
               { key: 'verbal', count: 25, points: 27.1 },
               { key: 'quant', count: 5, points: 6.8 },
-              { key: 'logic', count: 35, points: 33.9 },
+              { key: 'logic', count: 5, points: 4.5, section: '图形推理' },
+              { key: 'logic', count: 10, points: 9, section: '定义判断' },
+              { key: 'logic', count: 10, points: 9, section: '类比推理' },
+              { key: 'logic', count: 10, points: 11.4, section: '逻辑判断' },
               { key: 'data', count: 10, points: 13.6 },
               { key: 'comprehensive', count: 5, points: 5 },
             ],
@@ -488,13 +524,17 @@ const BANKS = [
             name: '事业单位联考 · C 类（自然科学专技）',
             total: 100,
             lastScore: null,
-            // C 类职测：常识 20 / 言语 25 / 数量 5 / 判断 30（1.5 分/题）/
-            // 资料 10×2 / 综合分析 10×1.5，150 分口径折算 100
+            // C 类职测：常识 20 / 言语 25 / 数量 5 / 判断 30（图推 5+定义 5+
+            // 类比 10+逻辑 10，150 分口径 1.5 分/题）/
+            // 资料 10×2 / 综合分析 10×1.5，折算 100 分后每题 1 分
             layout: [
               { key: 'common', count: 20, points: 13.3 },
               { key: 'verbal', count: 25, points: 26.7 },
               { key: 'quant', count: 5, points: 6.7 },
-              { key: 'logic', count: 30, points: 30 },
+              { key: 'logic', count: 5, points: 5, section: '图形推理' },
+              { key: 'logic', count: 5, points: 5, section: '定义判断' },
+              { key: 'logic', count: 10, points: 10, section: '类比推理' },
+              { key: 'logic', count: 10, points: 10, section: '逻辑判断' },
               { key: 'data', count: 10, points: 13.3 },
               { key: 'comprehensive', count: 10, points: 10 },
             ],
@@ -505,13 +545,18 @@ const BANKS = [
             total: 100,
             lastScore: null,
             // D 类职测：常识 20 / 言语 25 / 数量分析（数学运算 5 + 资料 10）/
-            // 判断 30 / 策略选择 10，150 分口径折算 100
+            // 判断 30（图推 5+定义 10+类比 5+逻辑 7+综合判断 3）/ 策略选择 10，
+            // 150 分口径折算 100
             layout: [
               { key: 'common', count: 20, points: 13.3 },
               { key: 'verbal', count: 25, points: 26.7 },
               { key: 'quant', count: 5, points: 6.7 },
               { key: 'data', count: 10, points: 13.3 },
-              { key: 'logic', count: 30, points: 30 },
+              { key: 'logic', count: 5, points: 5, section: '图形推理' },
+              { key: 'logic', count: 10, points: 10, section: '定义判断' },
+              { key: 'logic', count: 5, points: 5, section: '类比推理' },
+              { key: 'logic', count: 7, points: 7, section: '逻辑判断' },
+              { key: 'logic', count: 3, points: 3, section: '综合判断推理' },
               { key: 'strategy', count: 10, points: 10 },
             ],
           },
@@ -520,14 +565,18 @@ const BANKS = [
             name: '事业单位联考 · E 类（医疗卫生）',
             total: 100,
             lastScore: null,
-            // E 类职测：常识 20 / 言语 20 / 数量分析 15 / 判断 30 / 策略选择 15，
+            // E 类职测：常识 20 / 言语 20 / 数量分析 15 /
+            // 判断 30（图推 5+定义 10+类比 5+逻辑 10）/ 策略选择 15，
             // 150 分口径折算 100
             layout: [
               { key: 'common', count: 20, points: 13.3 },
               { key: 'verbal', count: 20, points: 20 },
               { key: 'quant', count: 5, points: 6.7 },
               { key: 'data', count: 10, points: 13.3 },
-              { key: 'logic', count: 30, points: 26.7 },
+              { key: 'logic', count: 5, points: 4.45, section: '图形推理' },
+              { key: 'logic', count: 10, points: 8.9, section: '定义判断' },
+              { key: 'logic', count: 5, points: 4.45, section: '类比推理' },
+              { key: 'logic', count: 10, points: 8.9, section: '逻辑判断' },
               { key: 'strategy', count: 15, points: 20 },
             ],
           },
@@ -564,7 +613,8 @@ const BANKS = [
             total: 100,
             lastScore: null,
             // 选调生各省题量不一（多与省考同卷或 90–100 题自主命题），
-            // 这里给一版 100 题、每题 1 分的通用行测卷，便于按卷面答案直接批改
+            // 这里给一版 100 题、每题 1 分的通用行测卷，便于按卷面答案直接批改；
+            // 选调各省不统一，判断推理不做子题型拆分
             layout: [
               { key: 'politics', count: 10, per: 1 },
               { key: 'common', count: 10, per: 1 },

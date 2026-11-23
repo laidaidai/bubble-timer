@@ -101,27 +101,69 @@ function grade(paper, answers, standard) {
 }
 
 
-// 解析粘贴的标准答案文本，兼容常见试卷答案分布形式：
-// 1. 编号题：1.A / 1、A / 1 A / 1:A / 1)A / 1-A
-// 2. 区间分块：1-5 ABCDA（题号区间后跟一段连写选项）
-// 3. 纯选项序列：A B C D、A、B、C、D、逗号/换行/空格分隔，或 ABCD 连写无分隔
-// 编号题优先；未编号的选项按出现顺序填入空位。
+// 解析粘贴的答案文本，兼容常见试卷答案与 AI 返回形式：
+// 1. 题号+选项：1.A / 1、A / 1 A / 1:A / 1)A / 1-A / 1A /
+//    （1）A / 第1题：A / 1题A / 1、选A
+// 2. 区间分块：1-5 ABCDA / 1—5题：A B C D A / 1至5题：A,B,C,D,A
+// 3. 表格行：1 | A / | 1 | A |
+// 4. 纯选项序列：A B C D、A、B、C、D、逗号/换行/空格分隔，或 ABCD 连写
+// 5. 未识别：1.? / 1？ / 1.未识别 / 1.看不清
+// 有题号时按题号填；只有完全没有题号时才按出现顺序填纯选项。
 // 返回 { answers, filled, missing, errors }，answers 下标0=第1题
 function parseAnswerText(text, total) {
   const errors = [];
   const answers = new Array(total).fill('');
+  const skipped = {};
   let working = String(text || '');
 
-  // 第一遍：区间分块，如 "1-5 ABCDA" "6—10：BCDAB"
-  const rangeRe = /(\d+)\s*[-—~～至]\s*(\d+)\s*[:：.、]?\s*([A-Da-d]{2,})/g;
+  // 全角字母 / 数字 / 常见标点转半角：不同 AI 客户端复制出来经常混用
+  working = working.replace(/[Ａ-Ｚａ-ｚ０-９]/g, (ch) => {
+    const c = ch.charCodeAt(0);
+    if (c >= 0xFF10 && c <= 0xFF19) return String.fromCharCode(c - 0xFF10 + 48);
+    if (c >= 0xFF21 && c <= 0xFF3A) return String.fromCharCode(c - 0xFF21 + 65);
+    return String.fromCharCode(c - 0xFF41 + 97);
+  });
+  working = working
+    .replace(/[．。]/g, '.')
+    .replace(/[，]/g, ',')
+    .replace(/[：]/g, ':')
+    .replace(/[；]/g, ';')
+    .replace(/[？]/g, '?')
+    .replace(/[（]/g, '(')
+    .replace(/[）]/g, ')')
+    .replace(/[－—–]/g, '-')
+    .replace(/[～]/g, '~');
+
+  // AI 常把答案包在 Markdown 代码块或英文标签里；先去噪，
+  // 避免 "text" / "answer" 里的字母被误当成选项。
+  working = working.replace(/```[A-Za-z0-9_-]*/g, ' ').replace(/`/g, ' ');
+  working = working.replace(/\b(?:answer|answers|option|options|correct|text)\b/gi, ' ');
+
+  let hasNumbered = false;
+
+  // 先摘掉未识别占位，保留空位，避免后续选项错位
+  const skipRe = /(\d+)\s*(?:题)?\s*[.,:、)）\-]?\s*(?:[?]|未识别|看不清|无法判断|未填涂|未作答)/g;
+  working = working.replace(skipRe, (whole, no) => {
+    const n = parseInt(no, 10);
+    if (n >= 1 && n <= total) skipped[n - 1] = true;
+    else errors.push(`题号 ${no} 超出范围（1-${total}）`);
+    return ' ';
+  });
+
+  // 区间分块，如 "1-5 ABCDA" "1—5题：A B C D A"
+  const rangeRe = /(?:第\s*)?(\d+)\s*[-~至到]\s*(?:第\s*)?(\d+)\s*题?\s*[.,:、]?\s*((?:[A-Da-d?][\s,;、]*){2,})/g;
   working = working.replace(rangeRe, (whole, s, e, letters) => {
+    hasNumbered = true;
     const start = parseInt(s, 10);
     const end = parseInt(e, 10);
-    const ls = String(letters).toUpperCase().split('');
+    const ls = String(letters).replace(/[^A-Da-d?]/g, '').toUpperCase().split('');
     if (start >= 1 && end >= start && end <= total) {
       for (let i = 0; i < ls.length; i++) {
         const no = start + i;
-        if (no <= end && no <= total) answers[no - 1] = ls[i];
+        if (no <= end && no <= total) {
+          if (ls[i] === '?') skipped[no - 1] = true;
+          else answers[no - 1] = ls[i];
+        }
       }
     } else {
       errors.push(`题号区间 ${s}-${e} 超出范围（1-${total}）`);
@@ -129,40 +171,50 @@ function parseAnswerText(text, total) {
     return ' ';
   });
 
-  // 第二遍：编号 + 选项，如 "1.A" "1、A" "1 A" "1:A" "1)A" "1-A"
-  const numRe = /(\d+)\s*[.、,，:：)）\-—]\s*([A-Da-d])/g;
-  working = working.replace(numRe, (whole, no, letter) => {
+  // 表格行，如 "1 | A" / "| 1 | A |"；AI 返回表格时也能直接粘
+  const tableRe = /(\d+)\s*[|｜]\s*([A-Da-d])\b/g;
+  working = working.replace(tableRe, (whole, no, letter) => {
+    hasNumbered = true;
     const n = parseInt(no, 10);
-    const L = String(letter).toUpperCase();
-    if (n >= 1 && n <= total) {
-      answers[n - 1] = L;
-    } else {
-      errors.push(`题号 ${no} 超出范围（1-${total}）`);
-    }
+    if (n >= 1 && n <= total) answers[n - 1] = String(letter).toUpperCase();
+    else errors.push(`题号 ${no} 超出范围（1-${total}）`);
     return ' ';
   });
 
-  // 第三遍：剩余文本里的字母按顺序填入空位，兼容纯序列与 ABCD 连写
+  // 题号 + 选项，兼容 "1.A" "1、A" "1 A" "1:A" "1)A" "1-A" "1A"
+  // "（1）A" "第1题 A" "1题A" "1、选A"
+  const numRe = /(?:第\s*)?[（(【\[]?\s*(\d+)\s*[）)】\]]?\s*题?\s*[.,:、\-]?\s*(?:选|答案|选项)?\s*([A-Da-d])/g;
+  working = working.replace(numRe, (whole, no, letter) => {
+    hasNumbered = true;
+    const n = parseInt(no, 10);
+    if (n >= 1 && n <= total) answers[n - 1] = String(letter).toUpperCase();
+    else errors.push(`题号 ${no} 超出范围（1-${total}）`);
+    return ' ';
+  });
+
+  // 只有完全没有题号时才按顺序填纯选项；有题号时不再用残留字母兜底，
+  // 避免解释文字里的 A/B/C 被误填到空题。
   const letters = working.match(/[A-Da-d]/g) || [];
   let cursor = 0;
-  for (let i = 0; i < total; i++) {
-    if (!answers[i] && cursor < letters.length) {
-      answers[i] = letters[cursor].toUpperCase();
-      cursor++;
+  if (!hasNumbered) {
+    for (let i = 0; i < total; i++) {
+      if (!answers[i] && !skipped[i] && cursor < letters.length) {
+        answers[i] = letters[cursor].toUpperCase();
+        cursor++;
+      }
     }
   }
-
-  const badLetters = (String(text || '').match(/[E-Ze-z]/g) || []);
-  if (badLetters.length) errors.push(`存在非 A/B/C/D 的选项字母：${badLetters[0].toUpperCase()} 等`);
 
   const filled = answers.filter(Boolean).length;
   const missing = [];
   for (let i = 0; i < total; i++) {
     if (!answers[i]) missing.push(i + 1);
   }
-  const extra = letters.length - cursor;
+  const extra = hasNumbered ? 0 : letters.length - cursor;
+  const badLetters = filled < total ? (working.match(/[E-Ze-z]/g) || []) : [];
   if (filled === 0) errors.push('未解析到有效答案，请粘贴 A/B/C/D 选项');
   if (extra > 0) errors.push(`有 ${extra} 个多余选项未对应到题目，请核对题号`);
+  if (badLetters.length) errors.push(`存在非 A/B/C/D 的选项字母：${badLetters[0].toUpperCase()} 等`);
 
   return { answers, filled, missing, errors };
 }

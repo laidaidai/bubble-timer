@@ -33,6 +33,7 @@
       </view>
     </view>
     <view class="progress-pct num">{{progressPct}}<text class="progress-pct-unit">%</text></view>
+    <view class="sheet-chip import-chip" bindtap="openImport" hover-class="is-press" aria-label="AI 识别并导入作答">AI 导入</view>
     <view wx:if="{{mode === 'list'}}" class="sheet-chip" bindtap="openCard" hover-class="is-press">答题卡</view>
   </view>
 
@@ -129,6 +130,39 @@
     <view class="single-bar">
       <view class="btn btn-outline single-bar-card" bindtap="openCard" hover-class="btn-pressed">答题卡</view>
       <view class="btn btn-dark single-submit submit-strong {{submitting ? 'disabled' : ''}}" bindtap="submit" hover-class="btn-pressed">{{submitting ? '交卷中…' : '交卷'}}</view>
+    </view>
+  </view>
+</view>
+
+<!-- AI 识别导入：复制提示词给外部 AI，拍照识别答题卡后把选项粘回来 -->
+<view wx:if="{{showImport}}" class="mask import-mask anim-fade grade-root theme-{{theme}}" style="{{themeStyle}}" bindtap="closeImport">
+  <view class="import-sheet anim-sheet" catchtap="noop">
+    <view class="import-handle"></view>
+    <view class="import-head">
+      <view class="import-title">AI 识别导入</view>
+      <view class="import-copy" bindtap="copyAiPrompt" hover-class="is-press" aria-label="复制给 AI 的识别提示词">复制提示词</view>
+      <view class="import-close" bindtap="closeImport" hover-class="is-press" aria-label="关闭">×</view>
+    </view>
+
+    <view class="import-input-wrap">
+      <textarea
+        class="import-textarea"
+        aria-label="粘贴 AI 识别的作答"
+        bindinput="onImportInput"
+        maxlength="-1"
+        cursor-spacing="120"
+        adjust-position="{{true}}"
+      />
+      <view wx:if="{{!importHasText}}" class="import-ph-lines">
+        <view wx:for="{{importPlaceholderLines}}" wx:key="*this" class="import-ph-line">{{item}}</view>
+      </view>
+      <view wx:if="{{!importHasText}}" class="import-ph-note">此功能仅辅助；AI 请开「工作模式」，准确率请核对。</view>
+    </view>
+    <view wx:if="{{importParsed}}" class="import-count {{importParsed === total ? 'is-full' : ''}}">已识别 {{importParsed}} / {{total}} 题</view>
+    <view wx:if="{{importError}}" class="import-error">{{importError}}</view>
+    <view class="import-actions">
+      <view class="btn btn-outline half" bindtap="closeImport" hover-class="btn-pressed">取消</view>
+      <view class="btn btn-dark half" bindtap="applyImport" hover-class="btn-pressed">填入作答</view>
     </view>
   </view>
 </view>

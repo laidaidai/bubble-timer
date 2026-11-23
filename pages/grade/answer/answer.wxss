@@ -130,6 +130,14 @@
   transition: transform .12s cubic-bezier(.2,.8,.3,1), box-shadow .12s cubic-bezier(.2,.8,.3,1);
 }
 
+/* AI 识别导入入口：和答题卡胶囊同尺寸，但用主色标成主动作 */
+.import-chip {
+  background: var(--primary);
+  border-color: var(--edge-deep);
+  color: var(--on-primary);
+  box-shadow: 3rpx 4rpx 0 var(--shadow);
+}
+
 .progress-pct {
   flex: 0 0 auto;
   padding: 4rpx 10rpx;
@@ -677,6 +685,144 @@
   border-bottom: 14rpx solid var(--amber-deep);
 }
 
+/* AI 识别导入弹层：和答题卡同宽，输入框 + 复制提示词是唯一主动作 */
+.import-mask { z-index: 1000; }
+.import-sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  max-width: 720px;
+  max-height: 86vh;
+  margin: 0 auto;
+  padding: 0 28rpx calc(24rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  background: var(--card);
+  border: 3rpx solid var(--edge);
+  border-bottom: 0;
+  border-radius: 32rpx 32rpx 0 0;
+  box-shadow: 0 -6rpx 0 var(--shadow-soft);
+  display: flex;
+  flex-direction: column;
+}
+
+.import-handle {
+  width: 66rpx;
+  height: 8rpx;
+  margin: 16rpx auto 0;
+  background: var(--primary);
+  border: 2rpx solid var(--edge);
+  border-radius: 999rpx;
+  box-sizing: border-box;
+}
+
+.import-head {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 12rpx 0 18rpx;
+}
+.import-title { font-size: 30rpx; font-weight: 900; }
+.import-copy {
+  margin-left: auto;
+  min-height: 48rpx;
+  padding: 0 16rpx;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border: 2rpx solid var(--edge);
+  border-radius: 999rpx;
+  background: var(--accent-bg);
+  color: var(--ink);
+  font-size: 20rpx;
+  font-weight: 900;
+  box-shadow: 2rpx 3rpx 0 var(--shadow-soft);
+}
+.import-close {
+  width: 48rpx;
+  height: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-3);
+  font-size: 34rpx;
+  font-weight: 900;
+}
+
+.import-input-wrap { position: relative; width: 100%; }
+
+.import-textarea {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 30vh;
+  min-height: 220rpx;
+  max-height: 460rpx;
+  padding: 18rpx;
+  box-sizing: border-box;
+  border: 2rpx solid var(--edge);
+  border-radius: 18rpx;
+  background: var(--cream-1);
+  box-shadow: inset 0 3rpx 0 var(--shadow-soft);
+  font-size: 26rpx;
+  line-height: 1.7;
+}
+.import-ph-lines {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2;
+  padding: 18rpx;
+  box-sizing: border-box;
+  pointer-events: none;
+  color: var(--text-3);
+  font-size: 21rpx;
+  line-height: 1.5;
+}
+.import-ph-line { display: block; word-break: break-all; }
+.import-ph-note {
+  position: absolute;
+  right: 18rpx;
+  bottom: 14rpx;
+  left: 18rpx;
+  z-index: 3;
+  color: var(--text-3);
+  font-size: 18rpx;
+  line-height: 1.4;
+  opacity: .72;
+  pointer-events: none;
+}
+
+.import-count {
+  margin-top: 10rpx;
+  color: var(--text-3);
+  font-size: 21rpx;
+  font-weight: 800;
+}
+.import-count.is-full { color: var(--success-text); }
+
+.import-error {
+  margin-top: 10rpx;
+  padding: 8rpx 12rpx;
+  border: 2rpx solid var(--danger);
+  border-radius: 12rpx;
+  background: var(--danger-bg);
+  color: var(--danger-text);
+  font-size: 21rpx;
+  line-height: 1.5;
+}
+
+.import-actions {
+  display: flex;
+  gap: 12rpx;
+  margin-top: 18rpx;
+}
+.import-actions .btn { flex: 1 1 0; min-width: 0; }
+
 /* 答题卡浮窗：定高 + flex 分区，内容区自己滚动，底部按钮永远在屏内；宽窗口与正文列同宽居中 */
 .sheet {
   position: absolute;
@@ -837,6 +983,18 @@
   .single-submit { min-height: 46px; }
   /* 桌面档关掉整卡高光，减少大幅面渐变重绘，优先换题帧率 */
   .glass-sheen { display: none; }
+  .import-sheet { max-width: 688px; max-height: none; padding: 0 18px calc(14px + env(safe-area-inset-bottom)); border-width: 2px; border-radius: 18px 18px 0 0; box-shadow: 0 -3px 0 var(--shadow-soft); }
+  .import-handle { width: 38px; height: 4px; margin-top: 9px; border-width: 1px; }
+  .import-head { gap: 7px; padding: 6px 0 10px; }
+  .import-title { font-size: 18px; }
+  .import-copy { min-height: 30px; padding: 0 10px; border-width: 1px; border-radius: 999px; font-size: 12px; box-shadow: 1px 2px 0 var(--shadow-soft); }
+  .import-close { width: 30px; height: 30px; font-size: 21px; }
+  .import-textarea { height: 210px; min-height: 0; max-height: none; padding: 10px; border-width: 2px; border-radius: 10px; font-size: 15px; line-height: 1.6; box-shadow: inset 0 2px 0 var(--shadow-soft); }
+  .import-ph-lines { font-size: 11px; }
+  .import-ph-note { right: 12px; bottom: 10px; left: 12px; font-size: 10px; }
+  .import-count { margin-top: 6px; font-size: 12px; }
+  .import-error { margin-top: 6px; padding: 5px 7px; border-width: 1px; border-radius: 7px; font-size: 12px; }
+  .import-actions { gap: 8px; margin-top: 10px; }
   .sheet { max-width: 688px; height: 560px; max-height: 76vh; border-width: 2px; border-radius: 18px 18px 0 0; box-shadow: 0 -3px 0 var(--shadow-soft); }
   .sheet-handle { width: 38px; height: 4px; margin: 9px auto 0; border-width: 1px; }
   .sheet-body { padding: 13px 16px; }
