@@ -18,14 +18,36 @@ build/
 coverage/
 *.log
 
-# 微信开发者工具本机私有配置
+# 微信开发者工具本机私有配置 / 缓存
 project.private.config.json
+.miniprogram/
+.wechat/
+*.wxapkg
+
+# 小程序签名证书，禁止入库
+*.keystore
+*.jks
 
 # 编辑器 / IDE 本地设置
 .idea/
 .vscode/
 *.iml
 .history/
+*.code-workspace
+.cursor/
+.windsurf/
+
+# Python 脚本缓存
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# 本地 AI 工具与私有配置
+.claude/settings.local.json
+.claude/worktrees/
+.npmrc
 
 
 
