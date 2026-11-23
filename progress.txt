@@ -59,3 +59,4 @@
 2026-11-23 工作制：按反馈删掉成绩页 B1 2×3 模块成绩卡，能力区标题改回「能力图」；保留 D1 雷达、目标档切换和下方逐模块卡，清理 buildScoreCards / scoreCards 数据与全部 B1 样式。result JS / WXML 事件 / WXSS 括号与 diff 检查通过，未在开发者工具重编译。
 2026-11-23 工作制：过关斩将历史空态改为品牌 logo 图案 + 一句「完成一次批改后，记录会出现在这里」，去掉「暂无作答记录」白卡和副文案；手机档 logo 轻浮动，桌面档静态展示。history WXML / WXSS、事件、括号与 diff 检查通过，未在开发者工具重编译。
 2026-11-23 工作制：修复代码质量检测两项未通过——在 project.config.json 的 packOptions 忽略 promo / mockups / .claude / .git / 设计文档 / AGENTS.md / progress.txt / 本机私有配置与 keystore，只保留运行时文件；本地估算主包 1.34MiB、图片音频 81.8KiB，均低于 1.5M / 200K。待开发者工具重新上传后复核。
+2026-11-23 工作制：完善用户级 Fish UI 设计系统，新增 action-and-progress 参考，沉淀动作控件层级、危险操作、只读进度与可调滑杆的语义边界、计时舞台布局、模块切换与跨端映射；主 SKILL 增加控件选型与验收条目，项目 Skill 同步引用。

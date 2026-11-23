@@ -15,7 +15,7 @@ description: 「小鱼计时器」微信小程序的 UI 设计系统与自适应
 - 一屏一个锚点、一个主操作；硬影卡不超过 3 张，列表行与次级卡用实线不用硬影。
 - **全局禁用虚线**：分隔、空态、目标线、图表基准、拖放提示全部用实线或留白；被修改的页面顺手清掉该范围内旧虚线。
 - 不写解释性微文案；保留字段名、单位、状态，交互靠控件自解释。
-- 组件几何不随主题变化；换主题只换 token。完整组件解剖、页面骨架与动效配方见用户级 `fish-timer-ui` 的 `SKILL.md`、`component-recipes.md`、`page-recipes.md`、`motion-recipes.md`；本文件只保留项目专属实现与验收。
+- 组件几何不随主题变化；换主题只换 token。完整组件解剖、按钮层级与进度表达、页面骨架与动效配方见用户级 `fish-timer-ui` 的 `SKILL.md`、`component-recipes.md`、`action-and-progress.md`、`page-recipes.md`、`motion-recipes.md`；本文件只保留项目专属实现与验收。
 - 项目专属历史已下沉到 `references/project-notes.md`；只有改小鱼计时器时才读，不再混进用户级通用 skill。
 
 ## 1. 主题 token（唯一数据源）
