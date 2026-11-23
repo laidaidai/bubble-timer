@@ -320,7 +320,8 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
 .timer-page.compact .clock-neon .plain-num, .timer-page.compact .clock-outline .plain-num { font-size: 62px; }
 
 /* 右侧模块栏：手动收起 / 展开（贴边小把手，不压住模块文字） */
-.timer-page { position: relative; }
+/* 页面根固定铺满视口：部分微信容器会给页面流加顶部偏移，绝对定位和尺寸测量都要以真实视口为准 */
+.timer-page { position: fixed; left: 0; top: 0; width: 100%; height: 100%; }
 .module-toggle {
   position: absolute;
   z-index: 40;
@@ -1202,6 +1203,10 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
 /* 全屏闲置：退出键静置 3s 自动收纳，点屏幕任何位置唤回（只动透明度/缩放，不参与布局） */
 .timer-page.immersive .immersive-toggle { transition: transform .26s cubic-bezier(.2, .9, .3, 1), opacity .26s ease, background-color .18s ease, box-shadow .18s ease; }
 .timer-page.immersive.chrome-idle .immersive-toggle { opacity: 0; transform: scale(.86); pointer-events: none; }
+/* 竖屏沉浸：退出键同样让开状态栏；系统胶囊仍在，别贴着顶部 */
+.timer-page.portrait.immersive .immersive-toggle {
+  top: var(--portrait-top, calc(env(safe-area-inset-top) + 10px));
+}
 
 /* 时钟尺寸不再靠“先写死高度再 transform 放大”，统一交给 .clock-slot + --clk-fit（见文件末尾） */
 
@@ -1237,7 +1242,7 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
 .timer-page.portrait .portrait-corner {
   position: absolute;
   z-index: 22;
-  top: calc(env(safe-area-inset-top) + 46px);
+  top: var(--portrait-corner-top, calc(env(safe-area-inset-top) + 46px));
   right: 6px;
   display: flex;
   justify-content: flex-end;
@@ -1350,6 +1355,10 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
 }
 .timer-page.portrait.module-collapsed .module-toggle { right: 10px; bottom: 10px; }
 .timer-page.portrait.module-collapsed .module-side { display: none; }
+/* 竖屏：避开系统状态栏与微信右上角胶囊，全屏按钮不压时间 */
+.timer-page.portrait .immersive-toggle {
+  top: var(--portrait-top, calc(env(safe-area-inset-top) + 10px));
+}
 
 /* 竖屏全屏：只留大时钟（三优先级压过 .compact / .immersive 的两段规则） */
 .timer-page.portrait.immersive { padding: 0; }

@@ -46,7 +46,7 @@ Page({
     celebrating: false, celebrationBubbles: [], celebrationMessage: '',
     timerReveal: false, immersiveAnim: false, immersiveLeaving: false,
     clockMorph: false, clockMorphStyle: '',
-    stageVars: '', slotVars: '', styleHint: '', clockFitVars: '',
+    stageVars: '', slotVars: '', styleHint: '', clockFitVars: '', navVars: '',
     moduleFabBottom: 20, moduleMenuDown: false, moduleFabVars: '',
     fabDragging: false, fabDragY: 0, fabSettling: false
   },
@@ -124,11 +124,13 @@ Page({
     // onShow / onLoad 早于首次渲染，getWindowInfo 在横屏桌面页还可能返回竖屏宽高；
     // 页面真正渲染出来后先用实测尺寸校准方向和槽位，再补一次时钟倍率。
     this.readPageViewport(rect => {
-      if (rect && (rect.w !== this.viewportW || rect.h !== this.viewportH)) {
+      if (rect) {
         this.viewportW = rect.w
         this.viewportH = rect.h
-        this.syncOrientation()
       }
+      // onLoad 早于首次渲染，方向请求可能还没生效；这里再同步一次，
+      // 让手机默认横屏、桌面窄竖窗口回退竖屏都能落到真实页面尺寸上。
+      this.syncOrientation()
       this.scheduleFitClock()
     })
   },
@@ -273,7 +275,57 @@ Page({
     }
   },
 
-  // 竖屏判定：窗口比宽高「高」就走竖屏那一套（手机计时页强制横屏，只有电脑/平板的窄竖窗口会命中）
+  // 页面方向：真实手机 / 平板优先横屏；桌面宿主（含伪装 ios 的微信手机小程序）
+  // 不能物理旋转，按页面实测宽高回退，避免把横屏布局硬塞进竖屏容器。
+  preferredPageOrientation(winW, winH) {
+    let platform = ''
+    let desktopHost = false
+    try {
+      const info = wx.getDeviceInfo ? wx.getDeviceInfo() : wx.getSystemInfoSync()
+      platform = String((info && info.platform) || '').toLowerCase()
+    } catch (error) {}
+    try {
+      const app = getApp()
+      desktopHost = !!(app && app.globalData && app.globalData.isDesktop)
+    } catch (error) {}
+    try {
+      const info = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync()
+      // Mac / Windows 微信“手机小程序”可能把 platform 伪装成 ios，且没有手机状态栏，
+      // 也可能只是一个远小于屏幕的桌面窗口；这类宿主不能物理旋转，不能再请求
+      // landscape，否则页面会被裁成横向长条。
+      const screenW = Number(info.screenWidth) || 0
+      const safeTop = info.safeArea && Number(info.safeArea.top)
+      if (!Number(info.statusBarHeight) || safeTop === 0) desktopHost = true
+      if (screenW && winW && screenW - winW > 80) desktopHost = true
+    } catch (error) {}
+    if (!desktopHost && (platform === 'ios' || platform === 'android')) return 'landscape'
+    return winW > winH ? 'landscape' : 'portrait'
+  },
+
+  syncPageOrientation(winW, winH) {
+    // onLoad 的 getWindowInfo 在桌面横屏窗口里可能是竖屏旧值；必须等
+    // onReady / onResize 量到 .timer-page 的真实尺寸后，再发方向请求。
+    if (!this.viewportW || !this.viewportH) return
+    const next = this.preferredPageOrientation(winW, winH)
+    if (next === this._pageOrientation) return
+    if (typeof wx.setPageOrientation !== 'function') return
+    // 页面本身已经是想要的方向时不再调接口，避免桌面预览/鸿蒙等宿主
+    // 在 setPageOrientation 回调里再触发一次尺寸变化，把全屏动画打断。
+    if ((next === 'landscape' && winW > winH) || (next === 'portrait' && winH > winW)) return
+    this._pageOrientation = next
+    wx.setPageOrientation({
+      orientation: next,
+      success: () => {
+        // setPageOrientation 在开发者工具和部分桌面容器里不会补发 onResize，
+        // 旋转成功后主动实测页面尺寸，避免页面已经横过来、布局仍按竖屏算。
+        if (this.pageSyncTimer) clearTimeout(this.pageSyncTimer)
+        this.pageSyncTimer = setTimeout(() => this.onResize(), 160)
+      },
+      fail: () => { this._pageOrientation = '' }
+    })
+  },
+
+  // 竖屏判定：按真实页面宽高走；手机优先横屏，横屏请求失败或桌面窄竖窗口回退竖屏。
   syncOrientation() {
     let info = null
     try {
@@ -285,6 +337,7 @@ Page({
     const winW = this.viewportW || info.windowWidth
     const winH = this.viewportH || info.windowHeight
     if (!winW || !winH) return
+    this.syncPageOrientation(winW, winH)
     const portrait = winH > winW
     const winChanged = winW !== this.lastWinW || winH !== this.lastWinH
     this.lastWinW = winW
@@ -473,6 +526,7 @@ Page({
     clearTimeout(this.timerRevealTimer)
     clearTimeout(this.immersiveAnimTimer)
     clearTimeout(this.immersivePhaseTimer)
+    if (this.pageSyncTimer) clearTimeout(this.pageSyncTimer)
     this.stopTicker()
     this.stopMsTicker()
     this.stopTotalBuzz()
@@ -781,9 +835,8 @@ Page({
     this.scheduleChromeIdle()
   },
 
-  // 模块球：右侧上下拖动，面板根据球在屏幕上半/下半自动向上或向下展开
-  // 计时页固定为 landscape，短边才是页面高度；getWindowInfo 在某些环境会返回竖屏尺寸，
-  // 这里直接取短边，既避开朝向动画中的缩放测量，也能跟着窗口尺寸变化重算。
+  // 模块球：右侧上下拖动，面板根据球在屏幕上半/下半自动向上或向下展开。
+  // 计时页现在会随窗口竖/横切换，优先用页面实测高度；拿不到时再用窗口短边兜底。
   syncModuleFabLayout() {
     let info = null
     try {
@@ -796,12 +849,21 @@ Page({
     if (!this._moduleFabPageH) this._moduleFabPageH = winH
     // 右上角胶囊必须让开，否则球拖到顶部会压住系统菜单
     let menuBottom = 56
+    let menuTop = 0
     try {
       const menu = wx.getMenuButtonBoundingClientRect
         ? wx.getMenuButtonBoundingClientRect()
         : null
-      if (menu && menu.bottom > 0) menuBottom = Math.min(96, menu.bottom)
+      if (menu && menu.bottom > 0) {
+        menuBottom = Math.min(96, menu.bottom)
+        menuTop = menu.top || 0
+      }
     } catch (error) {}
+    // 竖屏页顶部还有系统状态栏和微信胶囊：全屏按钮、正计时胶囊都不能压上去。
+    const statusTop = Math.max(0, Number(info.statusBarHeight) || 0)
+    const chromeTop = Math.max(8, statusTop + 8, menuTop)
+    const cornerTop = Math.max(statusTop + 46, menuBottom + 8)
+    const navVars = `--portrait-top: ${chromeTop}px; --portrait-corner-top: ${cornerTop}px;`
     const topSafe = Math.min(120, Math.max(80, menuBottom + 48))
     const safeBottom = 6
     const min = safeBottom + 16
@@ -821,7 +883,7 @@ Page({
     const panelMax = Math.max(140, Math.min(winH * 0.54, available))
     const bodyMax = Math.max(96, panelMax - 46)
     const vars = `--fab-bottom: ${bottom}px; --panel-bottom: ${panelBottom}px; --panel-top: ${panelTop}px; --panel-max: ${panelMax}px; --panel-body-max: ${bodyMax}px;`
-    this.setData({ moduleFabBottom: bottom, moduleMenuDown: down, moduleFabVars: vars })
+    this.setData({ moduleFabBottom: bottom, moduleMenuDown: down, moduleFabVars: vars, navVars })
     this.measureModuleFabPage()
   },
 
