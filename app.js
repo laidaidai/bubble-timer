@@ -157,6 +157,7 @@ const DEFAULT_SETTINGS = {
   tickSound: false,
   tickDefaultOff: true,
   incentiveType: 'tomato',
+  timerOrientation: 'landscape',
   privacyAlbum: true,
   privacyCalendar: true
 }

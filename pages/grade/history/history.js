@@ -61,14 +61,9 @@ Page({
         metaText: target ? `已计时 ${t.totalActualText || formatDuration(t.totalActual)} · 目标 ${target} 分钟` : `已计时 ${t.totalActualText || formatDuration(t.totalActual)}`,
       };
     });
-    const list = raw.map((r) => {
-      const done = (r.right || 0) + (r.wrong || 0) + (r.blank || 0);
-      const acc = done ? ((r.right || 0) / done) * 100 : 0;
-      return Object.assign({}, r, {
-        timeText: formatTime(r.time),
-        accText: acc.toFixed(1),
-      });
-    });
+    const list = raw.map((r) => Object.assign({}, r, {
+      timeText: formatTime(r.time),
+    }));
     this.setData({
       list,
       pending,
@@ -110,14 +105,17 @@ Page({
     });
   },
 
-  // 从历史直接重新作答这套卷（清掉旧草稿，避免上次没选完的答案串进来）
-  retry() {
-    const paperId = this.data.paperId;
+  // 从历史直接重新作答这条记录对应的试卷（清掉旧草稿，避免上次没选完的答案串进来）
+  retryRecord(e) {
+    const { id } = e.currentTarget.dataset;
+    const record = this.data.list.find((item) => String(item.id) === String(id));
+    const paperId = record && record.paperId;
     if (!paperId) return;
+    const encodedPaperId = encodeURIComponent(paperId);
     store.clearDraft(paperId);
     // redirectTo：交卷后是替代当前页，返回时不会再堆一层旧页
     wx.redirectTo({
-      url: `/pages/grade/answer/answer?paperId=${paperId}&mode=single&noTimer=1`,
+      url: `/pages/grade/answer/answer?paperId=${encodedPaperId}&mode=single&noTimer=1`,
       fail: () => wx.showToast({ title: '打开答题页失败，请重试', icon: 'none' }),
     });
   },

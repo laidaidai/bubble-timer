@@ -10,6 +10,10 @@ const LONG_REST_SECONDS = 15 * 60
 const LONG_REST_EVERY = 4
 const RECORD_LIMIT = 20
 
+function normalizeTimerOrientation(value) {
+  return value === 'auto' || value === 'landscape' || value === 'portrait' ? value : 'landscape'
+}
+
 // 计时页目标时长的英文缩写：45min / 1h / 1h 30min
 function targetUnitText(minutes) {
   const total = Math.max(0, Math.round(Number(minutes) || 0))
@@ -55,6 +59,7 @@ Page({
     this.setData({ isDesktop: !!(getApp().globalData && getApp().globalData.isDesktop) })
     const theme = app.getTheme ? app.getTheme() : { key: 'rose' }
     const settings = app.getSettings ? app.getSettings() : {}
+    this.orientationPreference = normalizeTimerOrientation(settings.timerOrientation)
     const quote = pickTimerQuote()
     this.tickAudioFlip = false
     this.setData({ theme: theme.key, themeStyle: theme.style || '', tickMuted: settings.tickSound !== true, compact: true, quoteText: quote.text })
@@ -136,6 +141,7 @@ Page({
   },
 
   onShow() {
+    this.readOrientationPreference()
     this.syncOrientation()
     if (this.data.runtimeModules && this.data.runtimeModules.length) this.playTimerReveal()
   },
@@ -275,9 +281,24 @@ Page({
     }
   },
 
-  // 页面方向：真实手机 / 平板优先横屏；桌面宿主（含伪装 ios 的微信手机小程序）
-  // 不能物理旋转，按页面实测宽高回退，避免把横屏布局硬塞进竖屏容器。
+  // 设置里的时钟方向：auto 跟随页面实际方向；横 / 竖强制请求系统旋转。
+  // 桌面宿主（含伪装 ios 的微信手机小程序）不能物理旋转，强制档按实际宽高回退，避免横屏被裁。
+  readOrientationPreference() {
+    let pref = 'landscape'
+    try {
+      const settings = app.getSettings ? app.getSettings() : {}
+      pref = normalizeTimerOrientation(settings.timerOrientation)
+    } catch (error) {}
+    if (pref !== this.orientationPreference) {
+      this.orientationPreference = pref
+      this._pageOrientation = ''
+    }
+  },
+
   preferredPageOrientation(winW, winH) {
+    const preference = this.orientationPreference || 'landscape'
+    // 自适应：不向系统发方向请求，窗口怎么变就怎么排。
+    if (preference === 'auto') return winW > winH ? 'landscape' : 'portrait'
     let platform = ''
     let desktopHost = false
     try {
@@ -285,20 +306,22 @@ Page({
       platform = String((info && info.platform) || '').toLowerCase()
     } catch (error) {}
     try {
-      const app = getApp()
-      desktopHost = !!(app && app.globalData && app.globalData.isDesktop)
+      const host = getApp()
+      desktopHost = !!(host && host.globalData && host.globalData.isDesktop)
     } catch (error) {}
     try {
       const info = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync()
-      // Mac / Windows 微信“手机小程序”可能把 platform 伪装成 ios，且没有手机状态栏，
+      // Mac / Windows 微信「手机小程序」可能把 platform 伪装成 ios，且没有手机状态栏，
       // 也可能只是一个远小于屏幕的桌面窗口；这类宿主不能物理旋转，不能再请求
-      // landscape，否则页面会被裁成横向长条。
+      // landscape / portrait，否则页面会被裁成横向长条或留下大片空白。
       const screenW = Number(info.screenWidth) || 0
       const safeTop = info.safeArea && Number(info.safeArea.top)
       if (!Number(info.statusBarHeight) || safeTop === 0) desktopHost = true
       if (screenW && winW && screenW - winW > 80) desktopHost = true
     } catch (error) {}
-    if (!desktopHost && (platform === 'ios' || platform === 'android')) return 'landscape'
+    // 开发者工具可以模拟旋转，保留强制档用于调试；真实桌面宿主按实际窗口回退。
+    if (platform === 'devtools') return preference
+    if (!desktopHost) return preference
     return winW > winH ? 'landscape' : 'portrait'
   },
 
@@ -325,7 +348,8 @@ Page({
     })
   },
 
-  // 竖屏判定：按真实页面宽高走；手机优先横屏，横屏请求失败或桌面窄竖窗口回退竖屏。
+  // 竖屏判定：按真实页面宽高走；方向偏好决定是否请求系统旋转，
+  // 桌面宿主或旋转失败时按实际页面宽高回退，避免布局与容器方向不一致。
   syncOrientation() {
     let info = null
     try {

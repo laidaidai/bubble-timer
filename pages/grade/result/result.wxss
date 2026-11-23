@@ -79,7 +79,7 @@
   gap: 8rpx;
   margin: 18rpx 22rpx 0;
   padding-top: 14rpx;
-  border-top: 2rpx dashed var(--edge);
+  border-top: 2rpx solid var(--edge);
   font-size: 23rpx;
   line-height: 1.4;
 }

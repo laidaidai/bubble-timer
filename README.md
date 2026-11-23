@@ -30,7 +30,7 @@
 
 1. 用微信开发者工具「导入项目」，选择本目录。
 2. AppID 使用 `project.config.json` 里的 `wx94c4673cd56b09ad`，或换成自己的小程序 AppID。
-3. 点「编译」即可；计时页默认请求横屏，手机横屏不可用或桌面窄竖窗口会回退竖屏，真机与微信桌面「手机小程序」都要核对。
+3. 点「编译」即可；计时页的时钟方向可在设置里切换「自适应 / 强制横屏 / 强制竖屏」，默认强制横屏；手机横屏不可用或桌面窄竖窗口会按实际窗口回退，真机与微信桌面「手机小程序」都要核对。
 4. 发布前在微信公众平台配置：服务类目、隐私协议（相册保存海报）、订阅消息模板（待办提醒用）。
 
 ## 目录结构
@@ -120,7 +120,7 @@ node tools/gen-theme-wxss.js
 仓库内附了一份 Claude Code / Claude 用的 UI Skill：
 
 ```
-.claude/skills/paopao-timer-ui/SKILL.md
+.claude/skills/fish-timer-ui/SKILL.md
 ```
 
-它记录了蜂蜜奶霜等 6 套描边主题的规则、主题 token 的改法、页面结构和验收流程。要全局可用，把它软链或复制到 `~/.claude/skills/` 即可。
+它记录了 7 套描边主题的规则、主题 token 的改法、页面结构、旗舰组件解剖与验收流程；通用版在 `workspace/.user_skills/fish-timer-ui`，含 6 类页面骨架、动效配方与 `fish-ui-page-atlas.html`，可直接复用到其他小程序或网页。

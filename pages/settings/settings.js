@@ -8,6 +8,16 @@ const SOUND_MODES = [
   { key: 'silent', name: '静音', desc: '只弹提示，不震不响' }
 ]
 
+const TIMER_ORIENTATIONS = [
+  { key: 'auto', name: '自适应' },
+  { key: 'landscape', name: '强制横屏' },
+  { key: 'portrait', name: '强制竖屏' }
+]
+
+const normalizeTimerOrientation = (value) => (
+  value === 'auto' || value === 'landscape' || value === 'portrait' ? value : 'landscape'
+)
+
 const PRIMARY_COLORS = ['#FFC94D', '#FF9FB6', '#7FC7D9', '#8FD2B0', '#B79CE4', '#FF9A62', '#5FA8E8', '#D9D2C0']
 const BG_COLORS = ['#FBF3DF', '#FFF1F3', '#EAF4F7', '#EAF5EF', '#F3F0FA', '#FFFFFF', '#F6F3EA', '#2A2017']
 const INK_COLORS = ['#4B3A2A', '#3A3550', '#243B36', '#5A3A22', '#1F1B16', '#555555']
@@ -60,6 +70,8 @@ Page({
     privacyCalendar: true,
     tickSound: false,
     incentiveType: 'tomato',
+    timerOrientation: normalizeTimerOrientation(app.getSettings ? app.getSettings().timerOrientation : ''),
+    orientationOptions: TIMER_ORIENTATIONS,
     incentiveOptions: [
       { key: 'tomato', name: '番茄' },
       { key: 'star', name: '星星' },
@@ -166,6 +178,7 @@ Page({
       privacyAlbum: settings.privacyAlbum !== false,
       privacyCalendar: settings.privacyCalendar !== false,
       incentiveType: settings.incentiveType || 'tomato',
+      timerOrientation: normalizeTimerOrientation(settings.timerOrientation),
       hasCustomRing: (app.getRings ? app.getRings() : []).some(item => String(item.key).indexOf('cr-') === 0 || item.key === 'custom')
     }
 
@@ -504,6 +517,16 @@ Page({
     app.saveSettings({ incentiveType: key })
     this.refresh()
     wx.showToast({ title: '已切换激励', icon: 'none', duration: 1000 })
+  },
+
+  setTimerOrientation(event) {
+    const key = event.currentTarget.dataset.key
+    const next = normalizeTimerOrientation(key)
+    if (!key || next === this.data.timerOrientation) return
+    app.saveSettings({ timerOrientation: next })
+    this.setData({ timerOrientation: next })
+    if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail: () => {} })
+    wx.showToast({ title: '已保存时钟方向', icon: 'none', duration: 1000 })
   },
 
   selectSection(event) {

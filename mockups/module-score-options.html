@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>小鱼计时器 · 模块分数呈现方案</title>
+<style>
+  :root {
+    --bg: #eaf4fc;
+    --paper: #fffdf8;
+    --surface: #f3f9ff;
+    --ink: #172b43;
+    --muted: #62788e;
+    --line: #bfd2e3;
+    --line-strong: #233c58;
+    --primary: #79b7e7;
+    --primary-deep: #337aae;
+    --primary-soft: #dceefb;
+    --peach: #ef9b7f;
+    --peach-soft: #fce6dc;
+    --green: #2f835f;
+    --green-soft: #e1f3e8;
+    --red: #c6584a;
+    --red-soft: #fbe5e0;
+    --yellow: #e7c35b;
+    --shadow: rgba(29, 51, 74, .16);
+    --radius: 24px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    color: var(--ink);
+    background-color: var(--bg);
+    background-image: radial-gradient(rgba(86, 139, 182, .16) .8px, transparent .8px);
+    background-size: 20px 20px;
+    font-family: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  button, input { font: inherit; }
+  button { cursor: pointer; }
+
+  .num {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+
+  .page {
+    width: min(1240px, calc(100% - 48px));
+    margin: 0 auto;
+    padding: 44px 0 68px;
+  }
+
+  /* ---------- Header ---------- */
+
+  .hero {
+    margin-bottom: 24px;
+  }
+
+  .eyebrow-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: .16em;
+    color: var(--primary-deep);
+  }
+
+  .demo-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 11px;
+    border: 1.5px solid var(--line-strong);
+    border-radius: 999px;
+    background: var(--paper);
+    font-size: 11px;
+    font-weight: 800;
+    box-shadow: 3px 3px 0 var(--shadow);
+  }
+
+  .demo-badge::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--peach);
+  }
+
+  .hero-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 252px;
+    align-items: end;
+    gap: 28px;
+  }
+
+  h1 {
+    margin: 0;
+    max-width: 780px;
+    font-size: clamp(32px, 4.2vw, 56px);
+    line-height: 1.08;
+    letter-spacing: -.045em;
+    font-weight: 900;
+  }
+
+  h1 span {
+    color: var(--primary-deep);
+    position: relative;
+    white-space: nowrap;
+  }
+
+  h1 span::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 1px;
+    height: 10px;
+    background: var(--primary-soft);
+    z-index: -1;
+    transform: rotate(-1deg);
+  }
+
+  .hero-copy {
+    margin: 14px 0 0;
+    max-width: 680px;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.75;
+  }
+
+  .hero-copy b { color: var(--ink); }
+
+  .score-stamp {
+    position: relative;
+    padding: 19px 20px 17px;
+    border: 2px solid var(--line-strong);
+    border-radius: 22px;
+    background: var(--paper);
+    box-shadow: 7px 7px 0 var(--shadow);
+    transform: rotate(1.4deg);
+  }
+
+  .score-stamp::before {
+    content: "";
+    position: absolute;
+    top: -8px;
+    left: 22px;
+    width: 58px;
+    height: 15px;
+    background: var(--primary);
+    border: 1.5px solid var(--line-strong);
+    transform: rotate(-3deg);
+    border-radius: 3px;
+  }
+
+  .stamp-label {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 800;
+  }
+
+  .stamp-score {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    margin-top: 4px;
+  }
+
+  .stamp-score strong {
+    font-size: 52px;
+    line-height: 1;
+    font-weight: 900;
+    letter-spacing: -.07em;
+  }
+
+  .stamp-score small { color: var(--muted); font-size: 13px; font-weight: 800; }
+  .stamp-sub { margin-top: 8px; color: var(--muted); font-size: 11px; font-weight: 700; }
+
+  /* ---------- Controls ---------- */
+
+  .controls {
+    position: sticky;
+    top: 10px;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px 24px;
+    margin: 26px 0 22px;
+    padding: 12px 14px;
+    border: 2px solid var(--line-strong);
+    border-radius: 18px;
+    background: rgba(255, 253, 248, .92);
+    box-shadow: 5px 5px 0 var(--shadow);
+    backdrop-filter: blur(10px);
+  }
+
+  .control-group {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+
+  .control-label {
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: .06em;
+    white-space: nowrap;
+  }
+
+  .segmented {
+    display: inline-flex;
+    padding: 3px;
+    border: 1.5px solid var(--line-strong);
+    border-radius: 999px;
+    background: var(--surface);
+    gap: 2px;
+  }
+
+  .segmented button {
+    min-width: 46px;
+    padding: 6px 10px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+    transition: background .18s ease, color .18s ease, transform .18s ease;
+  }
+
+  .segmented button:hover { color: var(--ink); transform: translateY(-1px); }
+
+  .segmented button.active {
+    background: var(--primary);
+    color: var(--ink);
+    box-shadow: 2px 2px 0 var(--line-strong);
+  }
+
+  .control-note {
+    margin-left: auto;
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 700;
+  }
+
+  .control-note b { color: var(--primary-deep); }
+
+  /* ---------- Shared panels ---------- */
+
+  .options-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px;
+  }
+
+  .panel {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: 20px 20px 18px;
+    border: 2px solid var(--line-strong);
+    border-radius: var(--radius);
+    background: rgba(255, 253, 248, .9);
+    box-shadow: 7px 7px 0 var(--shadow);
+    overflow: hidden;
+  }
+
+  .panel::before {
+    content: "";
+    position: absolute;
+    right: -30px;
+    top: -42px;
+    width: 108px;
+    height: 80px;
+    border-radius: 50%;
+    background: var(--primary-soft);
+    opacity: .7;
+    pointer-events: none;
+  }
+
+  .panel-b::before { background: var(--peach-soft); }
+  .panel-c::before { background: #fbf0cc; }
+  .panel-d::before { background: #e7e1f6; }
+
+  .panel-a {
+    border-color: var(--primary-deep);
+    box-shadow: 7px 7px 0 rgba(51, 122, 174, .24);
+  }
+
+  .panel-top {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    min-height: 44px;
+    margin-bottom: 14px;
+  }
+
+  .panel-index {
+    display: grid;
+    place-items: center;
+    flex: 0 0 30px;
+    width: 30px;
+    height: 30px;
+    border: 1.5px solid var(--line-strong);
+    border-radius: 9px;
+    background: var(--primary-soft);
+    font-size: 13px;
+    font-weight: 900;
+  }
+
+  .panel-b .panel-index { background: var(--peach-soft); }
+  .panel-c .panel-index { background: #fbf0cc; }
+  .panel-d .panel-index { background: #e7e1f6; }
+
+  .panel-heading { min-width: 0; flex: 1; }
+
+  .panel-heading h2 {
+    margin: 0;
+    font-size: 18px;
+    line-height: 1.3;
+    font-weight: 900;
+    letter-spacing: -.02em;
+  }
+
+  .panel-heading p {
+    margin: 4px 0 0;
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.5;
+    font-weight: 600;
+  }
+
+  .panel-tag {
+    flex: 0 0 auto;
+    padding: 5px 8px;
+    border: 1.5px solid var(--line-strong);
+    border-radius: 999px;
+    background: var(--green-soft);
+    color: var(--green);
+    font-size: 10px;
+    font-weight: 900;
+    white-space: nowrap;
+  }
+
+  .panel-b .panel-tag { background: var(--peach-soft); color: var(--red); }
+  .panel-c .panel-tag { background: #fbf0cc; color: #9a7116; }
+  .panel-d .panel-tag { background: #e7e1f6; color: #6f5a9b; }
+
+  .panel-a .panel-tag::before { content: "★ "; }
+
+  .data-surface {
+    padding: 13px 13px 12px;
+    border: 1.5px solid var(--line);
+    border-radius: 16px;
+    background: var(--surface);
+  }
+
+  .mini-label {
+    display: block;
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .04em;
+  }
+
+  /* ---------- A: bullet chart ---------- */
+
+  .bullet-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 11px;
+  }
+
+  .bullet-summary-main {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+  }
+
+  .bullet-summary-main strong {
+    font-size: 27px;
+    line-height: 1;
+    font-weight: 900;
+    letter-spacing: -.04em;
+  }
+
+  .bullet-summary-main strong.positive { color: var(--green); }
+  .bullet-summary-main strong.negative { color: var(--red); }
+  .bullet-summary-main small { color: var(--muted); font-size: 11px; font-weight: 700; }
+
+  .target-legend {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 700;
+  }
+
+  .target-legend::before {
+    content: "";
+    width: 2px;
+    height: 15px;
+    border-radius: 2px;
+    background: var(--ink);
+    box-shadow: 0 0 0 2px rgba(35, 60, 88, .06);
+  }
+
+  .bullet-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .b-row {
+    display: grid;
+    grid-template-columns: 92px minmax(100px, 1fr) 54px 49px;
+    align-items: center;
+    gap: 9px;
+    min-height: 44px;
+    padding: 7px 9px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--paper);
+  }
+
+  .b-name {
+    min-width: 0;
+    font-size: 12px;
+    font-weight: 900;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .b-name small {
+    display: block;
+    margin-top: 2px;
+    color: var(--muted);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: .02em;
+  }
+
+  .b-track {
+    position: relative;
+    height: 19px;
+    border: 1.5px solid var(--line-strong);
+    border-radius: 999px;
+    background: #e4f0fa;
+    isolation: isolate;
+  }
+
+  .b-fill {
+    position: absolute;
+    inset: 2px auto 2px 2px;
+    width: var(--rate);
+    max-width: calc(100% - 4px);
+    border-radius: 999px;
+    background: linear-gradient(90deg, #62a9dc, #8ac9ed);
+    transition: width .28s cubic-bezier(.2, .8, .3, 1);
+  }
+
+  .b-target {
+    position: absolute;
+    z-index: 2;
+    left: var(--target);
+    top: -4px;
+    bottom: -4px;
+    width: 2px;
+    border-radius: 2px;
+    background: var(--ink);
+    transition: left .28s cubic-bezier(.2, .8, .3, 1);
+  }
+
+  .b-target::after {
+    content: "";
+    position: absolute;
+    left: -4px;
+    bottom: -5px;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid var(--ink);
+  }
+
+  .b-points {
+    text-align: right;
+    font-size: 15px;
+    font-weight: 900;
+    letter-spacing: -.03em;
+    white-space: nowrap;
+  }
+
+  .b-points small { color: var(--muted); font-size: 9px; font-weight: 700; }
+
+  .b-diff {
+    text-align: center;
+    padding: 4px 4px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 900;
+    white-space: nowrap;
+  }
+
+  .b-diff.positive { color: var(--green); background: var(--green-soft); }
+  .b-diff.negative { color: var(--red); background: var(--red-soft); }
+
+  .insight-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-top: 11px;
+  }
+
+  .insight {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px;
+    padding: 6px 8px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: var(--paper);
+    color: var(--muted);
+    font-size: 9px;
+    font-weight: 700;
+  }
+
+  .insight b { color: var(--ink); font-size: 10px; }
+
+  /* ---------- B: score cards ---------- */
+
+  .score-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+  }
+
+  .score-card {
+    position: relative;
+    min-width: 0;
+    padding: 10px 10px 9px;
+    border: 1.5px solid var(--line-strong);
+    border-radius: 14px;
+    background: var(--paper);
+    box-shadow: 3px 3px 0 rgba(29, 51, 74, .1);
+  }
+
+  .score-card.is-weak { background: #fff8f6; }
+
+  .score-head {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+  }
+
+  .score-head h3 {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    font-size: 11px;
+    font-weight: 900;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .dot {
+    flex: 0 0 auto;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--dot);
+  }
+
+  .score-diff {
+    flex: 0 0 auto;
+    font-size: 9px;
+    font-weight: 900;
+  }
+
+  .score-diff.positive { color: var(--green); }
+  .score-diff.negative { color: var(--red); }
+
+  .score-main {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 6px;
+    margin-top: 4px;
+  }
+
+  .score-number {
+    font-size: 30px;
+    line-height: 1;
+    font-weight: 900;
+    letter-spacing: -.06em;
+    white-space: nowrap;
+  }
+
+  .score-number small {
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0;
+  }
+
+  .mini-ring {
+    position: relative;
+    flex: 0 0 40px;
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: conic-gradient(var(--dot) calc(var(--rate) * 1%), #e7f1fa 0);
+  }
+
+  .mini-ring::after {
+    content: "";
+    position: absolute;
+    inset: 8px;
+    border-radius: 50%;
+    background: var(--paper);
+  }
+
+  .score-card.is-weak .mini-ring::after { background: #fff8f6; }
+
+  .mini-track {
+    position: relative;
+    height: 6px;
+    margin-top: 7px;
+    border-radius: 999px;
+    background: #e7f1fa;
+  }
+
+  .mini-track i {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: calc(var(--rate) * 1%);
+    border-radius: 999px;
+    background: var(--dot);
+    opacity: .72;
+  }
+
+  .mini-track b {
+    position: absolute;
+    top: -3px;
+    bottom: -3px;
+    left: var(--target);
+    width: 1.5px;
+    border-radius: 2px;
+    background: var(--ink);
+    opacity: .8;
+  }
+
+  .score-foot {
+    display: flex;
+    justify-content: space-between;
+    gap: 4px;
+    margin-top: 5px;
+    color: var(--muted);
+    font-size: 9px;
+    font-weight: 600;
+  }
+
+  /* ---------- C: 100 point composition ---------- */
+
+  .comp-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 11px;
+  }
+
+  .comp-total { display: flex; align-items: baseline; gap: 4px; }
+  .comp-total strong { font-size: 31px; font-weight: 900; letter-spacing: -.05em; line-height: 1; }
+  .comp-total small { color: var(--muted); font-size: 10px; font-weight: 700; }
+  .comp-loss { color: var(--muted); font-size: 10px; font-weight: 700; white-space: nowrap; }
+  .comp-loss strong { color: var(--red); font-size: 15px; }
+
+  .comp-wrap {
+    position: relative;
+    margin: 18px 0 12px;
+    padding-top: 15px;
+  }
+
+  .comp-target-label {
+    position: absolute;
+    top: 0;
+    left: var(--target);
+    transform: translateX(-50%);
+    padding: 2px 6px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--paper);
+    color: var(--ink);
+    font-size: 9px;
+    font-weight: 800;
+    white-space: nowrap;
+    transition: left .28s cubic-bezier(.2, .8, .3, 1);
+  }
+
+  .comp-target-label::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 100%;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid var(--line-strong);
+    transform: translateX(-50%);
+  }
+
+  .comp-bar {
+    position: relative;
+    display: flex;
+    height: 54px;
+    overflow: hidden;
+    border: 2px solid var(--line-strong);
+    border-radius: 13px;
+    background: #e6f1fa;
+  }
+
+  .comp-seg {
+    position: relative;
+    height: 100%;
+    border-right: 1px solid rgba(35, 60, 88, .18);
+    background: var(--tone);
+  }
+
+  .comp-seg:last-child { border-right: 0; }
+
+  .comp-seg-fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: var(--rate);
+    background: var(--deep);
+    opacity: .62;
+    transition: width .28s cubic-bezier(.2, .8, .3, 1);
+  }
+
+  .comp-seg-fill::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: repeating-linear-gradient(115deg, transparent 0 7px, rgba(255, 255, 255, .16) 7px 8px);
+  }
+
+  .comp-target-line {
+    position: absolute;
+    z-index: 3;
+    top: -2px;
+    bottom: -2px;
+    left: var(--target);
+    width: 2px;
+    border-radius: 2px;
+    background: var(--ink);
+    transition: left .28s cubic-bezier(.2, .8, .3, 1);
+  }
+
+  .comp-target-line::after {
+    content: "";
+    position: absolute;
+    left: -4px;
+    bottom: -4px;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid var(--ink);
+  }
+
+  .comp-axis {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 5px;
+    color: var(--muted);
+    font-size: 9px;
+    font-weight: 700;
+  }
+
+  .comp-legend {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    margin-top: 12px;
+  }
+
+  .comp-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+    padding: 5px 6px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--paper);
+    font-size: 9px;
+    font-weight: 700;
+  }
+
+  .comp-item .dot { background: var(--deep); }
+  .comp-item-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .comp-item-score { font-weight: 900; white-space: nowrap; }
+  .comp-item-diff { font-size: 8px; font-weight: 900; white-space: nowrap; }
+  .comp-item-diff.positive { color: var(--green); }
+  .comp-item-diff.negative { color: var(--red); }
+
+  .comp-note { margin-top: 9px; color: var(--muted); font-size: 9px; line-height: 1.5; font-weight: 600; }
+
+  /* ---------- D: radar ---------- */
+
+  .radar-stage {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2px 0 0;
+  }
+
+  .radar-svg {
+    display: block;
+    width: 100%;
+    max-width: 420px;
+    height: auto;
+  }
+
+  .radar-svg text {
+    font-family: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", system-ui, sans-serif;
+  }
+
+  .radar-legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 16px;
+    margin-top: 1px;
+    color: var(--muted);
+    font-size: 9px;
+    font-weight: 700;
+  }
+
+  .radar-key { display: inline-flex; align-items: center; gap: 5px; }
+  .radar-line { width: 16px; height: 7px; border-radius: 2px; }
+  .radar-line.mine { background: #599ed7; }
+  .radar-line.target { background: var(--green); opacity: .8; }
+
+  .radar-note {
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 9px;
+    line-height: 1.5;
+    text-align: center;
+    font-weight: 600;
+  }
+
+  /* ---------- Footer ---------- */
+
+  .footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    margin-top: 28px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 10px;
+    line-height: 1.6;
+    font-weight: 600;
+  }
+
+  .footer b { color: var(--ink); }
+
+  /* ---------- Responsive ---------- */
+
+  @media (max-width: 1080px) {
+    .page { width: min(760px, calc(100% - 32px)); padding-top: 28px; }
+    .options-grid { grid-template-columns: 1fr; }
+    .hero-grid { grid-template-columns: 1fr 210px; }
+    h1 { font-size: clamp(30px, 6.4vw, 48px); }
+  }
+
+  @media (max-width: 640px) {
+    .page { width: calc(100% - 24px); padding-top: 20px; }
+    .hero-grid { grid-template-columns: 1fr; gap: 16px; }
+    .score-stamp { max-width: 220px; transform: rotate(-1deg); }
+    .controls { position: static; gap: 10px 14px; }
+    .control-note { width: 100%; margin-left: 0; }
+    .panel { padding: 15px 12px 14px; box-shadow: 5px 5px 0 var(--shadow); }
+    .panel-heading h2 { font-size: 16px; }
+    .panel-heading p { font-size: 10px; }
+    .panel-tag { font-size: 9px; }
+    .b-row { grid-template-columns: 73px minmax(70px, 1fr) 47px 43px; gap: 6px; padding: 6px; }
+    .b-name { font-size: 10px; }
+    .b-name small { font-size: 8px; }
+    .b-points { font-size: 12px; }
+    .b-diff { font-size: 9px; }
+    .score-grid { gap: 7px; }
+    .score-card { padding: 8px 7px; }
+    .score-number { font-size: 24px; }
+    .mini-ring { flex-basis: 32px; width: 32px; height: 32px; }
+    .mini-ring::after { inset: 7px; }
+    .comp-legend { grid-template-columns: 1fr; }
+    .footer { flex-direction: column; align-items: flex-start; gap: 5px; }
+  }
+</style>
+</head>
+<body>
+<main class="page">
+  <header class="hero">
+    <div class="eyebrow-row">
+      <span class="eyebrow">RESULT / MODULE SCORES</span>
+      <span class="demo-badge">演示数据</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>同一份成绩，<span>四种看法</span></h1>
+        <p class="hero-copy">
+          以「国考 · 地市级卷」的 <b>85.5 分</b>为例，比较模块分数在结果页里的不同呈现。
+          切换目标档，看看哪一种最容易读出「每个模块得了多少、离目标还有多远」。
+        </p>
+      </div>
+      <div class="score-stamp" aria-label="演示总分 85.5 分">
+        <div class="stamp-label"><span>总分</span><span>国考 · 地市级卷</span></div>
+        <div class="stamp-score num"><strong>85.5</strong><small>/ 100</small></div>
+        <div class="stamp-sub">12 次批改 · 6 个模块 · 目标 <span id="heroTarget">60</span> 分</div>
+      </div>
+    </div>
+  </header>
+
+  <section class="controls" aria-label="图表预览控制">
+    <div class="control-group">
+      <span class="control-label">目标档</span>
+      <div class="segmented" id="targetTabs" role="group" aria-label="目标分">
+        <button type="button" data-target="60" class="active">60</button>
+        <button type="button" data-target="70">70</button>
+        <button type="button" data-target="80">80</button>
+      </div>
+    </div>
+    <div class="control-group">
+      <span class="control-label">排序</span>
+      <div class="segmented" id="sortTabs" role="group" aria-label="模块排序">
+        <button type="button" data-sort="paper" class="active">卷面顺序</button>
+        <button type="button" data-sort="weak">薄弱优先</button>
+      </div>
+    </div>
+    <span class="control-note">目标线同步到全部视图 · 排序只影响 <b>A / B</b></span>
+  </section>
+
+  <section class="options-grid">
+
+    <!-- ===== 方案 A：横向子弹图 ===== -->
+    <article class="panel panel-a" id="panel-a">
+      <div class="panel-top">
+        <span class="panel-index">A</span>
+        <div class="panel-heading">
+          <h2>横向子弹图</h2>
+          <p>每行一根得分条：原始分、得分率、目标线放在一起，读数最直接。</p>
+        </div>
+        <span class="panel-tag">推荐</span>
+      </div>
+      <div class="data-surface">
+        <div class="bullet-summary">
+          <div class="bullet-summary-main">
+            <span class="mini-label">距目标</span>
+            <strong id="leadTotal" class="num">+25.5</strong><small>分</small>
+          </div>
+          <span class="target-legend">目标 <b id="bulletTarget">60</b> 分</span>
+        </div>
+        <div class="bullet-list" id="bulletList"></div>
+        <div class="insight-row">
+          <span class="insight">最值得补 <b id="weakestName">判断推理</b> <b id="weakestDiff">+7.0</b></span>
+          <span class="insight">最高得分率 <b id="strongestName">资料分析</b> <b id="strongestRate">90%</b></span>
+        </div>
+      </div>
+    </article>
+
+    <!-- ===== 方案 B：2×3 模块成绩卡 ===== -->
+    <article class="panel panel-b" id="panel-b">
+      <div class="panel-top">
+        <span class="panel-index">B</span>
+        <div class="panel-heading">
+          <h2>模块成绩卡</h2>
+          <p>2×3 一屏总览，视觉优先级更高，适合宣传图或结果页摘要。</p>
+        </div>
+        <span class="panel-tag">视觉</span>
+      </div>
+      <div class="data-surface">
+        <div class="score-grid" id="scoreGrid"></div>
+      </div>
+    </article>
+
+    <!-- ===== 方案 C：100 分构成条 ===== -->
+    <article class="panel panel-c" id="panel-c">
+      <div class="panel-top">
+        <span class="panel-index">C</span>
+        <div class="panel-heading">
+          <h2>100 分构成条</h2>
+          <p>按模块满分切段，看总分由哪些模块贡献，适合复盘总分来源。</p>
+        </div>
+        <span class="panel-tag">构成</span>
+      </div>
+      <div class="data-surface">
+        <div class="comp-head">
+          <div class="comp-total"><span class="mini-label">实得</span><strong class="num">85.5</strong><small>/ 100</small></div>
+          <div class="comp-loss">丢分 <strong class="num">14.5</strong></div>
+        </div>
+        <div class="comp-wrap">
+          <span class="comp-target-label" id="compTargetLabel">目标 60</span>
+          <div class="comp-bar" id="compBar">
+            <span class="comp-target-line" id="compTargetLine"></span>
+          </div>
+        </div>
+        <div class="comp-axis"><span>0</span><span>模块满分构成 · 每段宽度 = 满分</span><span>100</span></div>
+        <div class="comp-legend" id="compLegend"></div>
+        <div class="comp-note">段宽按模块满分分配；填充部分为实得分。实线为目标线，适合看总分结构，不适合横向比较模块高低。</div>
+      </div>
+    </article>
+
+    <!-- ===== 方案 D：改良雷达图 ===== -->
+    <article class="panel panel-d" id="panel-d">
+      <div class="panel-top">
+        <span class="panel-index">D</span>
+        <div class="panel-heading">
+          <h2>改良雷达图</h2>
+          <p>保留能力轮廓，在每个轴端补上原始得分，避免只看形状。</p>
+        </div>
+        <span class="panel-tag">轮廓</span>
+      </div>
+      <div class="data-surface">
+        <div class="radar-stage">
+          <svg class="radar-svg" id="radarSvg" viewBox="0 0 420 360" role="img" aria-label="模块得分雷达图"></svg>
+        </div>
+        <div class="radar-legend">
+          <span class="radar-key"><i class="radar-line mine"></i>我的表现</span>
+          <span class="radar-key"><i class="radar-line target"></i>目标 <b id="radarTargetText">60</b></span>
+          <span class="radar-key">半径 = 得分率</span>
+        </div>
+        <div class="radar-note">轴端同时标出「原始分 / 满分」；每个模块满分不同，所以半径不能直接当作原始分比较。</div>
+      </div>
+    </article>
+
+  </section>
+
+  <footer class="footer">
+    <span><b>说明：</b>同一组演示数据，只比较呈现方式，不代表最终页面排版。</span>
+    <span>小鱼计时器 · 批改结果 / 模块分数</span>
+  </footer>
+</main>
+
+<script>
+  const MODULES = [
+    { key: 'politics', name: '政治理论', short: '政治', got: 8.5,  full: 10, time: '15:00' },
+    { key: 'common',   name: '常识判断', short: '常识', got: 7.8,  full: 9,  time: '10:00' },
+    { key: 'verbal',   name: '言语理解', short: '言语', got: 19.0, full: 24, time: '28:40' },
+    { key: 'quant',    name: '数量关系', short: '数量', got: 9.0,  full: 10, time: '09:20' },
+    { key: 'logic',    name: '判断推理', short: '判断', got: 23.2, full: 27, time: '33:00' },
+    { key: 'data',     name: '资料分析', short: '资料', got: 18.0, full: 20, time: '22:00' }
+  ];
+
+  const COLOR = {
+    politics: { tone: '#d3e7fa', deep: '#5d9fd3' },
+    common:   { tone: '#fbe2d6', deep: '#d98567' },
+    verbal:   { tone: '#f8ecc4', deep: '#c7a43d' },
+    quant:    { tone: '#d9f0e5', deep: '#5caa86' },
+    logic:    { tone: '#e8e2f6', deep: '#927cc0' },
+    data:     { tone: '#f8dfe8', deep: '#c97892' }
+  };
+
+  const TOTAL = MODULES.reduce((sum, m) => sum + m.got, 0);
+  const state = { target: 60, sort: 'paper' };
+  const $ = (id) => document.getElementById(id);
+
+  const fmt = (value) => {
+    const rounded = Math.round(value * 10) / 10;
+    return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+  };
+
+  const rate = (m) => (m.got / m.full) * 100;
+  const diff = (m, target = state.target) => m.got - (m.full * target) / 100;
+  const diffText = (value) => `${value >= 0 ? '+' : '−'}${fmt(Math.abs(value))}`;
+
+  function orderedModules() {
+    const copy = MODULES.slice();
+    if (state.sort === 'weak') copy.sort((a, b) => diff(a) - diff(b) || rate(a) - rate(b));
+    return copy;
+  }
+
+  function renderHeader() {
+    $('heroTarget').textContent = state.target;
+    const lead = TOTAL - state.target;
+    const leadEl = $('leadTotal');
+    leadEl.textContent = diffText(lead);
+    leadEl.className = `num ${lead >= 0 ? 'positive' : 'negative'}`;
+    $('bulletTarget').textContent = state.target;
+    $('compTargetLabel').textContent = `目标 ${state.target}`;
+    $('radarTargetText').textContent = state.target;
+  }
+
+  // ===== A：横向子弹图 =====
+  function renderBullet() {
+    const rows = orderedModules();
+    $('bulletList').innerHTML = rows.map((m) => {
+      const d = diff(m);
+      return `
+        <div class="b-row" aria-label="${m.name}，${fmt(m.got)} / ${fmt(m.full)} 分，距目标 ${diffText(d)} 分">
+          <div class="b-name">${m.name}<small>${fmt(rate(m))}% · ${m.time}</small></div>
+          <div class="b-track" style="--rate:${rate(m)}%; --target:${state.target}%">
+            <span class="b-fill"></span>
+            <span class="b-target"></span>
+          </div>
+          <div class="b-points num">${fmt(m.got)}<small>/${fmt(m.full)}</small></div>
+          <div class="b-diff ${d >= 0 ? 'positive' : 'negative'} num">${diffText(d)}</div>
+        </div>`;
+    }).join('');
+
+    const weakest = MODULES.slice().sort((a, b) => diff(a) - diff(b))[0];
+    const strongest = MODULES.slice().sort((a, b) => rate(b) - rate(a))[0];
+    $('weakestName').textContent = weakest.name;
+    $('weakestDiff').textContent = diffText(diff(weakest));
+    $('weakestDiff').className = diff(weakest) >= 0 ? '' : 'negative';
+    $('strongestName').textContent = strongest.name;
+    $('strongestRate').textContent = `${fmt(rate(strongest))}%`;
+  }
+
+  // ===== B：模块成绩卡 =====
+  function renderScores() {
+    const rows = orderedModules();
+    const weakestKey = MODULES.slice().sort((a, b) => diff(a) - diff(b))[0].key;
+    $('scoreGrid').innerHTML = rows.map((m) => {
+      const d = diff(m);
+      const color = COLOR[m.key];
+      return `
+        <div class="score-card ${m.key === weakestKey ? 'is-weak' : ''}" style="--dot:${color.deep}; --rate:${rate(m)}; --target:${state.target}%">
+          <div class="score-head">
+            <span class="dot"></span>
+            <h3>${m.name}</h3>
+            <span class="score-diff ${d >= 0 ? 'positive' : 'negative'} num">${diffText(d)}</span>
+          </div>
+          <div class="score-main">
+            <div class="score-number num">${fmt(m.got)}<small> / ${fmt(m.full)}</small></div>
+            <div class="mini-ring"></div>
+          </div>
+          <div class="mini-track"><i></i><b></b></div>
+          <div class="score-foot"><span>${fmt(rate(m))}% 得分率</span><span>${m.time}</span></div>
+        </div>`;
+    }).join('');
+  }
+
+  // ===== C：100 分构成条 =====
+  function renderComposition() {
+    const bar = $('compBar');
+    const segments = MODULES.map((m) => {
+      const color = COLOR[m.key];
+      return `<div class="comp-seg" style="width:${m.full}%; --tone:${color.tone}; --deep:${color.deep}; --rate:${rate(m)}%">
+        <span class="comp-seg-fill"></span>
+      </div>`;
+    }).join('');
+    bar.innerHTML = segments + '<span class="comp-target-line" id="compTargetLine"></span>';
+    const targetLine = $('compTargetLine');
+    const targetLabel = $('compTargetLabel');
+    targetLine.style.left = `${state.target}%`;
+    targetLabel.style.left = `${state.target}%`;
+    targetLabel.textContent = `目标 ${state.target}`;
+
+    $('compLegend').innerHTML = MODULES.map((m) => {
+      const d = diff(m);
+      return `<div class="comp-item" style="--deep:${COLOR[m.key].deep}">
+        <span class="dot"></span>
+        <span class="comp-item-name">${m.name}</span>
+        <span class="comp-item-score num">${fmt(m.got)}/${fmt(m.full)}</span>
+        <span class="comp-item-diff ${d >= 0 ? 'positive' : 'negative'} num">${diffText(d)}</span>
+      </div>`;
+    }).join('');
+  }
+
+  // ===== D：改良雷达图 =====
+  function radarPoint(index, factor, cx, cy, radius) {
+    const angle = -Math.PI / 2 + (index * Math.PI * 2) / MODULES.length;
+    return {
+      x: cx + Math.cos(angle) * radius * factor,
+      y: cy + Math.sin(angle) * radius * factor,
+      cos: Math.cos(angle),
+      sin: Math.sin(angle)
+    };
+  }
+
+  function polygonPoints(factor, cx, cy, radius) {
+    return MODULES.map((_, i) => {
+      const p = radarPoint(i, factor, cx, cy, radius);
+      return `${p.x.toFixed(1)},${p.y.toFixed(1)}`;
+    }).join(' ');
+  }
+
+  function renderRadar() {
+    const cx = 210;
+    const cy = 176;
+    const radius = 102;
+    let svg = '';
+
+    // 背景网格
+    [0.25, 0.5, 0.75, 1].forEach((factor) => {
+      svg += `<polygon points="${polygonPoints(factor, cx, cy, radius)}" fill="${factor === 1 ? 'rgba(255,255,255,.22)' : 'none'}" stroke="#c8d9e8" stroke-width="1"/>`;
+    });
+
+    // 轴线
+    MODULES.forEach((_, i) => {
+      const p = radarPoint(i, 1, cx, cy, radius);
+      svg += `<line x1="${cx}" y1="${cy}" x2="${p.x.toFixed(1)}" y2="${p.y.toFixed(1)}" stroke="#c8d9e8" stroke-width="1"/>`;
+    });
+
+    // 目标轮廓
+    svg += `<polygon points="${polygonPoints(state.target / 100, cx, cy, radius)}" fill="rgba(47,131,95,.07)" stroke="#2f835f" stroke-width="2.2"/>`;
+
+    // 我的表现
+    svg += `<polygon points="${polygonPoints(0, cx, cy, radius)}" fill="none" stroke="none"/>`;
+    svg += `<polygon points="${MODULES.map((m, i) => {
+      const p = radarPoint(i, rate(m) / 100, cx, cy, radius);
+      return `${p.x.toFixed(1)},${p.y.toFixed(1)}`;
+    }).join(' ')}" fill="rgba(89,158,215,.17)" stroke="#599ed7" stroke-width="2.3"/>`;
+
+    // 实得顶点
+    MODULES.forEach((m, i) => {
+      const p = radarPoint(i, rate(m) / 100, cx, cy, radius);
+      svg += `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.4" fill="#599ed7" stroke="#fffdf8" stroke-width="1.2"/>`;
+    });
+
+    // 轴端标签：模块 + 原始分 + 距目标
+    MODULES.forEach((m, i) => {
+      const p = radarPoint(i, 1, cx, cy, radius);
+      const lx = cx + p.cos * (radius + 40);
+      const ly = cy + p.sin * (radius + 40);
+      const anchor = p.cos > 0.25 ? 'start' : p.cos < -0.25 ? 'end' : 'middle';
+      const d = diff(m);
+      const nameY = p.sin < -0.65 ? ly - 24 : p.sin > 0.65 ? ly - 2 : ly - 12;
+      const scoreY = nameY + 13;
+      const diffY = scoreY + 12;
+      svg += `
+        <text x="${lx.toFixed(1)}" y="${nameY.toFixed(1)}" text-anchor="${anchor}" font-size="11" font-weight="800" fill="#172b43">${m.short}</text>
+        <text x="${lx.toFixed(1)}" y="${scoreY.toFixed(1)}" text-anchor="${anchor}" font-size="10" font-weight="700" fill="#62788e">${fmt(m.got)}/${fmt(m.full)}</text>
+        <text x="${lx.toFixed(1)}" y="${diffY.toFixed(1)}" text-anchor="${anchor}" font-size="9" font-weight="800" fill="${d >= 0 ? '#2f835f' : '#c6584a'}">${diffText(d)}</text>`;
+    });
+
+    // 中心小点
+    svg += `<circle cx="${cx}" cy="${cy}" r="2.6" fill="#233c58" opacity=".5"/>`;
+    $('radarSvg').innerHTML = svg;
+  }
+
+  function renderAll() {
+    renderHeader();
+    renderBullet();
+    renderScores();
+    renderComposition();
+    renderRadar();
+  }
+
+  $('targetTabs').addEventListener('click', (event) => {
+    const button = event.target.closest('button[data-target]');
+    if (!button) return;
+    state.target = Number(button.dataset.target);
+    [...$('targetTabs').querySelectorAll('button')].forEach((item) => item.classList.toggle('active', item === button));
+    renderAll();
+  });
+
+  $('sortTabs').addEventListener('click', (event) => {
+    const button = event.target.closest('button[data-sort]');
+    if (!button) return;
+    state.sort = button.dataset.sort;
+    [...$('sortTabs').querySelectorAll('button')].forEach((item) => item.classList.toggle('active', item === button));
+    renderAll();
+  });
+
+  renderAll();
+</script>
+</body>
+</html>

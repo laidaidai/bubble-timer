@@ -1,0 +1,808 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fish UI · 跨类型实验</title>
+<style>
+  :root {
+    --page-bg: #eff6fe;
+    --page-ink: #1e3a52;
+    --page-sub: #4c7c9d;
+    --page-line: #c6def3;
+    --page-card: #ffffff;
+    --font: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body { margin: 0; min-height: 100%; }
+
+  body {
+    background:
+      radial-gradient(circle at 12% 0%, rgba(94,176,232,.14), transparent 30rem),
+      var(--page-bg);
+    color: var(--page-ink);
+    font-family: var(--font);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    width: min(1280px, calc(100% - 40px));
+    margin: 0 auto;
+    padding: 42px 0 56px;
+  }
+
+  .pagehead { max-width: 760px; }
+
+  .kicker {
+    display: inline-flex;
+    align-items: center;
+    height: 28px;
+    padding: 0 12px;
+    border: 1px solid var(--page-ink);
+    border-radius: 999px;
+    background: #ffc94d;
+    color: var(--page-ink);
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: .12em;
+    box-shadow: 3px 4px 0 rgba(30, 58, 82, .18);
+  }
+
+  h1 {
+    margin: 18px 0 0;
+    font-size: clamp(34px, 5vw, 62px);
+    line-height: 1.02;
+    letter-spacing: -.05em;
+    font-weight: 900;
+  }
+
+  .pagehead p {
+    margin: 12px 0 0;
+    color: var(--page-sub);
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  .palette {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 20px;
+  }
+
+  .swatch {
+    width: 18px;
+    height: 18px;
+    border: 1px solid var(--page-ink);
+    border-radius: 50%;
+    box-shadow: 1px 2px 0 rgba(30, 58, 82, .16);
+  }
+
+  .swatch:nth-child(1) { background: #fbf3df; }
+  .swatch:nth-child(2) { background: #f2603c; }
+  .swatch:nth-child(3) { background: #ff9fb6; }
+  .swatch:nth-child(4) { background: #5eb0e8; }
+  .swatch:nth-child(5) { background: #7fa3bd; }
+  .swatch:nth-child(6) { background: #6acfb4; }
+  .swatch:nth-child(7) { background: #e7c066; }
+
+  .gallery {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+    margin-top: 34px;
+    align-items: start;
+  }
+
+  .device {
+    min-width: 0;
+    border: 2px solid var(--edge);
+    border-radius: 32px;
+    background: var(--bg);
+    box-shadow: 10px 11px 0 var(--shadow);
+    overflow: hidden;
+  }
+
+  .phone {
+    width: 100%;
+    min-height: 760px;
+    padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+  }
+
+  .theme-cream {
+    --bg: #fbf3df; --card: #fffcf2; --panel: #4b3a2a;
+    --ink: #4b3a2a; --edge: #4b3a2a; --shadow: #4b3a2a; --shadow-soft: #d8c69f;
+    --primary: #ffc94d; --primary-2: #e8a33d; --on-primary: #4b3a2a;
+    --cream-1: #fff9e8; --cream-2: #fff3d6; --cream-3: #fff6df;
+    --line: #e9dcc0; --line-2: #eee0c4; --line-strong: #d9c7a1;
+    --text-2: #a6906f; --text-3: #b1a084; --on-panel: #fff9e8;
+    --success: #4f9b74; --danger: #e8442f;
+  }
+
+  .theme-sky {
+    --bg: #eff6fe; --card: #ffffff; --panel: #1e3a52;
+    --ink: #1e3a52; --edge: #1e3a52; --shadow: #16304a; --shadow-soft: #c6def3;
+    --primary: #5eb0e8; --primary-2: #3c97d6; --on-primary: #0f2f45;
+    --cream-1: #f7fbff; --cream-2: #dcebf7; --cream-3: #e3f0fb;
+    --line: #d9e7f3; --line-2: #eaf3fb; --line-strong: #bbd4e8;
+    --text-2: #4c7c9d; --text-3: #84a7c0; --on-panel: #ffffff;
+    --success: #3e9b7a; --danger: #e8442f;
+  }
+
+  .theme-mint {
+    --bg: #eaf6f2; --card: #fbfefd; --panel: #17403a;
+    --ink: #17403a; --edge: #17403a; --shadow: #12332d; --shadow-soft: #bfdcd2;
+    --primary: #6acfb4; --primary-2: #45b295; --on-primary: #12352f;
+    --cream-1: #f2fcf9; --cream-2: #ddf4ec; --cream-3: #e8f8f3;
+    --line: #cfe7df; --line-2: #e3f3ee; --line-strong: #b4d8cc;
+    --text-2: #4c8378; --text-3: #82afa4; --on-panel: #ffffff;
+    --success: #3e9b7a; --danger: #e8442f;
+  }
+
+  .screen {
+    min-height: 760px;
+    padding: 18px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .appbar {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-height: 30px;
+  }
+
+  .logo {
+    width: 25px;
+    height: 25px;
+    display: grid;
+    place-items: center;
+    border: 2px solid var(--edge);
+    border-radius: 8px;
+    background: var(--primary);
+    color: var(--on-primary);
+    font-size: 13px;
+    font-weight: 900;
+    box-shadow: 2px 2px 0 var(--shadow);
+    transform: rotate(-3deg);
+  }
+
+  .appname {
+    font-size: 15px;
+    font-weight: 900;
+    letter-spacing: -.02em;
+  }
+
+  .appdate {
+    margin-left: auto;
+    color: var(--text-3);
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .hero {
+    position: relative;
+    padding: 18px 16px 15px;
+    border: 2px solid var(--edge);
+    border-radius: 26px;
+    background: var(--card);
+    box-shadow: 7px 8px 0 var(--shadow);
+  }
+
+  .hero.dark {
+    background: var(--panel);
+    color: var(--on-panel);
+  }
+
+  .eyebrow {
+    color: var(--text-2);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .04em;
+  }
+
+  .hero.dark .eyebrow { color: var(--on-panel); opacity: .62; }
+
+  .bigline {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+    margin-top: 8px;
+  }
+
+  .big {
+    font-size: clamp(46px, 5vw, 68px);
+    line-height: .95;
+    font-weight: 900;
+    letter-spacing: -.06em;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .unit {
+    color: var(--text-2);
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  .hero.dark .unit { color: var(--on-panel); opacity: .6; }
+
+  .hero-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 15px;
+    color: var(--text-2);
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .hero.dark .hero-meta { color: var(--on-panel); opacity: .62; }
+
+  .bar {
+    position: relative;
+    height: 9px;
+    margin-top: 8px;
+    border: 1.5px solid var(--edge);
+    border-radius: 999px;
+    background: var(--cream-2);
+    overflow: hidden;
+  }
+
+  .hero.dark .bar {
+    border-color: var(--on-panel);
+    background: rgba(255,255,255,.16);
+  }
+
+  .bar i {
+    display: block;
+    height: 100%;
+    background: var(--primary);
+    border-right: 1.5px solid var(--edge);
+  }
+
+  .hero.dark .bar i { border-right-color: var(--on-panel); }
+
+  .bar b {
+    position: absolute;
+    top: -3px;
+    bottom: -3px;
+    width: 2px;
+    margin-left: -1px;
+    background: var(--edge);
+    border-radius: 2px;
+  }
+
+  .hero.dark .bar b { background: var(--on-panel); }
+
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .metric {
+    padding: 10px 10px 9px;
+    border: 1.5px solid var(--line-strong);
+    border-radius: 15px;
+    background: var(--cream-1);
+  }
+
+  .metric strong {
+    display: block;
+    font-size: 20px;
+    line-height: 1;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .metric span {
+    display: block;
+    margin-top: 4px;
+    color: var(--text-3);
+    font-size: 10px;
+    font-weight: 700;
+  }
+
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 3px;
+  }
+
+  .section-head strong {
+    font-size: 14px;
+    font-weight: 900;
+  }
+
+  .section-head span {
+    color: var(--text-3);
+    font-size: 10px;
+    font-weight: 800;
+  }
+
+  .module-row {
+    padding: 11px 12px 10px;
+    border: 1.5px solid var(--line-strong);
+    border-radius: 16px;
+    background: var(--card);
+  }
+
+  .module-row.active {
+    border-color: var(--edge);
+    box-shadow: 4px 5px 0 var(--shadow-soft);
+  }
+
+  .module-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .module-top strong {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 13px;
+    font-weight: 900;
+  }
+
+  .module-top span {
+    flex: 0 0 auto;
+    color: var(--text-2);
+    font-size: 10px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .mini-bar {
+    height: 6px;
+    margin-top: 8px;
+    border-radius: 999px;
+    background: var(--cream-2);
+    overflow: hidden;
+  }
+
+  .mini-bar i {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: var(--primary);
+  }
+
+  .primary {
+    margin-top: auto;
+    width: 100%;
+    min-height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 2px solid var(--edge);
+    border-radius: 999px;
+    background: var(--primary);
+    color: var(--on-primary);
+    box-shadow: 4px 5px 0 var(--shadow);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 900;
+  }
+
+  .primary span { font-size: 10px; }
+
+  .primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 5px 6px 0 var(--shadow);
+  }
+
+  .primary:active {
+    transform: translateY(2px);
+    box-shadow: 2px 3px 0 var(--shadow);
+  }
+
+  button:focus-visible {
+    outline: 2px solid var(--edge);
+    outline-offset: 3px;
+  }
+
+  .ghost {
+    min-height: 38px;
+    padding: 0 14px;
+    border: 1.5px solid var(--line-strong);
+    border-radius: 999px;
+    background: var(--cream-1);
+    color: var(--text-2);
+    font: inherit;
+    font-size: 11px;
+    font-weight: 800;
+  }
+
+  .chips {
+    display: flex;
+    gap: 7px;
+    flex-wrap: wrap;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    height: 25px;
+    padding: 0 10px;
+    border: 1.5px solid var(--line-strong);
+    border-radius: 999px;
+    background: var(--cream-1);
+    color: var(--text-2);
+    font-size: 10px;
+    font-weight: 800;
+  }
+
+  .chip.on {
+    background: var(--primary);
+    border-color: var(--edge);
+    color: var(--on-primary);
+    box-shadow: 2px 3px 0 var(--shadow-soft);
+  }
+
+  .category {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 6px 10px;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1.5px solid var(--line);
+  }
+
+  .category:last-of-type { border-bottom: 0; }
+
+  .category-name {
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .category-val {
+    color: var(--text-2);
+    font-size: 11px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .category .mini-bar { grid-column: 1 / -1; margin-top: 0; }
+
+  .tx {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr) auto;
+    gap: 9px;
+    align-items: center;
+    padding: 9px 0;
+    border-bottom: 1.5px solid var(--line);
+  }
+
+  .tx:last-of-type { border-bottom: 0; }
+
+  .tx-date {
+    color: var(--text-3);
+    font-size: 10px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tx-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .tx-amt {
+    font-size: 12px;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tx-amt.out { color: var(--danger); }
+
+  .week {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 5px;
+    margin-top: 15px;
+  }
+
+  .day {
+    display: grid;
+    place-items: center;
+    gap: 5px;
+    min-height: 48px;
+    border: 1.5px solid var(--line-strong);
+    border-radius: 10px;
+    color: var(--text-3);
+    font-size: 9px;
+    font-weight: 800;
+    background: var(--cream-1);
+  }
+
+  .day b {
+    width: 15px;
+    height: 15px;
+    display: grid;
+    place-items: center;
+    border: 1.5px solid var(--line-strong);
+    border-radius: 50%;
+    font-size: 9px;
+    line-height: 1;
+  }
+
+  .day.done {
+    border-color: var(--edge);
+    background: var(--cream-2);
+    color: var(--ink);
+  }
+
+  .day.done b {
+    border-color: var(--edge);
+    background: var(--primary);
+    color: var(--on-primary);
+  }
+
+  .habit {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 11px 12px;
+    border: 1.5px solid var(--line-strong);
+    border-radius: 15px;
+    background: var(--card);
+  }
+
+  .habit + .habit { margin-top: 8px; }
+
+  .check {
+    width: 24px;
+    height: 24px;
+    flex: 0 0 24px;
+    display: grid;
+    place-items: center;
+    border: 2px solid var(--edge);
+    border-radius: 50%;
+    background: transparent;
+    color: transparent;
+    font-size: 12px;
+    font-weight: 900;
+  }
+
+  .habit.done .check {
+    background: var(--primary);
+    color: var(--on-primary);
+    box-shadow: 2px 2px 0 var(--shadow);
+  }
+
+  .habit-copy { min-width: 0; flex: 1; }
+
+  .habit-copy strong {
+    display: block;
+    font-size: 12px;
+    font-weight: 900;
+  }
+
+  .habit-copy span {
+    display: block;
+    margin-top: 3px;
+    color: var(--text-3);
+    font-size: 10px;
+    font-weight: 700;
+  }
+
+  .habit-time {
+    color: var(--text-2);
+    font-size: 11px;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 28px;
+    padding-top: 14px;
+    border-top: 1px solid var(--page-line);
+    color: var(--page-sub);
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  @media (max-width: 1080px) {
+    .gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .phone { min-height: 720px; }
+    .big { font-size: 56px; }
+  }
+
+  @media (max-width: 720px) {
+    .page { width: min(100% - 28px, 520px); padding-top: 26px; }
+    .gallery { grid-template-columns: 1fr; gap: 18px; }
+    .device { border-radius: 26px; }
+    .phone, .screen { min-height: auto; }
+    .screen { padding-bottom: 18px; }
+    .primary { margin-top: 16px; }
+    .big { font-size: 58px; }
+    .footer { flex-direction: column; gap: 6px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+<main class="page">
+  <header class="pagehead">
+    <span class="kicker">FISH UI · CROSS-APP LAB</span>
+    <h1>一套语言，<br>三种产品</h1>
+    <p>学习、财务、习惯。纸底、墨线、硬影不变，页面骨架随信息密度变化。</p>
+    <div class="palette" aria-label="七套主题色">
+      <span class="swatch"></span><span class="swatch"></span><span class="swatch"></span>
+      <span class="swatch"></span><span class="swatch"></span><span class="swatch"></span>
+      <span class="swatch"></span>
+    </div>
+  </header>
+
+  <section class="gallery">
+    <!-- A. 学习/备考 -->
+    <article class="device theme-cream" aria-label="学习应用示例">
+      <div class="phone">
+        <div class="screen">
+          <div class="appbar">
+            <span class="logo">鱼</span>
+            <span class="appname">备考舱</span>
+            <span class="appdate">11.23</span>
+          </div>
+
+          <section class="hero">
+            <div class="eyebrow">今日目标</div>
+            <div class="bigline"><span class="big">120</span><span class="unit">分钟</span></div>
+            <div class="hero-meta"><span>已完成 82 分钟</span><span>68%</span></div>
+            <div class="bar"><i style="width:68%"></i><b style="left:68%"></b></div>
+          </section>
+
+          <div class="metrics">
+            <div class="metric"><strong>03</strong><span>训练模块</span></div>
+            <div class="metric"><strong>12</strong><span>连续天数</span></div>
+            <div class="metric"><strong>38</strong><span>剩余分钟</span></div>
+          </div>
+
+          <div class="section-head"><strong>训练模块</strong><span>今日 · 03</span></div>
+
+          <div class="module-row active">
+            <div class="module-top"><strong>政治理论</strong><span>18 / 30 min</span></div>
+            <div class="mini-bar"><i style="width:60%"></i></div>
+          </div>
+          <div class="module-row">
+            <div class="module-top"><strong>言语理解</strong><span>19 / 24 min</span></div>
+            <div class="mini-bar"><i style="width:79%"></i></div>
+          </div>
+          <div class="module-row">
+            <div class="module-top"><strong>资料分析</strong><span>16 / 20 min</span></div>
+            <div class="mini-bar"><i style="width:80%"></i></div>
+          </div>
+
+          <button class="primary">开始训练 <span>▶</span></button>
+        </div>
+      </div>
+    </article>
+
+    <!-- B. 财务/数据 -->
+    <article class="device theme-sky" aria-label="财务应用示例">
+      <div class="phone">
+        <div class="screen">
+          <div class="appbar">
+            <span class="logo">¥</span>
+            <span class="appname">零钱</span>
+            <span class="appdate">11 月</span>
+          </div>
+
+          <section class="hero dark">
+            <div class="eyebrow">本月可花</div>
+            <div class="bigline"><span class="big">¥3,280</span></div>
+            <div class="hero-meta"><span>预算 5,000</span><span>已用 34%</span></div>
+            <div class="bar"><i style="width:34%"></i><b style="left:34%"></b></div>
+          </section>
+
+          <div class="chips">
+            <span class="chip on">本月</span><span class="chip">餐饮</span><span class="chip">出行</span><span class="chip">学习</span>
+          </div>
+
+          <div class="section-head"><strong>支出结构</strong><span>¥3,280</span></div>
+
+          <div class="category">
+            <span class="category-name">餐饮</span><span class="category-val">¥ 1,240</span>
+            <div class="mini-bar"><i style="width:38%"></i></div>
+          </div>
+          <div class="category">
+            <span class="category-name">学习</span><span class="category-val">¥ 820</span>
+            <div class="mini-bar"><i style="width:25%"></i></div>
+          </div>
+          <div class="category">
+            <span class="category-name">出行</span><span class="category-val">¥ 560</span>
+            <div class="mini-bar"><i style="width:17%"></i></div>
+          </div>
+
+          <div class="section-head"><strong>最近记录</strong><span>本周</span></div>
+
+          <div class="tx"><span class="tx-date">11.22</span><span class="tx-name">咖啡豆</span><span class="tx-amt out">− 68</span></div>
+          <div class="tx"><span class="tx-date">11.21</span><span class="tx-name">地铁</span><span class="tx-amt out">− 6</span></div>
+          <div class="tx"><span class="tx-date">11.21</span><span class="tx-name">课程</span><span class="tx-amt out">− 199</span></div>
+
+          <button class="primary">记一笔 <span>＋</span></button>
+        </div>
+      </div>
+    </article>
+
+    <!-- C. 习惯/内容 -->
+    <article class="device theme-mint" aria-label="习惯应用示例">
+      <div class="phone">
+        <div class="screen">
+          <div class="appbar">
+            <span class="logo">慢</span>
+            <span class="appname">慢慢</span>
+            <span class="appdate">今天</span>
+          </div>
+
+          <section class="hero">
+            <div class="eyebrow">连续记录</div>
+            <div class="bigline"><span class="big">12</span><span class="unit">天</span></div>
+            <div class="hero-meta"><span>本周 4 / 6</span><span>最长 21 天</span></div>
+
+            <div class="week" aria-label="本周记录">
+              <div class="day done"><b>✓</b><span>一</span></div>
+              <div class="day done"><b>✓</b><span>二</span></div>
+              <div class="day"><b>·</b><span>三</span></div>
+              <div class="day done"><b>✓</b><span>四</span></div>
+              <div class="day done"><b>✓</b><span>五</span></div>
+              <div class="day"><b>·</b><span>六</span></div>
+              <div class="day"><b>·</b><span>日</span></div>
+            </div>
+          </section>
+
+          <div class="section-head"><strong>今日习惯</strong><span>4 / 6</span></div>
+
+          <div class="habit done">
+            <span class="check">✓</span>
+            <div class="habit-copy"><strong>阅读 20 分钟</strong><span>连续 12 天</span></div>
+            <span class="habit-time">20:00</span>
+          </div>
+          <div class="habit done">
+            <span class="check">✓</span>
+            <div class="habit-copy"><strong>早起</strong><span>连续 8 天</span></div>
+            <span class="habit-time">07:10</span>
+          </div>
+          <div class="habit">
+            <span class="check">✓</span>
+            <div class="habit-copy"><strong>运动</strong><span>本周 3 次</span></div>
+            <span class="habit-time">18:30</span>
+          </div>
+
+          <button class="primary">开始今日 <span>▶</span></button>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <footer class="footer">
+    <span>Fish UI / 2026-11 / 跨类型校准页</span>
+    <span>无虚线 · 单层硬影 · 主题化组件</span>
+  </footer>
+</main>
+</body>
+</html>

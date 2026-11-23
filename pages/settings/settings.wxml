@@ -104,6 +104,10 @@
           <view class="clock-style-radio" wx:if="{{item.active}}">✓</view>
         </view>
       </view>
+      <view class="pane-sub">时钟方向</view>
+      <view class="opt-grid orientation-grid">
+        <view class="opt {{timerOrientation === item.key ? 'active' : ''}}" wx:for="{{orientationOptions}}" wx:key="key" data-key="{{item.key}}" bindtap="setTimerOrientation">{{item.name}}</view>
+      </view>
     </view>
 
     <view class="pane {{paneClosing ? 'closing' : ''}}" wx:if="{{section === 'remind' && (sectionOpen || paneClosing)}}">

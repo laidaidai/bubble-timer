@@ -1,0 +1,874 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fish UI · 页面原型图谱</title>
+<style>
+  :root {
+    --page-bg: #eff6fe;
+    --page-ink: #1e3a52;
+    --page-sub: #4c7c9d;
+    --page-line: #c6def3;
+    --font: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+    --ease: cubic-bezier(.2,.8,.3,1);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+
+  body {
+    background:
+      radial-gradient(circle at 88% 0%, rgba(255,159,182,.10), transparent 28rem),
+      var(--page-bg);
+    color: var(--page-ink);
+    font-family: var(--font);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    width: min(1320px, calc(100% - 40px));
+    margin: 0 auto;
+    padding: 42px 0 56px;
+  }
+
+  .head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    max-width: 980px;
+  }
+
+  .kicker {
+    display: inline-flex;
+    align-items: center;
+    height: 28px;
+    padding: 0 12px;
+    border: 1px solid var(--page-ink);
+    border-radius: 999px;
+    background: #ffc94d;
+    color: var(--page-ink);
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: .1em;
+    box-shadow: 3px 4px 0 rgba(30,58,82,.16);
+  }
+
+  h1 {
+    margin: 16px 0 0;
+    font-size: clamp(34px, 4.6vw, 58px);
+    line-height: 1.03;
+    letter-spacing: -.05em;
+    font-weight: 900;
+  }
+
+  .lead {
+    margin: 10px 0 0;
+    color: var(--page-sub);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .replay {
+    flex: 0 0 auto;
+    min-height: 42px;
+    padding: 0 18px;
+    border: 2px solid var(--page-ink);
+    border-radius: 999px;
+    background: #ffffff;
+    color: var(--page-ink);
+    box-shadow: 4px 5px 0 rgba(30,58,82,.16);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 900;
+    transition: transform .26s var(--ease), box-shadow .26s var(--ease);
+  }
+
+  .replay:hover { transform: translateY(-1px); box-shadow: 5px 6px 0 rgba(30,58,82,.16); }
+  .replay:active { transform: translateY(2px); box-shadow: 2px 3px 0 rgba(30,58,82,.16); }
+  .replay:focus-visible { outline: 2px solid var(--page-ink); outline-offset: 3px; }
+
+  .atlas {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+    margin-top: 34px;
+    align-items: start;
+  }
+
+  .page-card {
+    min-width: 0;
+    border: 2px solid var(--edge);
+    border-radius: 30px;
+    background: var(--bg);
+    box-shadow: 9px 10px 0 var(--shadow);
+    overflow: hidden;
+  }
+
+  .theme-cream {
+    --bg: #fbf3df; --card: #fffcf2; --panel: #4b3a2a;
+    --ink: #4b3a2a; --edge: #4b3a2a; --shadow: #4b3a2a; --shadow-soft: #d8c69f;
+    --primary: #ffc94d; --primary-2: #e8a33d; --on-primary: #4b3a2a;
+    --cream-1: #fff9e8; --cream-2: #fff3d6; --cream-3: #fff6df;
+    --line: #e9dcc0; --line-2: #eee0c4; --line-strong: #d9c7a1;
+    --text-2: #a6906f; --text-3: #b1a084; --on-panel: #fff9e8;
+    --success: #4f9b74; --danger: #e8442f;
+  }
+
+  .theme-sky {
+    --bg: #eff6fe; --card: #ffffff; --panel: #1e3a52;
+    --ink: #1e3a52; --edge: #1e3a52; --shadow: #16304a; --shadow-soft: #c6def3;
+    --primary: #5eb0e8; --primary-2: #3c97d6; --on-primary: #0f2f45;
+    --cream-1: #f7fbff; --cream-2: #dcebf7; --cream-3: #e3f0fb;
+    --line: #d9e7f3; --line-2: #eaf3fb; --line-strong: #bbd4e8;
+    --text-2: #4c7c9d; --text-3: #84a7c0; --on-panel: #ffffff;
+    --success: #3e9b7a; --danger: #e8442f;
+  }
+
+  .theme-rose {
+    --bg: #fff1f3; --card: #fffbfc; --panel: #562b36;
+    --ink: #4a2a31; --edge: #4a2a31; --shadow: #54232e; --shadow-soft: #efc9d3;
+    --primary: #ff9fb6; --primary-2: #ee7e99; --on-primary: #4a2a31;
+    --cream-1: #fff6f8; --cream-2: #ffe8ee; --cream-3: #ffeff3;
+    --line: #f2d6de; --line-2: #f7e2e8; --line-strong: #e4bfcb;
+    --text-2: #a8798a; --text-3: #bfa0ab; --on-panel: #fff4f7;
+    --success: #3e9b7a; --danger: #e8442f;
+  }
+
+  .theme-mint {
+    --bg: #eaf6f2; --card: #fbfefd; --panel: #17403a;
+    --ink: #17403a; --edge: #17403a; --shadow: #12332d; --shadow-soft: #bfdcd2;
+    --primary: #6acfb4; --primary-2: #45b295; --on-primary: #12352f;
+    --cream-1: #f2fcf9; --cream-2: #ddf4ec; --cream-3: #e8f8f3;
+    --line: #cfe7df; --line-2: #e3f3ee; --line-strong: #b4d8cc;
+    --text-2: #4c8378; --text-3: #82afa4; --on-panel: #ffffff;
+    --success: #3e9b7a; --danger: #e8442f;
+  }
+
+  .theme-obsidian {
+    --bg: #12100c; --card: #1e1a13; --panel: #12100c;
+    --ink: #f0e2c0; --edge: #c9a65f; --shadow: #453818; --shadow-soft: #3a3222;
+    --primary: #e7c066; --primary-2: #cba24c; --on-primary: #241f16;
+    --cream-1: #241f17; --cream-2: #30281c; --cream-3: #3b3222;
+    --line: #3a3222; --line-2: #2e2719; --line-strong: #5c4c2e;
+    --text-2: #c3b286; --text-3: #9e8e69; --on-panel: #f0e2c0;
+    --success: #8cc9a2; --danger: #f06b56;
+  }
+
+  .screen {
+    min-height: 558px;
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+    padding: 16px 15px 15px;
+    color: var(--ink);
+  }
+
+  .appbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 26px;
+  }
+
+  .mark {
+    width: 24px;
+    height: 24px;
+    display: grid;
+    place-items: center;
+    border: 2px solid var(--edge);
+    border-radius: 7px;
+    background: var(--primary);
+    color: var(--on-primary);
+    font-size: 12px;
+    font-weight: 900;
+    box-shadow: 2px 2px 0 var(--shadow);
+    transform: rotate(-3deg);
+  }
+
+  .appname {
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: -.02em;
+  }
+
+  .meta {
+    margin-left: auto;
+    color: var(--text-3);
+    font-size: 10px;
+    font-weight: 700;
+  }
+
+  .hero {
+    border: 2px solid var(--edge);
+    border-radius: 22px;
+    background: var(--card);
+    padding: 15px 14px 13px;
+    box-shadow: 6px 7px 0 var(--shadow);
+  }
+
+  .hero.dark {
+    background: var(--panel);
+    color: var(--on-panel);
+  }
+
+  .eyebrow {
+    color: var(--text-2);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .03em;
+  }
+
+  .hero.dark .eyebrow { color: var(--on-panel); opacity: .6; }
+
+  .bigline {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin-top: 7px;
+  }
+
+  .big {
+    font-size: clamp(38px, 4.5vw, 58px);
+    line-height: .95;
+    font-weight: 900;
+    letter-spacing: -.06em;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .unit {
+    color: var(--text-2);
+    font-size: 11px;
+    font-weight: 800;
+  }
+
+  .hero.dark .unit { color: var(--on-panel); opacity: .62; }
+
+  .meta-line {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 11px;
+    color: var(--text-2);
+    font-size: 10px;
+    font-weight: 700;
+  }
+
+  .hero.dark .meta-line { color: var(--on-panel); opacity: .62; }
+
+  .bar {
+    position: relative;
+    height: 8px;
+    margin-top: 7px;
+    border: 1.5px solid var(--edge);
+    border-radius: 999px;
+    background: var(--cream-2);
+    overflow: hidden;
+  }
+
+  .hero.dark .bar { border-color: var(--on-panel); background: rgba(255,255,255,.16); }
+  .bar i {
+    display: block;
+    height: 100%;
+    background: var(--primary);
+    border-right: 1.5px solid var(--edge);
+    transform-origin: left center;
+  }
+
+  .hero.dark .bar i { border-right-color: var(--on-panel); }
+
+  .bar b {
+    position: absolute;
+    top: -3px;
+    bottom: -3px;
+    width: 2px;
+    margin-left: -1px;
+    background: var(--edge);
+    border-radius: 2px;
+  }
+
+  .hero.dark .bar b { background: var(--on-panel); }
+
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 7px;
+  }
+
+  .metric {
+    padding: 9px 9px 8px;
+    border: 1.5px solid var(--line-strong);
+    border-radius: 13px;
+    background: var(--cream-1);
+  }
+
+  .metric strong {
+    display: block;
+    font-size: 18px;
+    line-height: 1;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .metric span {
+    display: block;
+    margin-top: 3px;
+    color: var(--text-3);
+    font-size: 9px;
+    font-weight: 700;
+  }
+
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 2px;
+  }
+
+  .section-head strong { font-size: 13px; font-weight: 900; }
+  .section-head span { color: var(--text-3); font-size: 9px; font-weight: 800; }
+
+  .row {
+    padding: 10px 11px 9px;
+    border: 1.5px solid var(--line-strong);
+    border-radius: 14px;
+    background: var(--card);
+  }
+
+  .row.active {
+    border-color: var(--edge);
+    box-shadow: 3px 4px 0 var(--shadow-soft);
+  }
+
+  .row-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .row-top strong {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
+    font-weight: 900;
+  }
+
+  .row-top span {
+    flex: 0 0 auto;
+    color: var(--text-2);
+    font-size: 10px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .bar.mini { height: 5px; margin-top: 7px; border-width: 1px; }
+
+  .primary {
+    margin-top: auto;
+    width: 100%;
+    min-height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    border: 2px solid var(--edge);
+    border-radius: 999px;
+    background: var(--primary);
+    color: var(--on-primary);
+    box-shadow: 3px 4px 0 var(--shadow);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 900;
+    transition: transform .26s var(--ease), box-shadow .26s var(--ease);
+  }
+
+  .primary:hover { transform: translateY(-1px); box-shadow: 4px 5px 0 var(--shadow); }
+  .primary:active { transform: translateY(2px); box-shadow: 1px 2px 0 var(--shadow); }
+  button:focus-visible { outline: 2px solid var(--edge); outline-offset: 3px; }
+
+  .pills {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 0 9px;
+    border: 1.5px solid var(--line-strong);
+    border-radius: 999px;
+    background: var(--cream-1);
+    color: var(--text-2);
+    font-size: 9px;
+    font-weight: 800;
+  }
+
+  .pill.on {
+    background: var(--primary);
+    border-color: var(--edge);
+    color: var(--on-primary);
+  }
+
+  .todo {
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 9px;
+    padding: 10px 0;
+    border-bottom: 1.5px solid var(--line);
+  }
+
+  .todo:last-of-type { border-bottom: 0; }
+
+  .dot {
+    width: 20px;
+    height: 20px;
+    display: grid;
+    place-items: center;
+    border: 1.5px solid var(--line-strong);
+    border-radius: 50%;
+    color: transparent;
+    font-size: 10px;
+    font-weight: 900;
+  }
+
+  .todo.done .dot {
+    border-color: var(--edge);
+    background: var(--primary);
+    color: var(--on-primary);
+  }
+
+  .todo-copy { min-width: 0; }
+  .todo-copy strong {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 11px;
+    font-weight: 900;
+  }
+  .todo-copy span { display: block; margin-top: 2px; color: var(--text-3); font-size: 9px; font-weight: 700; }
+  .todo-time { color: var(--text-2); font-size: 10px; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+  .fab {
+    position: absolute;
+    right: 16px;
+    bottom: 54px;
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    border: 2px solid var(--edge);
+    border-radius: 50%;
+    background: var(--primary);
+    color: var(--on-primary);
+    box-shadow: 3px 4px 0 var(--shadow);
+    font-size: 17px;
+    font-weight: 900;
+  }
+
+  .score-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto 64px;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 0;
+    border-bottom: 1.5px solid var(--line);
+  }
+
+  .score-row:last-of-type { border-bottom: 0; }
+  .score-row strong { font-size: 11px; font-weight: 900; }
+  .score-row b { color: var(--text-2); font-size: 11px; font-weight: 900; font-variant-numeric: tabular-nums; }
+  .score-row .bar { margin-top: 0; }
+
+  .compare {
+    font-size: 21px;
+    line-height: 1.2;
+    font-weight: 900;
+    letter-spacing: -.03em;
+  }
+
+  .compare em { color: var(--success); font-style: normal; }
+
+  .clock {
+    margin-top: 8px;
+    font-size: clamp(54px, 7vw, 78px);
+    line-height: .9;
+    font-weight: 900;
+    letter-spacing: -.08em;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    color: var(--on-panel);
+  }
+
+  .clock-sub {
+    margin-top: 10px;
+    color: var(--on-panel);
+    opacity: .62;
+    font-size: 10px;
+    font-weight: 700;
+    text-align: center;
+  }
+
+  .controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 6px;
+  }
+
+  .ctrl {
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    border: 1.5px solid var(--edge);
+    border-radius: 50%;
+    background: var(--card);
+    color: var(--ink);
+    font-size: 12px;
+    font-weight: 900;
+  }
+
+  .ctrl.main {
+    width: 46px;
+    height: 46px;
+    background: var(--primary);
+    color: var(--on-primary);
+    box-shadow: 3px 4px 0 var(--shadow);
+    font-size: 14px;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 5px;
+    padding: 3px;
+    border: 1.5px solid var(--line-strong);
+    border-radius: 999px;
+    background: var(--cream-1);
+  }
+
+  .tabs span {
+    flex: 1;
+    padding: 7px 0;
+    border-radius: 999px;
+    color: var(--text-2);
+    text-align: center;
+    font-size: 9px;
+    font-weight: 800;
+  }
+
+  .tabs span.on { background: var(--primary); color: var(--on-primary); }
+
+  .swatches { display: flex; gap: 8px; padding: 4px 0; }
+  .swatch {
+    width: 19px;
+    height: 19px;
+    border: 1.5px solid var(--edge);
+    border-radius: 50%;
+    box-shadow: 1px 2px 0 var(--shadow-soft);
+  }
+
+  .setting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 11px 0;
+    border-bottom: 1.5px solid var(--line);
+  }
+
+  .setting-row:last-of-type { border-bottom: 0; }
+  .setting-row strong { font-size: 11px; font-weight: 900; }
+  .setting-row span { color: var(--text-2); font-size: 10px; font-weight: 800; }
+
+  .switch {
+    width: 32px;
+    height: 18px;
+    padding: 2px;
+    border: 1.5px solid var(--edge);
+    border-radius: 999px;
+    background: var(--cream-2);
+  }
+
+  .switch i {
+    display: block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--ink);
+    transition: transform .26s var(--ease);
+  }
+
+  .switch.on { background: var(--primary); }
+  .switch.on i { transform: translateX(14px); }
+
+  .empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 13px;
+    text-align: center;
+  }
+
+  .empty-mark {
+    width: 54px;
+    height: 54px;
+    display: grid;
+    place-items: center;
+    border: 2px solid var(--edge);
+    border-radius: 16px;
+    background: var(--primary);
+    color: var(--on-primary);
+    box-shadow: 4px 5px 0 var(--shadow);
+    font-size: 24px;
+    font-weight: 900;
+    transform: rotate(-4deg);
+  }
+
+  .empty h2 {
+    margin: 0;
+    font-size: 19px;
+    font-weight: 900;
+    letter-spacing: -.03em;
+  }
+
+  .empty p {
+    margin: 0;
+    color: var(--text-2);
+    font-size: 10px;
+    font-weight: 700;
+  }
+
+  .caption {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 16px 10px 16px;
+    color: var(--text-2);
+    font-size: 10px;
+    font-weight: 800;
+  }
+
+  .caption strong { color: var(--ink); }
+
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 28px;
+    padding-top: 14px;
+    border-top: 1px solid var(--page-line);
+    color: var(--page-sub);
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  @keyframes fish-rise {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fish-fill {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+  }
+
+  @keyframes fish-pop {
+    0% { transform: scale(.94); }
+    60% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+  }
+
+  .anim { opacity: 1; }
+  .is-playing .anim {
+    animation: fish-rise .4s var(--ease) both;
+    animation-delay: calc(var(--i, 0) * 40ms);
+  }
+  .is-playing .hero .big { animation: fish-pop .4s var(--ease) both; }
+  .is-playing .bar i { animation: fish-fill .5s var(--ease) .1s both; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .is-playing .anim, .is-playing .hero .big, .is-playing .bar i { animation: none !important; }
+    *, *::before, *::after { transition: none !important; }
+  }
+
+  @media (max-width: 1120px) {
+    .atlas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+
+  @media (max-width: 720px) {
+    .wrap { width: min(calc(100% - 28px), 520px); padding-top: 26px; }
+    .head { flex-direction: column; align-items: flex-start; gap: 16px; }
+    .atlas { grid-template-columns: 1fr; gap: 18px; }
+    .page-card { border-radius: 26px; }
+    .screen { min-height: auto; }
+    .primary { margin-top: 16px; }
+    .footer { flex-direction: column; gap: 6px; }
+  }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header class="head">
+    <div>
+      <span class="kicker">FISH UI · PAGE ATLAS</span>
+      <h1>六种页面，<br>一套语法</h1>
+      <p class="lead">从工作台到空态：同一套纸底、墨线、硬影与数字层级。</p>
+    </div>
+    <button class="replay" id="replay" type="button">重播动效</button>
+  </header>
+
+  <section class="atlas">
+    <!-- Dashboard -->
+    <article class="page-card theme-cream">
+      <div class="screen">
+        <div class="appbar"><span class="mark">鱼</span><span class="appname">训练台</span><span class="meta">11.23</span></div>
+        <section class="hero anim" style="--i:0">
+          <div class="eyebrow">今日目标</div>
+          <div class="bigline"><span class="big">120</span><span class="unit">分钟</span></div>
+          <div class="meta-line"><span>已完成 82</span><span>68%</span></div>
+          <div class="bar"><i style="width:68%"></i><b style="left:68%"></b></div>
+        </section>
+        <div class="metrics anim" style="--i:1">
+          <div class="metric"><strong>03</strong><span>模块</span></div>
+          <div class="metric"><strong>12</strong><span>连续天</span></div>
+          <div class="metric"><strong>38</strong><span>剩余</span></div>
+        </div>
+        <div class="section-head"><strong>训练模块</strong><span>今日 · 03</span></div>
+        <div class="row active anim" style="--i:2"><div class="row-top"><strong>政治理论</strong><span>18 / 30 min</span></div><div class="bar mini"><i style="width:60%"></i></div></div>
+        <div class="row anim" style="--i:3"><div class="row-top"><strong>言语理解</strong><span>19 / 24 min</span></div><div class="bar mini"><i style="width:79%"></i></div></div>
+        <div class="row anim" style="--i:4"><div class="row-top"><strong>资料分析</strong><span>16 / 20 min</span></div><div class="bar mini"><i style="width:80%"></i></div></div>
+        <button class="primary">开始训练 <span>▶</span></button>
+      </div>
+      <div class="caption"><strong>Dashboard</strong><span>Hero + 模块</span></div>
+    </article>
+
+    <!-- List -->
+    <article class="page-card theme-sky" style="position:relative">
+      <div class="screen">
+        <div class="appbar"><span class="mark">鱼</span><span class="appname">待办</span><span class="meta">09:12</span></div>
+        <div class="pills anim" style="--i:0"><span class="pill on">今天</span><span class="pill">全部</span><span class="pill">已完成</span></div>
+        <div class="section-head"><strong>今天</strong><span>4 / 6</span></div>
+        <div class="anim" style="--i:1">
+          <div class="todo done"><span class="dot">✓</span><div class="todo-copy"><strong>整理错题</strong><span>言语理解</span></div><span class="todo-time">09:00</span></div>
+          <div class="todo done"><span class="dot">✓</span><div class="todo-copy"><strong>晨读</strong><span>20 分钟</span></div><span class="todo-time">07:30</span></div>
+          <div class="todo"><span class="dot">·</span><div class="todo-copy"><strong>资料分析</strong><span>专项训练</span></div><span class="todo-time">14:00</span></div>
+        </div>
+        <div class="fab" aria-label="新建待办">＋</div>
+      </div>
+      <div class="caption"><strong>List</strong><span>实线行 + 单个 FAB</span></div>
+    </article>
+
+    <!-- Report -->
+    <article class="page-card theme-sky">
+      <div class="screen">
+        <div class="appbar"><span class="mark">鱼</span><span class="appname">复盘</span><span class="meta">11.23</span></div>
+        <section class="hero dark anim" style="--i:0">
+          <div class="eyebrow">训练成绩</div>
+          <div class="bigline"><span class="big">85.5</span><span class="unit">/ 100</span></div>
+          <div class="meta-line"><span>目标 80</span><span>高于目标</span></div>
+          <div class="bar"><i style="width:85.5%"></i><b style="left:80%"></b></div>
+        </section>
+        <div class="compare anim" style="--i:1">比目标高 <em>5.5</em> 分</div>
+        <div class="section-head"><strong>模块分差</strong><span>优先补</span></div>
+        <div class="anim" style="--i:2">
+          <div class="score-row"><strong>政治理论</strong><b>8.5 / 10</b><div class="bar mini"><i style="width:85%"></i></div></div>
+          <div class="score-row"><strong>言语理解</strong><b>19 / 24</b><div class="bar mini"><i style="width:79%"></i></div></div>
+          <div class="score-row"><strong>判断推理</strong><b>23.2 / 27</b><div class="bar mini"><i style="width:86%"></i></div></div>
+        </div>
+        <button class="primary">查看答卷 <span>›</span></button>
+      </div>
+      <div class="caption"><strong>Report</strong><span>结论先行 + 实线目标</span></div>
+    </article>
+
+    <!-- Focus -->
+    <article class="page-card theme-obsidian">
+      <div class="screen">
+        <div class="appbar"><span class="mark">鱼</span><span class="appname">专注</span><span class="meta">第 2 / 6</span></div>
+        <section class="hero dark anim" style="--i:0; border-color:var(--edge); box-shadow:6px 7px 0 var(--shadow)">
+          <div class="eyebrow">倒计时</div>
+          <div class="clock anim" style="--i:1">42:18</div>
+          <div class="clock-sub">言语理解 · 已专注 17 分钟</div>
+          <div class="bar"><i style="width:41%"></i><b style="left:41%"></b></div>
+        </section>
+        <div class="controls anim" style="--i:2">
+          <span class="ctrl">‹</span><span class="ctrl main">Ⅱ</span><span class="ctrl">›</span><span class="ctrl">✓</span>
+        </div>
+        <button class="primary">下一模块 <span>›</span></button>
+      </div>
+      <div class="caption"><strong>Focus</strong><span>大数字 + 控件</span></div>
+    </article>
+
+    <!-- Settings -->
+    <article class="page-card theme-mint">
+      <div class="screen">
+        <div class="appbar"><span class="mark">鱼</span><span class="appname">设置</span><span class="meta">完成</span></div>
+        <div class="tabs anim" style="--i:0"><span class="on">主题</span><span>时钟</span><span>提醒</span></div>
+        <div class="section-head"><strong>主题配色</strong><span>晴空苏打</span></div>
+        <div class="swatches anim" style="--i:1">
+          <span class="swatch" style="background:#fbf3df"></span>
+          <span class="swatch" style="background:#f2603c"></span>
+          <span class="swatch" style="background:#ff9fb6"></span>
+          <span class="swatch" style="background:#5eb0e8; outline:2px solid var(--edge); outline-offset:2px"></span>
+          <span class="swatch" style="background:#6acfb4"></span>
+        </div>
+        <div class="anim" style="--i:2">
+          <div class="setting-row"><strong>每日目标</strong><span>120 分钟 ›</span></div>
+          <div class="setting-row"><strong>完成提醒</strong><span class="switch on"><i></i></span></div>
+          <div class="setting-row"><strong>声音</strong><span>钟琴 ›</span></div>
+        </div>
+        <button class="primary">保存 <span>✓</span></button>
+      </div>
+      <div class="caption"><strong>Settings</strong><span>分段 + 表单行</span></div>
+    </article>
+
+    <!-- Empty -->
+    <article class="page-card theme-rose">
+      <div class="screen">
+        <div class="appbar"><span class="mark">鱼</span><span class="appname">记录</span><span class="meta">本周</span></div>
+        <div class="empty">
+          <div class="empty-mark">鱼</div>
+          <h2>还没有训练记录</h2>
+          <button class="primary" style="width:auto; min-width:150px; margin-top:2px">开始第一次</button>
+        </div>
+      </div>
+      <div class="caption"><strong>Empty</strong><span>实线 + 单一主操作</span></div>
+    </article>
+  </section>
+
+  <footer class="footer">
+    <span>Fish UI / Page Atlas / 2026-11</span>
+    <span>无虚线 · 无解释段 · 入场只播一次</span>
+  </footer>
+</main>
+
+<script>
+  (function () {
+    var replay = document.getElementById('replay');
+    if (!replay) return;
+    function play() {
+      var screens = Array.prototype.slice.call(document.querySelectorAll('.screen'));
+      screens.forEach(function (screen) { screen.classList.remove('is-playing'); });
+      void document.body.offsetHeight;
+      screens.forEach(function (screen) { screen.classList.add('is-playing'); });
+    }
+    replay.addEventListener('click', play);
+    if (!window.matchMedia || !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      requestAnimationFrame(play);
+    }
+  })();
+</script>
+</body>
+</html>

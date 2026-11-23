@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>小鱼计时器 · 模块分数 B / D 六种用法</title>
+<style>
+  :root {
+    --bg: #eaf4fc;
+    --paper: #fffdf8;
+    --surface: #f7fbff;
+    --ink: #172b43;
+    --muted: #62788e;
+    --line: #c3d5e4;
+    --line-strong: #233c58;
+    --primary: #79b7e7;
+    --primary-deep: #337aae;
+    --primary-soft: #dceefb;
+    --green: #2f835f;
+    --green-soft: #e4f4eb;
+    --red: #c6584a;
+    --red-soft: #fbe7e2;
+    --yellow: #e7c35b;
+    --shadow: rgba(29, 51, 74, .14);
+    --font: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+
+  body {
+    color: var(--ink);
+    background-color: var(--bg);
+    background-image: radial-gradient(rgba(86, 139, 182, .14) .8px, transparent .8px);
+    background-size: 20px 20px;
+    font-family: var(--font);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  button { font: inherit; cursor: pointer; }
+
+  .num {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+
+  .page {
+    width: min(1280px, calc(100% - 40px));
+    margin: 0 auto;
+    padding: 36px 0 56px;
+  }
+
+  .hero-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 292px;
+    align-items: end;
+    gap: 24px;
+    margin-bottom: 28px;
+  }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 26px;
+    padding: 0 10px;
+    border: 1.5px solid var(--line-strong);
+    border-radius: 999px;
+    background: var(--paper);
+    color: var(--primary-deep);
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .08em;
+    box-shadow: 2px 3px 0 var(--shadow);
+  }
+
+  .eyebrow::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--primary);
+  }
+
+  h1 {
+    max-width: 700px;
+    margin: 14px 0 0;
+    font-size: clamp(32px, 4.2vw, 54px);
+    line-height: 1.06;
+    letter-spacing: -.055em;
+    font-weight: 900;
+  }
+
+  h1 span {
+    color: var(--primary-deep);
+    white-space: nowrap;
+  }
+
+  .summary {
+    padding: 14px 15px 13px;
+    border: 2px solid var(--line-strong);
+    border-radius: 18px;
+    background: var(--paper);
+    box-shadow: 5px 6px 0 var(--shadow);
+  }
+
+  .summary-top {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+  }
+
+  .summary-label {
+    margin-right: 3px;
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 800;
+  }
+
+  .summary-top strong {
+    font-size: 40px;
+    line-height: .9;
+    font-weight: 900;
+    letter-spacing: -.07em;
+  }
+
+  .summary-top small {
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .summary-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 11px;
+  }
+
+  .summary-track {
+    position: relative;
+    flex: 1;
+    height: 7px;
+    border: 1.5px solid var(--line-strong);
+    border-radius: 999px;
+    background: var(--primary-soft);
+    overflow: hidden;
+  }
+
+  .summary-track i {
+    display: block;
+    width: 85.5%;
+    height: 100%;
+    background: var(--primary);
+    border-right: 1.5px solid var(--line-strong);
+  }
+
+  .summary-track b {
+    position: absolute;
+    top: -2px;
+    bottom: -2px;
+    left: 60%;
+    width: 2px;
+    background: var(--ink);
+  }
+
+  .summary-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 9px;
+    font-weight: 700;
+  }
+
+  .summary-meta b { color: var(--ink); }
+
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 9px;
+    margin: 30px 0 12px;
+  }
+
+  .section-head strong {
+    font-size: 20px;
+    line-height: 1;
+    font-weight: 900;
+    letter-spacing: -.03em;
+  }
+
+  .section-head span {
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 800;
+  }
+
+  .section-head::after {
+    content: "";
+    flex: 1;
+    height: 1.5px;
+    margin-left: 4px;
+    background: var(--line);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .panel {
+    min-width: 0;
+    padding: 13px 13px 12px;
+    border: 2px solid var(--line-strong);
+    border-radius: 18px;
+    background: var(--paper);
+  }
+
+  .panel-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 11px;
+  }
+
+  .code {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 27px;
+    height: 23px;
+    padding: 0 6px;
+    border: 1.5px solid var(--line-strong);
+    border-radius: 7px;
+    background: var(--primary-soft);
+    color: var(--primary-deep);
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .02em;
+  }
+
+  .panel-head h2 {
+    min-width: 0;
+    flex: 1;
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: -.02em;
+  }
+
+  .tag {
+    flex: 0 0 auto;
+    padding: 4px 7px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    color: var(--muted);
+    font-size: 8px;
+    font-weight: 800;
+  }
+
+  .viz { min-height: 274px; display: flex; flex-direction: column; }
+
+  .viz-note {
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 8px;
+    font-weight: 700;
+    line-height: 1.4;
+  }
+
+  .viz-note b { color: var(--ink); }
+
+  /* ---------- B1: cards with ring ---------- */
+
+  .b1-grid,
+  .b2-grid,
+  .b3-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .b1-card,
+  .b2-card,
+  .b3-card {
+    min-width: 0;
+    padding: 8px 8px 7px;
+    border: 1.5px solid var(--line-strong);
+    border-radius: 11px;
+    background: var(--paper);
+    box-shadow: 2px 2px 0 rgba(29, 51, 74, .08);
+  }
+
+  .card-line {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .card-name {
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 10px;
+    font-weight: 900;
+  }
+
+  .delta {
+    flex: 0 0 auto;
+    font-size: 8.5px;
+    font-weight: 900;
+    white-space: nowrap;
+  }
+
+  .delta.positive { color: var(--green); }
+  .delta.negative { color: var(--red); }
+
+  .score-main {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 4px;
+    margin-top: 4px;
+  }
+
+  .score {
+    font-size: 25px;
+    line-height: .9;
+    font-weight: 900;
+    letter-spacing: -.07em;
+    white-space: nowrap;
+  }
+
+  .score small {
+    color: var(--muted);
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0;
+  }
+
+  .ring {
+    position: relative;
+    flex: 0 0 29px;
+    width: 29px;
+    height: 29px;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: conic-gradient(var(--tone) calc(var(--rate) * 1%), #e7f1fa 0);
+  }
+
+  .ring::after {
+    content: "";
+    position: absolute;
+    inset: 6px;
+    border-radius: 50%;
+    background: var(--paper);
+  }
+
+  .track {
+    position: relative;
+    height: 5px;
+    margin-top: 6px;
+    border-radius: 999px;
+    background: #e7f1fa;
+  }
+
+  .track i {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: calc(var(--rate) * 1%);
+    border-radius: 999px;
+    background: var(--tone);
+    opacity: .75;
+  }
+
+  .track b {
+    position: absolute;
+    top: -2px;
+    bottom: -2px;
+    left: 60%;
+    width: 1.5px;
+    border-radius: 2px;
+    background: var(--ink);
+    opacity: .8;
+  }
+
+  .card-foot {
+    display: flex;
+    justify-content: space-between;
+    gap: 4px;
+    margin-top: 5px;
+    color: var(--muted);
+    font-size: 8px;
+    font-weight: 600;
+  }
+
+  /* ---------- B2: tiles with bar ---------- */
+
+  .b2-card { padding-bottom: 8px; }
+
+  .b2-main {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4px;
+    margin-top: 4px;
+  }
+
+  .b2-main .score { font-size: 24px; }
+
+  .b2-rate {
+    color: var(--muted);
+    font-size: 8px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  .b2-foot {
+    margin-top: 5px;
+    color: var(--muted);
+    font-size: 8px;
+    font-weight: 600;
+  }
+
+  /* ---------- B3: score tags ---------- */
+
+  .b3-grid { gap: 6px; }
+
+  .b3-card {
+    padding: 8px 8px 8px 10px;
+    border-left: 4px solid var(--tone);
+  }
+
+  .b3-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4px;
+  }
+
+  .b3-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 9px;
+    font-weight: 900;
+  }
+
+  .b3-rate {
+    color: var(--muted);
+    font-size: 8px;
+    font-weight: 800;
+  }
+
+  .b3-bottom {
+    display: flex;
+    align-items: baseline;
+    gap: 3px;
+    margin-top: 5px;
+  }
+
+  .b3-bottom strong {
+    font-size: 24px;
+    line-height: .9;
+    font-weight: 900;
+    letter-spacing: -.07em;
+  }
+
+  .b3-bottom small {
+    color: var(--muted);
+    font-size: 8px;
+    font-weight: 700;
+  }
+
+  .b3-bottom .delta { margin-left: auto; }
+
+  /* ---------- D: radar / polar ---------- */
+
+  .radar-wrap {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    min-height: 238px;
+  }
+
+  .radar-svg {
+    display: block;
+    width: 100%;
+    max-width: 390px;
+    height: auto;
+  }
+
+  .radar-svg text {
+    font-family: var(--font);
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 5px 12px;
+    margin-top: 3px;
+    color: var(--muted);
+    font-size: 8px;
+    font-weight: 700;
+  }
+
+  .key { display: inline-flex; align-items: center; gap: 4px; }
+  .key-line { width: 13px; height: 3px; border-radius: 2px; background: var(--primary-deep); }
+  .key-line.target { background: var(--green); }
+
+  .polar-wrap {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    min-height: 250px;
+  }
+
+  .polar-svg {
+    display: block;
+    width: 100%;
+    max-width: 390px;
+    height: auto;
+  }
+
+  .polar-svg text { font-family: var(--font); }
+
+  .footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    margin-top: 22px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 9px;
+    font-weight: 700;
+  }
+
+  .footer b { color: var(--ink); }
+
+  @media (max-width: 1100px) {
+    .page { width: min(860px, calc(100% - 32px)); }
+    .hero-grid { grid-template-columns: 1fr 250px; }
+    .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+
+  @media (max-width: 680px) {
+    .page { width: calc(100% - 24px); padding-top: 20px; }
+    .hero-grid { grid-template-columns: 1fr; gap: 16px; }
+    .summary { max-width: 280px; }
+    .grid { grid-template-columns: 1fr; gap: 12px; }
+    .panel { padding: 11px 10px 10px; }
+    .viz { min-height: auto; }
+    .footer { flex-direction: column; align-items: flex-start; gap: 5px; }
+  }
+</style>
+</head>
+<body>
+<main class="page">
+  <header class="hero-grid">
+    <div>
+      <div class="eyebrow">FISH UI · MODULE SCORE</div>
+      <h1>同一组分数，<br><span>六种读法</span></h1>
+    </div>
+    <aside class="summary" aria-label="演示总分">
+      <div class="summary-top">
+        <span class="summary-label">总分</span>
+        <strong class="num">85.5</strong>
+        <small>/ 100</small>
+      </div>
+      <div class="summary-bar" aria-hidden="true">
+        <span class="summary-track"><i></i><b></b></span>
+      </div>
+      <div class="summary-meta"><span>目标 <b>60</b></span><span>6 模块</span></div>
+    </aside>
+  </header>
+
+  <div class="section-head"><strong>B / 卡片总览</strong><span>2×3</span></div>
+  <section class="grid" id="bGrid"></section>
+
+  <div class="section-head"><strong>D / 轮廓与极坐标</strong><span>6 轴</span></div>
+  <section class="grid" id="dGrid"></section>
+
+  <footer class="footer">
+    <span><b>同一组演示数据</b> · 目标 60 · 无虚线</span>
+    <span>小鱼计时器 / 模块分数</span>
+  </footer>
+</main>
+
+<script>
+  const MODULES = [
+    { key: 'politics', name: '政治理论', short: '政治', got: 8.5,  full: 10, time: '15:00' },
+    { key: 'common',   name: '常识判断', short: '常识', got: 7.8,  full: 9,  time: '10:00' },
+    { key: 'verbal',   name: '言语理解', short: '言语', got: 19.0, full: 24, time: '28:40' },
+    { key: 'quant',    name: '数量关系', short: '数量', got: 9.0,  full: 10, time: '09:20' },
+    { key: 'logic',    name: '判断推理', short: '判断', got: 23.2, full: 27, time: '33:00' },
+    { key: 'data',     name: '资料分析', short: '资料', got: 18.0, full: 20, time: '22:00' }
+  ];
+
+  const COLOR = {
+    politics: { tone: '#cfe7fa', deep: '#5d9fd3' },
+    common:   { tone: '#fbe1d7', deep: '#d98567' },
+    verbal:   { tone: '#f7edc8', deep: '#b99b39' },
+    quant:    { tone: '#d9efe4', deep: '#5aa985' },
+    logic:    { tone: '#e5e0f4', deep: '#8e7abb' },
+    data:     { tone: '#f6dfe7', deep: '#c5778e' }
+  };
+
+  const TARGET = 60;
+  const TOTAL = MODULES.reduce((sum, m) => sum + m.got, 0);
+
+  const fmt = (n) => {
+    const r = Math.round(n * 10) / 10;
+    return Number.isInteger(r) ? String(r) : r.toFixed(1);
+  };
+  const rate = (m) => (m.got / m.full) * 100;
+  const diff = (m) => m.got - (m.full * TARGET) / 100;
+  const diffText = (n) => `${n >= 0 ? '+' : '−'}${fmt(Math.abs(n))}`;
+  const signClass = (n) => n >= 0 ? 'positive' : 'negative';
+
+  function b1Card(m) {
+    const c = COLOR[m.key];
+    const d = diff(m);
+    return `
+      <div class="b1-card" style="--tone:${c.deep}; --rate:${rate(m)}">
+        <div class="card-line"><span class="card-name">${m.name}</span><span class="delta ${signClass(d)} num">${diffText(d)}</span></div>
+        <div class="score-main"><span class="score num">${fmt(m.got)}<small> / ${fmt(m.full)}</small></span><span class="ring" aria-hidden="true"></span></div>
+        <div class="track" aria-hidden="true"><i></i><b></b></div>
+        <div class="card-foot"><span>${fmt(rate(m))}%</span><span>${m.time}</span></div>
+      </div>`;
+  }
+
+  function b2Card(m) {
+    const c = COLOR[m.key];
+    const d = diff(m);
+    return `
+      <div class="b2-card" style="--tone:${c.deep}; --rate:${rate(m)}">
+        <div class="card-line"><span class="card-name">${m.name}</span><span class="delta ${signClass(d)} num">${diffText(d)}</span></div>
+        <div class="b2-main"><span class="score num">${fmt(m.got)}<small> / ${fmt(m.full)}</small></span><span class="b2-rate">${fmt(rate(m))}%</span></div>
+        <div class="track" aria-hidden="true"><i></i><b></b></div>
+        <div class="b2-foot">${m.time}</div>
+      </div>`;
+  }
+
+  function b3Card(m) {
+    const c = COLOR[m.key];
+    const d = diff(m);
+    return `
+      <div class="b3-card" style="--tone:${c.deep}">
+        <div class="b3-top"><span class="b3-name">${m.name}</span><span class="b3-rate">${fmt(rate(m))}%</span></div>
+        <div class="b3-bottom"><strong class="num">${fmt(m.got)}</strong><small>/ ${fmt(m.full)}</small><span class="delta ${signClass(d)} num">${diffText(d)}</span></div>
+      </div>`;
+  }
+
+  function panel(code, title, tag, body, note = '') {
+    return `
+      <article class="panel">
+        <div class="panel-head"><span class="code">${code}</span><h2>${title}</h2><span class="tag">${tag}</span></div>
+        <div class="viz">${body}${note ? `<div class="viz-note">${note}</div>` : ''}</div>
+      </article>`;
+  }
+
+  function renderB() {
+    document.getElementById('bGrid').innerHTML = [
+      panel('B1', '2×3 成绩卡', '结果页', `<div class="b1-grid">${MODULES.map(b1Card).join('')}</div>`),
+      panel('B2', '2×3 分数砖', '小屏', `<div class="b2-grid">${MODULES.map(b2Card).join('')}</div>`),
+      panel('B3', '2×3 成绩签', '极简', `<div class="b3-grid">${MODULES.map(b3Card).join('')}</div>`)
+    ].join('');
+  }
+
+  // ===== D drawing helpers =====
+
+  const CX = 210;
+  const CY = 162;
+  const R = 92;
+
+  function point(i, factor) {
+    const angle = -Math.PI / 2 + (i * Math.PI * 2) / MODULES.length;
+    return {
+      x: CX + Math.cos(angle) * R * factor,
+      y: CY + Math.sin(angle) * R * factor,
+      cos: Math.cos(angle),
+      sin: Math.sin(angle)
+    };
+  }
+
+  function polygon(factor) {
+    return MODULES.map((_, i) => {
+      const p = point(i, factor);
+      return `${p.x.toFixed(1)},${p.y.toFixed(1)}`;
+    }).join(' ');
+  }
+
+  function label(i, m, mode) {
+    const p = point(i, 1);
+    const lx = CX + p.cos * (R + 30);
+    const ly = CY + p.sin * (R + 28);
+    const anchor = p.cos > .25 ? 'start' : p.cos < -.25 ? 'end' : 'middle';
+    const d = diff(m);
+    const nameY = p.sin < -.6 ? ly - 18 : p.sin > .6 ? ly - 1 : ly - 11;
+    const scoreY = nameY + 11;
+    const diffY = scoreY + 10;
+    if (mode === 'min') {
+      return `<text x="${lx}" y="${nameY}" text-anchor="${anchor}" font-size="9" font-weight="800" fill="#172b43">${m.short}</text>
+              <text x="${lx}" y="${scoreY}" text-anchor="${anchor}" font-size="8" font-weight="700" fill="#62788e">${fmt(m.got)}/${fmt(m.full)}</text>`;
+    }
+    return `<text x="${lx}" y="${nameY}" text-anchor="${anchor}" font-size="9" font-weight="800" fill="#172b43">${m.short}</text>
+            <text x="${lx}" y="${scoreY}" text-anchor="${anchor}" font-size="8" font-weight="700" fill="#62788e">${fmt(m.got)}/${fmt(m.full)}</text>
+            <text x="${lx}" y="${diffY}" text-anchor="${anchor}" font-size="7.5" font-weight="800" fill="${d >= 0 ? '#2f835f' : '#c6584a'}">${diffText(d)}</text>`;
+  }
+
+  function radarSvg(mode) {
+    let svg = '';
+    if (mode === 'grid') {
+      [0.25, 0.5, 0.75, 1].forEach((factor) => {
+        svg += `<polygon points="${polygon(factor)}" fill="${factor === 1 ? 'rgba(255,255,255,.2)' : 'none'}" stroke="#c8d9e8" stroke-width="1"/>`;
+      });
+      MODULES.forEach((_, i) => {
+        const p = point(i, 1);
+        svg += `<line x1="${CX}" y1="${CY}" x2="${p.x.toFixed(1)}" y2="${p.y.toFixed(1)}" stroke="#c8d9e8" stroke-width="1"/>`;
+      });
+    } else {
+      svg += `<polygon points="${polygon(1)}" fill="none" stroke="#c8d9e8" stroke-width="1.2"/>`;
+      MODULES.forEach((_, i) => {
+        const p = point(i, 1);
+        svg += `<line x1="${CX}" y1="${CY}" x2="${p.x.toFixed(1)}" y2="${p.y.toFixed(1)}" stroke="#dce8f2" stroke-width="1"/>`;
+      });
+    }
+
+    svg += `<polygon points="${polygon(TARGET / 100)}" fill="rgba(47,131,95,.05)" stroke="#2f835f" stroke-width="2"/>`;
+
+    svg += `<polygon points="${MODULES.map((m, i) => {
+      const p = point(i, rate(m) / 100);
+      return `${p.x.toFixed(1)},${p.y.toFixed(1)}`;
+    }).join(' ')}" fill="rgba(89,158,215,.14)" stroke="#599ed7" stroke-width="2.3"/>`;
+
+    MODULES.forEach((m, i) => {
+      const p = point(i, rate(m) / 100);
+      svg += `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3" fill="#599ed7" stroke="#fffdf8" stroke-width="1.1"/>`;
+      svg += label(i, m, mode === 'grid' ? 'full' : 'min');
+    });
+
+    svg += `<circle cx="${CX}" cy="${CY}" r="2.2" fill="#233c58" opacity=".45"/>`;
+    return `<svg class="radar-svg" viewBox="0 0 420 340" role="img" aria-label="模块得分雷达图">${svg}</svg>`;
+  }
+
+  function polarSvg() {
+    let svg = '';
+    svg += `<circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="#c8d9e8" stroke-width="1.2"/>`;
+    svg += `<circle cx="${CX}" cy="${CY}" r="${R * TARGET / 100}" fill="none" stroke="#2f835f" stroke-width="2"/>`;
+
+    MODULES.forEach((m, i) => {
+      const axis = point(i, 1);
+      svg += `<line x1="${CX}" y1="${CY}" x2="${axis.x.toFixed(1)}" y2="${axis.y.toFixed(1)}" stroke="#dce8f2" stroke-width="1"/>`;
+    });
+
+    MODULES.forEach((m, i) => {
+      const p = point(i, rate(m) / 100);
+      const c = COLOR[m.key];
+      svg += `<line x1="${CX}" y1="${CY}" x2="${p.x.toFixed(1)}" y2="${p.y.toFixed(1)}" stroke="${c.deep}" stroke-width="7" stroke-linecap="round" opacity=".72"/>`;
+      svg += `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="4" fill="${c.deep}" stroke="#fffdf8" stroke-width="1.3"/>`;
+      svg += label(i, m, 'full');
+    });
+
+    svg += `<circle cx="${CX}" cy="${CY}" r="4" fill="#233c58"/>`;
+    return `<svg class="polar-svg" viewBox="0 0 420 340" role="img" aria-label="模块得分极坐标柱图">${svg}</svg>`;
+  }
+
+  function renderD() {
+    const d1 = `<div class="radar-wrap">${radarSvg('grid')}</div>
+      <div class="legend"><span class="key"><i class="key-line"></i>我的</span><span class="key"><i class="key-line target"></i>目标 60</span></div>`;
+    const d2 = `<div class="radar-wrap">${radarSvg('min')}</div>
+      <div class="legend"><span class="key"><i class="key-line"></i>我的</span><span class="key"><i class="key-line target"></i>目标 60</span></div>`;
+    const d3 = `<div class="polar-wrap">${polarSvg()}</div>
+      <div class="legend"><span class="key">长度 = 得分率</span><span class="key"><i class="key-line target"></i>目标 60</span></div>`;
+
+    document.getElementById('dGrid').innerHTML = [
+      panel('D1', '雷达全标注', '复盘', d1),
+      panel('D2', '极简雷达', '总览', d2),
+      panel('D3', '极坐标柱', '排序', d3)
+    ].join('');
+  }
+
+  renderB();
+  renderD();
+</script>
+</body>
+</html>

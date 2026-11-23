@@ -59,13 +59,13 @@
     <view class="notice-text">旧记录：用过系统预置答案，分数不可信</view>
   </view>
 
-  <!-- 能力图：按本次作答各模块得分率画雷达，绿框是目标档，只呈现真实数据 -->
+  <!-- 能力图：D1 雷达给模块轮廓；只呈现真实数据 -->
   <view wx:if="{{modules.length > 0}}" class="card radar-card anim-rise" style="animation-delay: 60ms;">
     <view class="radar-head">
       <view class="radar-title">能力图</view>
       <view class="btn btn-outline mini review-btn" bindtap="openReview" hover-class="btn-pressed">答题卡</view>
     </view>
-    <!-- 目标档：点哪档，绿框就画在那一档，轴尾同步显示距目标的差值 -->
+    <!-- 目标档：点哪档，雷达绿框与差值提示同步切换 -->
     <view class="target-tabs">
       <view
         wx:for="{{targets}}"
@@ -76,7 +76,7 @@
         hover-class="is-press"
       >目标 {{item}} 分</view>
     </view>
-    <!-- 能力图跟随正文滚动容器，容器从顶栏下方开始，滚动时直接被裁掉 -->
+    <!-- D1：能力图跟随正文滚动容器，容器从顶栏下方开始，滚动时直接被裁掉 -->
     <view class="radar-canvas-stage">
       <canvas wx:if="{{radarDrawing}}" type="2d" id="radar" class="radar-canvas radar-canvas-raw"></canvas>
       <image

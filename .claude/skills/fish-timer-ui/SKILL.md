@@ -9,10 +9,19 @@ description: 「小鱼计时器」微信小程序的 UI 设计系统与自适应
 视觉基调：**neo-brutalist 手绘感**——浅色底、深色粗描边、硬投影（无模糊阴影）、大圆角或全胶囊、数字一律加粗。
 **不得声称「已在微信开发者工具编译通过」**；只能说做了静态校验，效果由用户自己重编译截图确认。
 
+## 0. 通用设计总纲（与用户级 fish-timer-ui 同步）
+
+- 纸底、墨线、单层硬影、大圆角、大数字；手作感只放在轮廓，间距与数字必须精确。
+- 一屏一个锚点、一个主操作；硬影卡不超过 3 张，列表行与次级卡用实线不用硬影。
+- **全局禁用虚线**：分隔、空态、目标线、图表基准、拖放提示全部用实线或留白；被修改的页面顺手清掉该范围内旧虚线。
+- 不写解释性微文案；保留字段名、单位、状态，交互靠控件自解释。
+- 组件几何不随主题变化；换主题只换 token。完整组件解剖、页面骨架与动效配方见用户级 `fish-timer-ui` 的 `SKILL.md`、`component-recipes.md`、`page-recipes.md`、`motion-recipes.md`；本文件只保留项目专属实现与验收。
+- 项目专属历史已下沉到 `references/project-notes.md`；只有改小鱼计时器时才读，不再混进用户级通用 skill。
+
 ## 1. 主题 token（唯一数据源）
 
 - `theme/palette.js` 是唯一配色源；`node tools/gen-theme-wxss.js` 生成 `app.wxss` 的 `THEME-TOKENS:START/END`，**生成区禁止手改**。
-- 6 套内置主题（cream / tomato / rose / sky 默认 / mint / obsidian）+ 自定义主题。每套约 46 个变量，另带 `canvas` 与 `nav/front/swatch/slider`。
+- 7 套内置主题（cream / tomato / rose / sky 默认 / sketch / mint / obsidian）+ 自定义主题。每套约 46 个变量，另带 `canvas` 与 `nav/front/swatch/slider`。
 - 页面根节点必须 `class="... theme-{{theme}}" style="{{themeStyle}}"`，自定义主题靠内联变量生效；`onShow` 重读主题。
 - 主要变量：`--bg --card --panel --panel-deep --ink --edge --edge-deep --shadow --shadow-soft --primary --primary-2 --primary-3 --on-primary --cream-1..4 --line --line-strong --track --text-2/3/4 --text-warm --success --danger --warn-bg --accent-bg`。
 - **禁止写死色值**；canvas 取色用 `app.getTheme().canvas`，与页面 CSS 必须同色。

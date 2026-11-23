@@ -61,7 +61,7 @@ function moduleDiff(item, target) {
 
 // 逐题对错：四格 A/B/C/D，只标「正解」与「你选」；跨用户的选项人数/占比需要服务端统计，本地不做
 
-// 能力图拆成两层静止图：底图（网格 / 轴 / 轴名）和曲线层（目标框 / 我的曲线 / 顶点）。
+// 能力图拆成两层静止图：底图（网格 / 轴 / 轴名、原始分与差值）和曲线层（目标框 / 我的曲线 / 顶点）。
 // 曲线层是透明 PNG，展示时绕圆心从 1.5% 放大到 100%，就是每个顶点从中心点往四周扩。
 function radarGeometry(cfg) {
   const { w, h, items } = cfg;
@@ -106,7 +106,8 @@ function drawRadarBase(ctx, cfg) {
     ctx.stroke();
   }
 
-  // 轴名 + 距目标的分差：固定不动，曲线在它上面扩
+  // D1 轴端：模块名 / 原始分 / 距目标分差三行，固定不动，曲线在它上面扩。
+  // 原始分优先 got/full；旧记录没有分值口径时退回百分比，避免出现 0/0。
   ctx.textBaseline = 'middle';
   for (let i = 0; i < n; i++) {
     const it = items[i];
@@ -115,15 +116,21 @@ function drawRadarBase(ctx, cfg) {
     const ax = cx + dirX * (R + (dense ? 8 : 12));
     const ay = cy + dirY * (R + (dense ? 8 : 12));
     const diff = moduleDiff(it, target);
-    ctx.textAlign = dirX > 0.3 ? 'left' : (dirX < -0.3 ? 'right' : 'center');
     const name = dense || it.name.length > 6 ? it.label : it.name;
+    const scoreText = it.full > 0
+      ? `${fmtPoint(it.got)}/${fmtPoint(it.full)}`
+      : `${Math.round(it.value)}%`;
+    ctx.textAlign = dirX > 0.3 ? 'left' : (dirX < -0.3 ? 'right' : 'center');
     ctx.font = dense ? 'bold 9px sans-serif' : 'bold 11px sans-serif';
     ctx.fillStyle = colors.ink;
-    ctx.fillText(name, ax, ay - (dense ? 6 : 8));
+    ctx.fillText(name, ax, ay - (dense ? 11 : 15));
+    ctx.font = dense ? '8px sans-serif' : '9px sans-serif';
+    ctx.fillStyle = colors.sub;
+    ctx.fillText(scoreText, ax, ay - 2);
     if (diff !== null) {
-      ctx.font = dense ? 'bold 9px sans-serif' : 'bold 12px sans-serif';
+      ctx.font = dense ? 'bold 9px sans-serif' : 'bold 11px sans-serif';
       ctx.fillStyle = diff >= 0 ? colors.success : colors.danger;
-      ctx.fillText(signedNum(diff), ax, ay + (dense ? 5 : 9));
+      ctx.fillText(signedNum(diff), ax, ay + (dense ? 8 : 12));
     }
   }
 }
@@ -357,6 +364,8 @@ Page({
         tone: timer.tone || timeTone(deltaSeconds),
       };
     }
+    // 旧记录里可能还留着「附加题」模块（已删除的功能），读旧数据时直接跳过
+    const visibleModules = modules.filter((m) => m.scored !== false);
     this.setData({
       isDesktop: app.globalData.isDesktop,
       missing: false,
@@ -372,7 +381,7 @@ Page({
           : '',
       },
       // 旧记录里可能还留着「附加题」模块（已删除的功能），读旧数据时直接跳过
-      modules: modules.filter((m) => m.scored !== false),
+      modules: visibleModules,
       radarTip: tip,
       timerSummary,
     }, () => {
@@ -392,7 +401,7 @@ Page({
   },
 
   // 能力图：六边形雷达。底图和曲线分两次导出，曲线用 CSS 从中心向外放大。
-  // 绿框＝当前目标档，杏色＝我的表现；轴末端写模块简称 + 距目标的分差。
+  // 绿框＝当前目标档，杏色＝我的表现；轴末端写模块简称、原始分与距目标的分差。
   drawRadar(retry = 0) {
     const radar = this._radar;
     if (!radar || !radar.items.length) return;
