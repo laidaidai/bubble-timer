@@ -1,0 +1,505 @@
+@import "../base.wxss";
+
+/* 本卷配时：模块固定为试卷模块，只调整每段目标时长。
+   视觉沿用训练首页的模块卡、步进器和手绘滑杆，页面自己承担保存与起跑。 */
+.plan-page {
+  padding-left: 24rpx;
+  padding-right: 24rpx;
+  padding-bottom: calc(216rpx + env(safe-area-inset-bottom));
+}
+
+.plan-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 26rpx 28rpx 26rpx 36rpx;
+  background: var(--card);
+  border: 3rpx solid var(--edge);
+  border-radius: 30rpx;
+  box-shadow: 6rpx 7rpx 0 var(--shadow);
+  box-sizing: border-box;
+  animation: app-rise-in .38s cubic-bezier(.2, .8, .3, 1) both;
+}
+.plan-hero::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 10rpx;
+  background: var(--primary);
+  border-right: 2rpx solid var(--edge);
+}
+.plan-hero-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18rpx;
+}
+.plan-kicker {
+  color: var(--text-warm);
+  font-size: 20rpx;
+  font-weight: 900;
+  letter-spacing: 2rpx;
+}
+.plan-reset {
+  flex: 0 0 auto;
+  min-height: 48rpx;
+  padding: 0 16rpx;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-warm);
+  background: var(--cream-2);
+  border: 2rpx solid var(--line-strong);
+  border-radius: 999rpx;
+  box-shadow: 2rpx 3rpx 0 var(--shadow-soft);
+  font-size: 19rpx;
+  font-weight: 800;
+  transition: transform .12s cubic-bezier(.2,.8,.3,1), box-shadow .12s ease;
+}
+.plan-reset-press {
+  transform: translate(2rpx, 3rpx);
+  box-shadow: none;
+}
+.plan-paper {
+  display: block;
+  margin-top: 8rpx;
+  overflow: hidden;
+  color: var(--ink);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 34rpx;
+  font-weight: 900;
+  line-height: 1.3;
+}
+.plan-sum {
+  margin-top: 12rpx;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 20rpx;
+}
+.plan-sum-main {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: baseline;
+  gap: 7rpx;
+}
+.plan-total {
+  color: var(--ink);
+  font-size: 76rpx;
+  font-weight: 900;
+  line-height: .92;
+  letter-spacing: -2rpx;
+}
+.plan-total-unit {
+  color: var(--text-warm);
+  font-size: 23rpx;
+  font-weight: 900;
+}
+.plan-meta {
+  flex: 1;
+  min-width: 0;
+  color: var(--text-3);
+  text-align: right;
+  font-size: 20rpx;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.plan-section-head {
+  margin: 28rpx 4rpx 8rpx;
+  display: flex;
+  align-items: center;
+}
+.plan-section-title {
+  color: var(--ink);
+  font-size: 30rpx;
+  font-weight: 900;
+  letter-spacing: 1rpx;
+}
+
+.plan-list {
+  display: flex;
+  flex-direction: column;
+}
+.plan-card.module-card {
+  position: relative;
+  margin: 14rpx 0;
+  padding: 22rpx 24rpx 20rpx;
+  background: var(--card);
+  border: 2rpx solid var(--edge);
+  border-radius: 30rpx;
+  box-shadow: 5rpx 6rpx 0 var(--shadow-soft);
+  box-sizing: border-box;
+  animation: app-rise-in .38s cubic-bezier(.2, .8, .3, 1) backwards;
+}
+.plan-card.dragging {
+  background: var(--cream-2);
+  box-shadow: 8rpx 10rpx 0 var(--shadow-soft);
+}
+.plan-card.drag-mode {
+  transition: transform 180ms cubic-bezier(.2, .8, .3, 1);
+}
+.plan-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  margin-right: 84rpx;
+}
+.plan-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ink);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 30rpx;
+  font-weight: 900;
+  line-height: 1.4;
+}
+.plan-count {
+  flex: 0 0 auto;
+  min-height: 42rpx;
+  padding: 0 14rpx;
+  display: inline-flex;
+  align-items: center;
+  color: var(--text-mid);
+  background: var(--cream-1);
+  border: 2rpx solid var(--line);
+  border-radius: 999rpx;
+  font-size: 19rpx;
+  font-weight: 800;
+  line-height: 1.2;
+}
+.plan-controls {
+  margin-top: 22rpx;
+  margin-right: 84rpx;
+  display: flex;
+  align-items: center;
+}
+.plan-drag {
+  position: absolute;
+  top: 50%;
+  right: 8rpx;
+  width: 76rpx;
+  height: 96rpx;
+  margin-top: -48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-3);
+}
+.plan-drag-handle {
+  font-size: 30rpx;
+  font-weight: 700;
+  line-height: 1;
+}
+.plan-card.dragging .plan-drag { color: var(--ink); }
+.plan-stepper {
+  flex: 0 0 190rpx;
+  height: 58rpx;
+  display: flex;
+  overflow: hidden;
+  border: 2rpx solid var(--edge);
+  border-radius: 999rpx;
+}
+/* 加减号沿用训练首页的 round-small 重置：外层一条胶囊，不让全站按钮皮肤切成两个圈。 */
+.plan-step {
+  flex: 1;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none;
+  height: 54rpx;
+  margin: 0;
+  padding: 0;
+  color: var(--ink);
+  background: var(--cream-1);
+  border: 0;
+  border-radius: 0;
+  font-size: 30rpx;
+  font-weight: 800;
+  line-height: 54rpx;
+}
+.plan-step::after { border: 0; }
+.plan-input {
+  flex: 0 0 64rpx;
+  width: 64rpx;
+  height: 54rpx;
+  padding: 0;
+  color: var(--ink);
+  background: var(--cream-2);
+  border-top: 0;
+  border-bottom: 0;
+  border-left: 2rpx solid var(--edge);
+  border-right: 2rpx solid var(--edge);
+  font-size: 30rpx;
+  font-weight: 900;
+  text-align: center;
+}
+.plan-slider {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: 60rpx;
+  margin-left: 24rpx;
+}
+.plan-track {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 16rpx;
+  overflow: hidden;
+  background: var(--cream-2);
+  border: 3rpx solid var(--edge);
+  border-radius: 14rpx 10rpx 16rpx 11rpx;
+  box-shadow: 3rpx 4rpx 0 var(--shadow-soft);
+  transform: translateY(-50%);
+  box-sizing: border-box;
+}
+.plan-fill {
+  position: relative;
+  height: 100%;
+  background: var(--primary);
+  border-right: 2rpx solid var(--edge);
+  border-radius: 11rpx 8rpx 13rpx 9rpx;
+  box-sizing: border-box;
+}
+.plan-fill::after {
+  content: "";
+  position: absolute;
+  top: 2rpx;
+  right: 3rpx;
+  bottom: 2rpx;
+  left: 3rpx;
+  background: repeating-linear-gradient(112deg, rgba(255, 255, 255, .22) 0, rgba(255, 255, 255, .22) 3rpx, transparent 3rpx, transparent 10rpx);
+  border-radius: 8rpx;
+  pointer-events: none;
+}
+.plan-knob {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  width: 34rpx;
+  height: 34rpx;
+  background: var(--primary);
+  border: 3rpx solid var(--edge);
+  border-radius: 46% 54% 48% 52%;
+  box-shadow: 4rpx 5rpx 0 var(--shadow);
+  transform: translate(-50%, -50%);
+  box-sizing: border-box;
+}
+.plan-knob::after {
+  content: "";
+  position: absolute;
+  left: 7rpx;
+  top: 5rpx;
+  width: 9rpx;
+  height: 11rpx;
+  background: rgba(255, 255, 255, .5);
+  border-radius: 50%;
+  transform: rotate(22deg);
+}
+.plan-slider:active .plan-knob {
+  transform: translate(-50%, -50%) scale(1.08);
+}
+
+.plan-empty {
+  margin: 18rpx 0;
+  padding: 62rpx 24rpx;
+  color: var(--text-2);
+  text-align: center;
+  background: var(--card);
+  border: 2rpx dashed var(--line-strong);
+  border-radius: 24rpx;
+  font-size: 23rpx;
+  font-weight: 700;
+}
+
+.plan-actions {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  z-index: 90;
+  width: 100%;
+  max-width: 780px;
+  padding: 16rpx 24rpx calc(16rpx + env(safe-area-inset-bottom));
+  display: flex;
+  align-items: stretch;
+  gap: 14rpx;
+  background: var(--bg);
+  border-top: 3rpx solid var(--edge);
+  box-sizing: border-box;
+  transform: translateX(-50%);
+}
+.plan-save,
+.plan-start {
+  min-height: 86rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999rpx;
+  font-size: 27rpx;
+  font-weight: 900;
+  line-height: 1.2;
+  box-sizing: border-box;
+  transition: transform .12s cubic-bezier(.2,.8,.3,1), box-shadow .12s ease, opacity .12s ease;
+}
+.plan-save {
+  flex: 0 0 240rpx;
+  color: var(--ink);
+  background: var(--card);
+  border: 2rpx solid var(--edge);
+  box-shadow: 4rpx 5rpx 0 var(--shadow-soft);
+}
+.plan-save.is-clean {
+  color: var(--text-mid);
+  border-color: var(--line-strong);
+  box-shadow: none;
+}
+.plan-start {
+  flex: 1;
+  color: var(--on-primary);
+  background: var(--primary);
+  border: 2rpx solid var(--edge);
+  box-shadow: 4rpx 5rpx 0 var(--shadow);
+}
+.plan-start.is-disabled {
+  opacity: .4;
+  box-shadow: none;
+}
+.plan-press {
+  transform: translateY(2rpx);
+  box-shadow: 1rpx 1rpx 0 var(--shadow-soft);
+}
+
+@media (min-width: 700px) {
+  .plan-page {
+    width: 100%;
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 24px 16px calc(82px + env(safe-area-inset-bottom));
+  }
+  .plan-hero {
+    padding: 14px 16px 14px 20px;
+    border-width: 2px;
+    border-radius: 16px;
+    box-shadow: 4px 5px 0 var(--shadow);
+  }
+  .plan-hero::before {
+    width: 6px;
+    border-right-width: 1px;
+  }
+  .plan-hero-top { gap: 10px; }
+  .plan-kicker { font-size: 11px; letter-spacing: 1px; }
+  .plan-reset {
+    min-height: 28px;
+    padding: 0 10px;
+    border-width: 1px;
+    box-shadow: 1px 2px 0 var(--shadow-soft);
+    font-size: 11px;
+  }
+  .plan-paper { margin-top: 4px; font-size: 18px; }
+  .plan-sum { margin-top: 7px; gap: 12px; }
+  .plan-sum-main { gap: 4px; }
+  .plan-total { font-size: 40px; letter-spacing: -1px; }
+  .plan-total-unit { font-size: 12px; }
+  .plan-meta { font-size: 11px; }
+
+  .plan-section-head { margin: 16px 2px 5px; }
+  .plan-section-title { font-size: 17px; letter-spacing: 1px; }
+  .plan-card.module-card {
+    margin: 8px 0;
+    padding: 13px 15px 12px;
+    border-width: 1px;
+    border-radius: 18px;
+    box-shadow: 3px 4px 0 var(--shadow-soft);
+  }
+  .plan-card.dragging { box-shadow: 4px 5px 0 var(--shadow-soft); }
+  .plan-card-head { margin-right: 40px; gap: 10px; }
+  .plan-name { font-size: 17px; }
+  .plan-count {
+    min-height: 24px;
+    padding: 0 9px;
+    border-width: 1px;
+    font-size: 11px;
+  }
+  .plan-controls { margin-top: 12px; margin-right: 40px; }
+  .plan-drag {
+    right: 6px;
+    width: 32px;
+    height: 54px;
+    margin-top: -27px;
+  }
+  .plan-drag-handle { font-size: 17px; }
+  .plan-stepper { flex: 0 0 106px; height: 32px; border-width: 1px; }
+  .plan-step {
+    height: 30px;
+    font-size: 17px;
+    line-height: 30px;
+  }
+  .plan-input {
+    flex: 0 0 36px;
+    width: 36px;
+    height: 30px;
+    border-left-width: 1px;
+    border-right-width: 1px;
+    font-size: 17px;
+  }
+  .plan-slider { height: 34px; margin-left: 13px; }
+  .plan-track {
+    height: 10px;
+    border-width: 2px;
+    border-radius: 8px 6px 9px 6px;
+    box-shadow: 2px 3px 0 var(--shadow-soft);
+  }
+  .plan-fill {
+    border-right-width: 1px;
+    border-radius: 6px 5px 7px 5px;
+  }
+  .plan-fill::after {
+    top: 1px;
+    right: 2px;
+    bottom: 1px;
+    left: 2px;
+  }
+  .plan-knob {
+    width: 20px;
+    height: 20px;
+    border-width: 2px;
+    box-shadow: 2px 3px 0 var(--shadow);
+  }
+  .plan-knob::after {
+    left: 4px;
+    top: 3px;
+    width: 6px;
+    height: 7px;
+  }
+  .plan-empty {
+    margin: 10px 0;
+    padding: 36px 14px;
+    border-width: 1px;
+    border-radius: 14px;
+    font-size: 13px;
+  }
+  .plan-actions {
+    max-width: 780px;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+    gap: 10px;
+    border-top-width: 1px;
+  }
+  .plan-save,
+  .plan-start {
+    min-height: 42px;
+    border-width: 1px;
+    font-size: 14px;
+  }
+  .plan-save {
+    flex-basis: 132px;
+    box-shadow: 2px 3px 0 var(--shadow-soft);
+  }
+  .plan-start { box-shadow: 2px 3px 0 var(--shadow); }
+  .plan-press { box-shadow: 1px 1px 0 var(--shadow-soft); }
+}

@@ -72,7 +72,14 @@ Page({
   loadRecords() {
     const records = (wx.getStorageSync(app.globalData.recordsKey) || []).map(record => {
       const names = (record.rows || []).map(item => item.name).filter(Boolean)
-      return { ...record, title: names[0] || '训练记录', startedAtText: this.recordStartedAtText(record) }
+      const ctx = record.context || {}
+      // 带卷计时优先显示卷名；未关联成绩的会话在历史里保留「去填答案」。
+      return {
+        ...record,
+        title: ctx.paperName || names[0] || '训练记录',
+        startedAtText: this.recordStartedAtText(record),
+        pendingAnswer: !!(ctx.source === 'grade' && ctx.paperId && !record.gradeRecordId)
+      }
     })
     this.setData({ records })
   },
@@ -95,7 +102,11 @@ Page({
       name: item.name,
       targetMinutes: item.targetMinutes,
       elapsedSeconds: 0,
-      status: item.targetMinutes === 0 ? 'done' : 'pending'
+      status: item.targetMinutes === 0 ? 'done' : 'pending',
+      moduleKey: item.moduleKey || '',
+      start: item.start,
+      end: item.end,
+      questionCount: item.questionCount
     }))
     const firstIndex = runtimeModules.findIndex(item => item.status !== 'done')
     if (firstIndex === -1) {
@@ -114,9 +125,20 @@ Page({
       moduleSeconds: 0,
       isPaused: false,
       mode,
-      totalTargetSeconds
+      totalTargetSeconds,
+      // 重跑带卷计时仍保留卷面上下文，计时完照样自动去填答案
+      context: record.context && record.context.paperId ? Object.assign({}, record.context, { linkedAt: Date.now() }) : null
     })
     this.launchTimer()
+  },
+
+  goGradeAnswer(event) {
+    const record = this.data.records[Number(event.currentTarget.dataset.index)]
+    if (!record || !record.context || !record.context.paperId) return
+    wx.navigateTo({
+      url: `/pages/grade/answer/answer?paperId=${encodeURIComponent(record.context.paperId)}&timerId=${encodeURIComponent(record.id)}`,
+      fail: () => wx.showToast({ title: '打开答题页失败，请重试', icon: 'none' })
+    })
   },
 
   clearAllRecords() {

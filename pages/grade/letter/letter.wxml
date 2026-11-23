@@ -10,11 +10,11 @@
     <view class="letter-sign">—— from 独立开发者</view>
 
     <view class="letter-body">
-      <view class="para anim-rise" style="animation-delay: 80ms;">你好，翻开这份小程序的你，一定正在为上岸默默努力。</view>
-      <view class="para anim-rise" style="animation-delay: 135ms;">行测刷题最耗人的，从来不是做题本身，而是对完答案之后那一堆散落在试卷上的对错：哪一模块弱、哪一类题反复错、这次比上次进步了多少，全靠自己对着答案一个一个数。</view>
-      <view class="para anim-rise" style="animation-delay: 190ms;">这个小助手想做的事很简单：录入你的作答，对照标准答案自动批改，把正确率、模块强弱、错题分布整理成一份看得懂的报告。把统计的时间还给复盘，把复盘的时间还给下一阶段的提高。</view>
-      <view class="para anim-rise" style="animation-delay: 245ms;">答题时可以直接点选，答案可以随时修改，过程自动缓存，不用担心退出丢失。</view>
-      <view class="para anim-rise" style="animation-delay: 300ms;">备考是一场长跑，偶尔分数不好看也很正常。愿你每刷的一套卷，都变成考场上的底气。</view>
+      <view class="para anim-rise" style="animation-delay: 80ms;">你好，翻开这封信的你，一定正在为上岸默默努力。</view>
+      <view class="para anim-rise" style="animation-delay: 135ms;">备考的日子里，很多辛苦是别人看不见的：早起背过的常识，通勤路上刷过的言语，深夜里反复订正的那几道数量关系。它们不会立刻变成分数，但都算数。</view>
+      <view class="para anim-rise" style="animation-delay: 190ms;">有时候，进步也不是一条直线。某套卷子做得顺，未必代表下一套也顺；某一次分数难看，也不代表前面的努力白费。比起盯着一次结果，更希望你多看看自己已经补上的那些洞。</view>
+      <view class="para anim-rise" style="animation-delay: 245ms;">累了就歇一会儿，睡够、吃好、出门走一走。备考是长跑，能走到考场那天，本身就已经很了不起。</view>
+      <view class="para anim-rise" style="animation-delay: 300ms;">愿你每刷的一套卷，都变成考场上的底气。</view>
       <view class="para anim-rise sign" style="animation-delay: 355ms;">—— 加油，岸上见。</view>
     </view>
   </view>

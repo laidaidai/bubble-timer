@@ -19,11 +19,6 @@
               <text class="mode-phase" wx:if="{{phaseLabel}}">{{phaseLabel}}</text>
             </view>
     </view>
-    <view class="stage-meta">
-      <text class="meta-module">{{currentModule.name || '训练完成'}}</text>
-      <text class="meta-total"><text class="num">{{moduleTimeText}}</text></text>
-      <text class="meta-ms" wx:if="{{msShow}}">{{msText}}ms</text>
-    </view>
     <view class="clock-stage" style="{{orientStyle}}">
 
       <view class="clock-slot">
@@ -75,6 +70,11 @@
         <view class="progress-logo" style="left: {{progressPercent}}%;">
           <image class="progress-logo-img" src="/assets/brand/logo-mark.png" mode="aspectFit"></image>
         </view>
+        <view class="stage-meta">
+          <text class="meta-module">{{currentModule.name || '训练完成'}}</text>
+          <text class="meta-total"><text class="num">{{moduleTimeText}}</text></text>
+          <text class="meta-ms" wx:if="{{msShow}}">{{msText}}ms</text>
+        </view>
       </view>
 
       <view class="stage-target">
@@ -120,11 +120,6 @@
             <text>{{modeName}}</text>
             <text class="mode-phase" wx:if="{{phaseLabel}}">{{phaseLabel}}</text>
           </view>
-    </view>
-    <view class="stage-meta">
-      <text class="meta-module">{{currentModule.name || '训练完成'}}</text>
-      <text class="meta-total"><text class="num">{{moduleTimeText}}</text></text>
-      <text class="meta-ms" wx:if="{{msShow}}">{{msText}}ms</text>
     </view>
     <view class="portrait-stage">
       <view class="clock-stage" style="{{orientStyle}}">
@@ -172,6 +167,11 @@
         </view>
         <view class="progress-logo" style="left: {{progressPercent}}%;">
           <image class="progress-logo-img" src="/assets/brand/logo-mark.png" mode="aspectFit"></image>
+        </view>
+        <view class="stage-meta">
+          <text class="meta-module">{{currentModule.name || '训练完成'}}</text>
+          <text class="meta-total"><text class="num">{{moduleTimeText}}</text></text>
+          <text class="meta-ms" wx:if="{{msShow}}">{{msText}}ms</text>
         </view>
       </view>
 

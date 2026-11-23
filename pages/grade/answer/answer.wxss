@@ -89,6 +89,41 @@
 }
 
 .progress-main { flex: 1; min-width: 0; }
+.timer-strip {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8rpx;
+  margin: -8rpx 4rpx 14rpx;
+  color: var(--text-3);
+  font-size: 21rpx;
+  line-height: 1.4;
+}
+.timer-strip-dot {
+  width: 8rpx;
+  height: 8rpx;
+  border-radius: 50%;
+  background: var(--text-3);
+  flex: 0 0 auto;
+}
+.timer-strip-dot.late { background: var(--danger-text); }
+.timer-strip-dot.early { background: var(--success-text); }
+.timer-strip-label { color: var(--text-3); }
+.timer-strip-value {
+  color: var(--text-2);
+  font-weight: 800;
+  letter-spacing: -.2rpx;
+}
+.timer-strip-target { color: var(--text-3); }
+.timer-strip-delta {
+  margin-left: 2rpx;
+  font-weight: 700;
+  color: var(--text-3);
+}
+.timer-strip-delta.late { color: var(--danger-text); }
+.timer-strip-delta.early { color: var(--success-text); }
+
+
 
 .progress-copy {
   display: flex;
@@ -710,7 +745,7 @@
 .import-handle {
   width: 66rpx;
   height: 8rpx;
-  margin: 16rpx auto 0;
+  margin: 0 auto;
   background: var(--primary);
   border: 2rpx solid var(--edge);
   border-radius: 999rpx;
@@ -851,7 +886,7 @@
   border: 2rpx solid var(--edge);
   border-radius: 999rpx;
   background: var(--primary);
-  margin: 16rpx auto 0;
+  margin: 0 auto;
   box-sizing: border-box;
 }
 
@@ -941,6 +976,8 @@
   .mode-chip-glyph { font-size: 12px; }
   .mod-tab { min-height: 28px; padding: 0 11px; font-size: 13px; box-shadow: 1px 2px 0 var(--shadow-soft); }
   .progress-row { gap: 8px; margin: 0 0 10px; padding: 8px 10px 9px; border-width: 2px; border-radius: 12px; box-shadow: 2px 2px 0 var(--shadow-soft); }
+  .timer-strip { gap: 4px; margin: -4px 2px 8px; font-size: 12px; }
+  .timer-strip-dot { width: 4px; height: 4px; }
   .progress-label { font-size: 11px; }
   .progress-count { font-size: 24px; }
   .progress-total { font-size: 13px; }
@@ -984,7 +1021,7 @@
   /* 桌面档关掉整卡高光，减少大幅面渐变重绘，优先换题帧率 */
   .glass-sheen { display: none; }
   .import-sheet { max-width: 688px; max-height: none; padding: 0 18px calc(14px + env(safe-area-inset-bottom)); border-width: 2px; border-radius: 18px 18px 0 0; box-shadow: 0 -3px 0 var(--shadow-soft); }
-  .import-handle { width: 38px; height: 4px; margin-top: 9px; border-width: 1px; }
+  .import-handle { width: 38px; height: 4px; margin: 0 auto; border-width: 1px; }
   .import-head { gap: 7px; padding: 6px 0 10px; }
   .import-title { font-size: 18px; }
   .import-copy { min-height: 30px; padding: 0 10px; border-width: 1px; border-radius: 999px; font-size: 12px; box-shadow: 1px 2px 0 var(--shadow-soft); }
@@ -996,7 +1033,7 @@
   .import-error { margin-top: 6px; padding: 5px 7px; border-width: 1px; border-radius: 7px; font-size: 12px; }
   .import-actions { gap: 8px; margin-top: 10px; }
   .sheet { max-width: 688px; height: 560px; max-height: 76vh; border-width: 2px; border-radius: 18px 18px 0 0; box-shadow: 0 -3px 0 var(--shadow-soft); }
-  .sheet-handle { width: 38px; height: 4px; margin: 9px auto 0; border-width: 1px; }
+  .sheet-handle { width: 38px; height: 4px; margin: 0 auto; border-width: 1px; }
   .sheet-body { padding: 13px 16px; }
   .sheet-group { margin-bottom: 16px; }
   .sheet-group-name { font-size: 16px; border-left-width: 5px; padding-left: 9px; margin-bottom: 11px; }

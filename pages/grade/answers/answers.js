@@ -62,6 +62,8 @@ Page({
     const app = getApp();
     const q = query || {};
     const paperId = q.paperId || '';
+    // 从带卷答题页来导入标准答案时记住计时会话，回去仍填同一份答案。
+    this.timerId = q.timerId || '';
     const found = getPaper(paperId);
     if (!found) {
       wx.showToast({ title: '试卷不存在', icon: 'none' });
@@ -193,8 +195,9 @@ Page({
   goAnswer() {
     const paperId = this.data.paperId;
     if (!paperId) return;
+    const timerId = this.timerId || '';
     wx.navigateTo({
-      url: `/pages/grade/answer/answer?paperId=${paperId}&mode=single`,
+      url: `/pages/grade/answer/answer?paperId=${paperId}&mode=single${timerId ? `&timerId=${encodeURIComponent(timerId)}` : ''}`,
       fail: () => wx.showToast({ title: '打开答题页失败，请重试', icon: 'none' }),
     });
   },

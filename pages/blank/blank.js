@@ -27,6 +27,26 @@ Page({
       return
     }
 
+    if (mode === 'grade') {
+      // 带卷计时结束：横屏计时页 → 竖屏空白页 → 竖屏答题页。
+      // 中间这一跳把屏幕方向切回来，同时也让交卷后能原路退回过关首页。
+      const paperId = options && options.paperId
+      if (!paperId) {
+        wx.navigateBack({ fail: () => wx.switchTab({ url: '/pages/index/index' }) })
+        return
+      }
+      setTimeout(() => this.setData({ leaving: true }), 260)
+      setTimeout(() => {
+        const timerId = (options && options.timerId) || ''
+        const query = `paperId=${encodeURIComponent(paperId)}${timerId ? `&timerId=${encodeURIComponent(timerId)}` : ''}`
+        wx.redirectTo({
+          url: `/pages/grade/answer/answer?${query}`,
+          fail: () => wx.navigateBack({ fail: () => wx.switchTab({ url: '/pages/index/index' }) })
+        })
+      }, 560)
+      return
+    }
+
     // 出口中转：先让 logo 过渡完整出现，再淡出回来源页
     setTimeout(() => this.setData({ leaving: true }), 520)
     setTimeout(() => {

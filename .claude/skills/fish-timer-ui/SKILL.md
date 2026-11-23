@@ -28,6 +28,7 @@ description: 「小鱼计时器」微信小程序的 UI 设计系统与自适应
 - 字号下限 18rpx；正文 20–24rpx；标题 26–32rpx；降级用 `--text-3`，不缩字号。
 - **原生 `button` 自带约 184px 默认宽度**：凡在 flex 行里排 button，必须显式 `width: auto !important; min-width: 0 !important; flex: 0 1 auto; max-width: 100%; box-sizing: border-box`，否则顶出容器（记录页三按钮被切半就是这个）。
 - 滑杆（首页/报告/打卡共用一套）：轨 `18rpx` + `--cream-2` + 2rpx 描边 + 歪圆角 `14rpx 10rpx 16rpx 11rpx`；填充 `--primary` + 右描边 + 112deg 白斜纹；把手 `30rpx` + 3rpx 描边 + `46% 54% 48% 52%`；超出计划红 `--danger`、提前绿 `--success`。
+- 可拖动滑杆先判轴：touchstart 不落值；|dy| > |dx| 视为纵向，交还页面滚动且不改值；只有横向拖动或轻点才落值，避免上下刷页面碰到滑杆就跳分钟。
 
 ## 3. 动画语言
 
@@ -83,6 +84,7 @@ description: 「小鱼计时器」微信小程序的 UI 设计系统与自适应
 - 文字类皮肤偏小先查自己的 `.plain-clock` padding：透明内距会被算进原始尺寸（outline 已清零）。
 - 翻页钟尺寸只改 `components/flip-clock/index.wxss`（页面里 `.flip-card` 是另一套旧实现）；组件需自带 `@media (min-width: 700px)` 的 px 档。
 - 点击切皮肤只挂在时钟本体，不要挂 `.clock-stage`（点空白会误切）；切换提示 `.style-hint` 1.3s 自动收起。
+- 计时页模块名/模块时间悬浮在进度条下、名言上：绝对定位在 `.progress-rail` 的 `--rail-pad` 内，不占中部舞台高度；compact / portrait / wide 各自分档，rpx 在大窗口放大时要设字号上限，避免压到目标行和名言。
 - 计时页结构、横竖两套 DOM、竖向顺序、槽位高度等细节见完整版 skill（本文件是浓缩口径，改计时页前先读 `pages/timer/timer.{wxml,wxss,js}` 现状）。
 
 ## 6. 页面要点

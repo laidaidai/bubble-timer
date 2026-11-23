@@ -109,6 +109,72 @@ function defaultAnswer(qNo) {
 
 // 生成一套试卷的默认标准答案数组（下标 0 对应第 1 题）
 
+// 过关斩将 → 训练计时的目标时长计划。
+// 试卷只定义模块和题号区间，不写死用时；这里按考试类型给出一套可调整的默认分配。
+// 模块缺失（例如某省卷没有政治理论）时按比例重分，保证合计正好等于该组考试总时长。
+// 自定义卷新增了未知模块时，也按题量权重兜底，不让某个模块出现 0 分钟。
+const PAPER_MINUTES_BY_GROUP = {
+  'group-a1': 120,
+  'group-a2': 120,
+  'group-a3': 120,
+  'group-a4': 90,
+  'group-a5': 90,
+  'group-a6': 120,
+};
+
+const PAPER_MODULE_MINUTES = {
+  'group-a1': { politics: 15, common: 10, verbal: 30, quant: 10, logic: 30, data: 25 },
+  'group-a2': { politics: 12, common: 10, verbal: 30, quant: 13, logic: 30, data: 25 },
+  'group-a3': { politics: 12, common: 10, verbal: 30, quant: 13, logic: 30, data: 25 },
+  'group-a4': { common: 10, verbal: 20, quant: 15, logic: 25, data: 20, comprehensive: 10, strategy: 10 },
+  'group-a6': { politics: 12, common: 10, verbal: 30, quant: 13, logic: 30, data: 25 },
+};
+
+function paperTotalMinutes(paper, groupId) {
+  const fixed = PAPER_MINUTES_BY_GROUP[groupId];
+  if (fixed) return fixed;
+  return paper && Number(paper.total) >= 110 ? 120 : 90;
+}
+
+// 返回：模块名 / 题号区间 / 目标分钟，合计严格等于总时长。
+// 只用于「目标」，实际用时仍由计时页逐模块累计，不能用题量反推。
+function paperTimePlan(paper, groupId) {
+  const mods = paperModules(paper);
+  if (!mods.length) return [];
+  const total = paperTotalMinutes(paper, groupId);
+  const fixed = PAPER_MODULE_MINUTES[groupId] || {};
+  const known = mods.map((m) => Number(fixed[m.key]) || 0);
+  const allKnown = known.every((v) => v > 0);
+  let raw;
+  if (allKnown) {
+    const base = known.reduce((sum, v) => sum + v, 0) || 1;
+    raw = known.map((v) => (v / base) * total);
+  } else {
+    const base = mods.reduce((sum, m) => sum + Math.max(1, Number(m.count) || 0), 0);
+    raw = mods.map((m) => (Math.max(1, Number(m.count) || 0) / base) * total);
+  }
+  let left = total;
+  const out = raw.map((v, i) => {
+    const remaining = raw.length - i - 1;
+    const min = Math.max(1, Math.min(Math.round(v), left - remaining));
+    left -= min;
+    return min;
+  });
+  if (left !== 0) {
+    const target = out.indexOf(Math.max.apply(null, out));
+    out[target] += left;
+  }
+  return mods.map((m, i) => ({
+    key: m.key,
+    name: m.name,
+    short: m.short,
+    start: m.start,
+    end: m.end,
+    count: m.count,
+    targetMinutes: out[i],
+  }));
+}
+
 // 每题选项选择人数 / 占比（mock，确定性）
 
 function filterLevel(filter) {
@@ -667,6 +733,8 @@ module.exports = {
   savePaperOverride,
   clearPaperOverride,
   paperModules,
+  paperTimePlan,
+  paperTotalMinutes,
   moduleOfQuestion,
   paperSize,
   questionPoints,

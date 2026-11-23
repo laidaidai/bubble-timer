@@ -3,6 +3,13 @@ const store = require('../utils/store.js');
 const theme = require('../utils/theme.js');
 const data = require('../utils/data.js');
 const { MODULE_DEFS } = data;
+const {
+  resetSheetDrag,
+  startSheetDrag,
+  moveSheetDrag,
+  endSheetDrag,
+  cancelSheetDrag,
+} = require('../../../utils/format.js');
 
 function formatTime(ts) {
   const d = new Date(ts);
@@ -23,6 +30,25 @@ function signedNum(v) {
 }
 function signedPoint(v) {
   return signedNum(v) + ' 分';
+}
+
+// 计时摘要里的短时长：秒数 / 分钟 / 小时；只保留有效单位
+function clockSpan(seconds) {
+  const total = Math.max(0, Math.round(Number(seconds) || 0));
+  return total < 60
+    ? `${total} 秒`
+    : `${Math.round(total / 60)} 分钟`;
+}
+
+function deltaTimeText(seconds) {
+  const v = Number(seconds) || 0;
+  if (!v) return '持平';
+  return `${v > 0 ? '超' : '提前'} ${clockSpan(Math.abs(v))}`;
+}
+
+function timeTone(seconds) {
+  const v = Number(seconds) || 0;
+  return v > 0 ? 'late' : (v < 0 ? 'early' : 'even');
 }
 
 // 模块距目标的分差（分）＝该模块实得分 − 该模块满分 × 目标百分比。
@@ -212,11 +238,15 @@ Page({
     targets: [60, 70, 80],
     radarTarget: 60,
     reviewOpen: false, // 答题卡浮层
+    sheetDragY: 0,
+    sheetDragging: false,
+    sheetSettling: false,
     radarTip: null,
     radarBaseImage: '',
     radarCurveImage: '',
     radarGrow: false,
     radarDrawing: false,
+    timerSummary: null,
   },
 
   onLoad(query) {
@@ -239,6 +269,9 @@ Page({
       data.paperModules(found.paper).forEach((m) => { paperFull[m.key] = m.points; });
     }
     const moduleStats = fillModulePoints(d.moduleStats || [], questions, paperPoints, paperFull);
+    // 只有带计时的会话才有时长；旧成绩没有 timer，整块用时分析自动隐藏。
+    const timer = record.timer || null;
+    const timerRows = (timer && Array.isArray(timer.rows)) ? timer.rows : [];
     const modules = moduleStats.map((m) => {
       const rows = (m.questions || []).map((q) => {
         return {
@@ -266,6 +299,20 @@ Page({
           : '',
         full: typeof m.points === 'number' ? m.points : 0,
         got: typeof m.got === 'number' ? m.got : 0,
+        // 模块用时按 moduleKey 对齐；旧计时没有 key 时退回模块名匹配
+        ...(function () {
+          const tr = timerRows.length
+            ? timerRows.find((r) => r.moduleKey === m.key || (!r.moduleKey && r.name === m.name))
+            : null;
+          // 没切到过的模块没有可信用时，不能拿 0 秒去算「提前」，宁可不显示。
+          if (!tr || (Number(tr.elapsedSeconds) || 0) <= 0) return {};
+          return {
+            timeText: tr.actualText || clockSpan(tr.elapsedSeconds),
+            timeTargetText: tr.targetMinutes ? `目标 ${tr.targetMinutes} 分钟` : '',
+            timeDeltaText: deltaTimeText(tr.deltaSeconds),
+            timeTone: timeTone(tr.deltaSeconds),
+          };
+        })(),
         // 逐题明细默认收起：一屏先看模块得分，点模块名再展开看每题对错
         open: false,
         rows,
@@ -297,6 +344,19 @@ Page({
     });
     this._radar = { items: radarItems, target: radarTarget };
     const tip = this.tipFor(radarItems, radarTarget);
+    let timerSummary = null;
+    if (timer) {
+      const targetMinutes = Number(timer.totalTarget) || timerRows.reduce((sum, r) => sum + (Number(r.targetMinutes) || 0), 0);
+      const deltaSeconds = typeof timer.deltaSeconds === 'number'
+        ? timer.deltaSeconds
+        : (Number(timer.totalActual) || 0) - targetMinutes * 60;
+      timerSummary = {
+        totalText: timer.totalActualText || clockSpan(timer.totalActual),
+        targetText: timer.totalTargetText || (targetMinutes ? `${targetMinutes} 分钟` : ''),
+        deltaText: timer.deltaText || (targetMinutes ? deltaTimeText(deltaSeconds) : ''),
+        tone: timer.tone || timeTone(deltaSeconds),
+      };
+    }
     this.setData({
       isDesktop: app.globalData.isDesktop,
       missing: false,
@@ -314,6 +374,7 @@ Page({
       // 旧记录里可能还留着「附加题」模块（已删除的功能），读旧数据时直接跳过
       modules: modules.filter((m) => m.scored !== false),
       radarTip: tip,
+      timerSummary,
     }, () => {
       // 首帧可能拿不到 canvas 节点/尺寸；onReady、onShow 和这里都会补画，
       // drawRadar 内部再按次数退避重试，避免页面渲染慢时只试一次就留下空白。
@@ -568,15 +629,35 @@ Page({
   },
 
   openReview() {
+    resetSheetDrag(this)
     this.setData({ reviewOpen: true })
   },
 
   closeReview() {
     if (!this.data.reviewOpen) return
+    resetSheetDrag(this)
     this.setData({ reviewOpen: false }, () => {
       // canvas 在浮层期间移除，避免原生画布盖在遮罩上；收起后重新查询节点补画
       setTimeout(() => this.drawRadar(), 80)
     })
+  },
+
+  onSheetGripStart(e) {
+    const dataset = (e && e.currentTarget && e.currentTarget.dataset) || {}
+    startSheetDrag(this, e, { selector: dataset.selector, close: dataset.close })
+  },
+
+  onSheetGripMove(e) {
+    moveSheetDrag(this, e)
+  },
+
+  onSheetGripEnd(e) {
+    const dataset = (e && e.currentTarget && e.currentTarget.dataset) || {}
+    endSheetDrag(this, e, { selector: dataset.selector, close: dataset.close })
+  },
+
+  onSheetGripCancel() {
+    cancelSheetDrag(this)
   },
 
   noop() {},
@@ -614,7 +695,7 @@ Page({
     if (!paperId) return;
     store.clearDraft(paperId);
     wx.redirectTo({
-      url: `/pages/grade/answer/answer?paperId=${paperId}&mode=single`,
+      url: `/pages/grade/answer/answer?paperId=${paperId}&mode=single&noTimer=1`,
       fail: () => wx.showToast({ title: '打开答题页失败，请重试', icon: 'none' }),
     });
   },

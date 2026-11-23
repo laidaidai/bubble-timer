@@ -22,7 +22,33 @@
     </view>
   </view>
 
-  <view wx:if="{{!list.length}}" class="empty card anim-pop">
+  <view wx:if="{{pending.length}}" class="pending-block anim-rise">
+    <view class="pending-head">
+      <text class="pending-title">待填答案</text>
+      <text class="pending-count num">{{pending.length}}</text>
+    </view>
+    <view
+      wx:for="{{pending}}"
+      wx:key="id"
+      class="pending-card"
+      data-paper-id="{{item.paperId}}"
+      data-timer-id="{{item.id}}"
+      bindtap="goFill"
+      hover-class="pending-pressed"
+      aria-label="去填 {{item.paperName}} 的答案"
+    >
+      <view class="pending-main">
+        <view class="pending-top">
+          <view class="pending-dot" aria-hidden="true"></view>
+          <text class="pending-paper">{{item.paperName}}</text>
+        </view>
+        <view class="pending-meta num">{{item.metaText}}</view>
+      </view>
+      <view class="pending-go">去填答案<text class="pending-go-arrow">›</text></view>
+    </view>
+  </view>
+
+  <view wx:if="{{!list.length && !pending.length}}" class="empty card anim-pop">
     <view class="empty-title">暂无作答记录</view>
     <view class="empty-sub">答完一套卷，得分会存这里</view>
   </view>

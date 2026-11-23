@@ -19,7 +19,10 @@
       <view class="history-head">
         <view class="history-title-wrap">
           <view class="history-title">{{item.title}}</view>
-          <view class="history-time num" wx:if="{{item.startedAtText}}">{{item.startedAtText}}</view>
+          <view class="history-subline">
+            <view class="history-time num" wx:if="{{item.startedAtText}}">{{item.startedAtText}}</view>
+            <text wx:if="{{item.pendingAnswer}}" class="history-pending-tag">待填答案</text>
+          </view>
         </view>
       </view>
       <view class="history-meta">
@@ -27,7 +30,8 @@
         <text class="history-count"><text class="num">{{item.rows.length}}</text> 个模块</text>
       </view>
       <view class="history-actions">
-        <button class="history-rerun" data-index="{{index}}" bindtap="rerunRecord">再试一次</button>
+        <button wx:if="{{item.pendingAnswer}}" class="history-fill" data-index="{{index}}" catchtap="goGradeAnswer">去填答案</button>
+        <button wx:else class="history-rerun" data-index="{{index}}" bindtap="rerunRecord">再试一次</button>
         <button class="delete-link" data-index="{{index}}" bindtap="removeRecord">删除</button>
         <button class="history-report-button" data-index="{{index}}" bindtap="openReport">查看报告</button>
       </view>

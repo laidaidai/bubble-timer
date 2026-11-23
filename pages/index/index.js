@@ -1028,45 +1028,85 @@ Page({
     }, 80)
   },
 
-  // 手绘风滑块：用触摸位置换算分钟，替代原生细线 slider
+  // 手绘风滑块：先判断横向拖动意图，再按 x 换算分钟。
+  // 上下滑页面时从滑杆上起手，不立刻改分钟；纵向手势直接让页面滚动。
   startSketchSlider(event) {
     const index = Number(event.currentTarget.dataset.index)
     const touch = event.touches && event.touches[0]
     if (!touch) return
-    this.sketchDragging = true
     const cached = this.sketchRects && this.sketchRects[index]
-    if (cached && cached.width) {
-      this.sketchSliderRect = { index, left: cached.left, width: cached.width }
-      this.applySketchSlider(touch.clientX)
-      return
+    const gesture = {
+      index,
+      startX: touch.clientX,
+      startY: touch.clientY,
+      lastX: touch.clientX,
+      rect: cached && cached.width ? { left: cached.left, width: cached.width } : null,
+      axis: null
     }
-    wx.createSelectorQuery().in(this).select(`#sketch-slider-${index}`).boundingClientRect(rect => {
-      if (!rect || !rect.width) return
-      this.sketchSliderRect = { index, left: rect.left, width: rect.width }
-      if (this.sketchRects) this.sketchRects[index] = { left: rect.left, width: rect.width }
-      this.applySketchSlider(touch.clientX)
-    }).exec()
+    this.sketchGesture = gesture
+    this.dragCandidateIndex = -1
+    this.sketchDragging = false
+    if (!gesture.rect) {
+      wx.createSelectorQuery().in(this).select(`#sketch-slider-${index}`).boundingClientRect(rect => {
+        if (!this.sketchGesture || this.sketchGesture !== gesture || !rect || !rect.width) return
+        gesture.rect = { left: rect.left, width: rect.width }
+        if (this.sketchRects) this.sketchRects[index] = gesture.rect
+        if (gesture.axis === 'horizontal') this.applySketchSlider(gesture.lastX)
+      }).exec()
+    }
   },
 
   moveSketchSlider(event) {
+    const gesture = this.sketchGesture
     const touch = event.touches && event.touches[0]
-    if (!touch || !this.sketchSliderRect) return
+    if (!gesture || !touch) return
+    gesture.lastX = touch.clientX
+    const dx = touch.clientX - gesture.startX
+    const dy = touch.clientY - gesture.startY
+    if (!gesture.axis) {
+      if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return
+      if (Math.abs(dy) > Math.abs(dx) * 1.05) {
+        gesture.axis = 'vertical'
+        this.sketchDragging = false
+        return
+      }
+      gesture.axis = 'horizontal'
+      this.sketchDragging = true
+    }
+    if (gesture.axis !== 'horizontal' || !gesture.rect) return
     this.applySketchSlider(touch.clientX)
   },
 
-  endSketchSlider() {
-    this.sketchSliderRect = null
+  endSketchSlider(event) {
+    const gesture = this.sketchGesture
+    if (!gesture) return
+    const touch = event.changedTouches && event.changedTouches[0]
+    if (touch) gesture.lastX = touch.clientX
+    if (gesture.rect && (!gesture.axis || gesture.axis === 'horizontal')) {
+      this.sketchDragging = true
+      this.applySketchSlider(gesture.lastX)
+      this.sketchDragging = false
+    }
+    const index = gesture.index
+    this.sketchGesture = null
     this.sketchDragging = false
-    this.refreshConfig()
+    if (index !== undefined) this.refreshConfig()
+  },
+
+  cancelSketchSlider() {
+    this.sketchGesture = null
+    this.sketchDragging = false
   },
 
   applySketchSlider(clientX) {
-    const rect = this.sketchSliderRect
+    const gesture = this.sketchGesture
+    const rect = gesture && gesture.rect
     if (!rect) return
+    const index = gesture.index
     const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width))
     const minutes = Math.round(ratio * 60)
-    if (minutes === this.data.modules[rect.index].targetMinutes) return
-    this.updateMinutes(rect.index, minutes)
+    if (minutes === this.data.modules[index].targetMinutes) return
+    this.updateMinutes(index, minutes)
   },
 
   adjustMinutes(event) {

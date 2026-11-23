@@ -447,6 +447,22 @@
   line-height: 1.35;
 }
 
+
+.timer-tag {
+  padding: 3rpx 12rpx;
+  color: var(--primary);
+  background: var(--card);
+  border: 2rpx solid var(--primary);
+  border-radius: 999rpx;
+  font-size: 19rpx;
+  font-weight: 900;
+  line-height: 1.35;
+}
+.timer-tag.is-live {
+  color: var(--on-primary);
+  background: var(--primary);
+  border-color: var(--edge);
+}
 .edit-tag {
   padding: 3rpx 12rpx;
   color: var(--success-text);
@@ -526,19 +542,27 @@
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  color: var(--text-2);
-  background: var(--card);
+  color: var(--text-mid);
+  background: var(--chip-neutral);
   border: 2rpx solid var(--line-strong);
   border-radius: 14rpx;
-  transition: transform .12s cubic-bezier(.2,.8,.3,1), background .12s ease;
+  box-shadow: 2rpx 3rpx 0 var(--shadow-soft);
+  transition: transform .12s cubic-bezier(.2,.8,.3,1), background .12s ease, box-shadow .12s ease, filter .12s ease;
 }
 .paper-icon-btn.is-danger {
   color: var(--danger-text);
+  background: var(--danger-bg);
   border-color: var(--danger-line);
+}
+.paper-icon-btn.is-history {
+  color: var(--text-mid);
+  background: var(--chip-neutral);
+  border-color: var(--line-strong);
 }
 .paper-icon-press {
   transform: translate(2rpx, 3rpx);
-  background: var(--cream-3);
+  box-shadow: none;
+  filter: brightness(.95);
 }
 .paper-icon { position: relative; width: 26rpx; height: 26rpx; box-sizing: border-box; }
 .paper-icon-clock {
@@ -566,6 +590,21 @@
   border-radius: 2rpx;
   transform-origin: left center;
   transform: rotate(32deg);
+}
+.paper-icon-btn.is-timer {
+  color: var(--on-primary);
+  background: var(--primary);
+  border-color: var(--edge);
+}
+.paper-icon-btn.is-timer.is-live {
+  color: var(--on-panel);
+  background: var(--success);
+  border-color: var(--edge);
+}
+.timer-play {
+  font-size: 24rpx;
+  line-height: 1;
+  transform: translateX(1rpx);
 }
 .paper-icon-glyph {
   display: block;
@@ -704,18 +743,20 @@
   .paper-score { font-size: 22px; }
   .paper-score-unit { font-size: 11px; }
   .draft-tag { padding: 2px 7px; border-width: 1px; font-size: 11px; }
+  .timer-tag { padding: 2px 7px; border-width: 1px; font-size: 11px; }
   .edit-tag { padding: 2px 7px; border-width: 1px; font-size: 11px; }
   .paper-go { width: 26px; height: 26px; font-size: 20px; border-width: 0; box-shadow: none; }
   .paper-actions { margin-top: 12px; padding-top: 11px; gap: 10px; border-top-width: 1px; }
   .paper-action-buttons { gap: 6px; }
   .paper-btn { min-height: 32px; padding: 0 11px; border-width: 1px; border-radius: 8px; box-shadow: 1px 2px 0 var(--shadow-soft); font-size: 12px; }
   .paper-action-icons { gap: 6px; }
-  .paper-icon-btn { width: 32px; height: 32px; border-width: 1px; border-radius: 8px; }
+  .paper-icon-btn { width: 32px; height: 32px; border-width: 1px; border-radius: 8px; box-shadow: 1px 2px 0 var(--shadow-soft); }
   .paper-icon { width: 15px; height: 15px; }
   .paper-icon-clock { border-width: 1px; }
   .paper-icon-clock::before { left: 6px; top: 2px; width: 1px; height: 5px; border-radius: 1px; }
   .paper-icon-clock::after { left: 7px; top: 7px; width: 4px; height: 1px; border-radius: 1px; }
   .paper-icon-glyph { font-size: 18px; }
+  .timer-play { font-size: 13px; }
 
   @keyframes grade-group-in-desk {
     from { opacity: 0; transform: translateY(5px); }

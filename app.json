@@ -11,6 +11,7 @@
     "pages/blank/blank",
     "pages/important/important",
     "pages/grade/index/index",
+    "pages/grade/plan/plan",
     "pages/grade/answer/answer",
     "pages/grade/result/result",
     "pages/grade/history/history",

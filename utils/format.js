@@ -108,6 +108,96 @@ function bindKeyboardHeight(page) {
   }
 }
 
+// 底部面板下拉关闭：只由顶部横杆接管触摸，内容区滚动不受影响。
+// 下移超过面板高度的 22%（64~140px）或末段速度足够快时关闭，否则回弹。
+function resetSheetDrag(page) {
+  if (!page) return
+  if (page._sheetDragTimer) {
+    clearTimeout(page._sheetDragTimer)
+    page._sheetDragTimer = null
+  }
+  page._sheetDrag = null
+  if (page.data && (page.data.sheetDragY || page.data.sheetDragging || page.data.sheetSettling)) {
+    page.setData({ sheetDragY: 0, sheetDragging: false, sheetSettling: false })
+  }
+}
+
+function startSheetDrag(page, event, options) {
+  if (!page || !page.setData) return
+  const touch = event && event.touches && event.touches[0]
+  if (!touch) return
+  if (page._sheetDragTimer) {
+    clearTimeout(page._sheetDragTimer)
+    page._sheetDragTimer = null
+  }
+  const startY = touch.clientY != null ? touch.clientY : touch.pageY
+  const selector = (options && options.selector) || ''
+  page._sheetDrag = {
+    startY,
+    lastY: startY,
+    lastAt: Date.now(),
+    dy: 0,
+    height: 0,
+    close: (options && options.close) || ''
+  }
+  page.setData({ sheetDragY: 0, sheetDragging: true, sheetSettling: false })
+  if (!selector || !wx.createSelectorQuery) return
+  // 高度用于判断关闭阈值和下沉距离；查不到时退化为固定阈值。
+  wx.createSelectorQuery().select(selector).boundingClientRect((rect) => {
+    if (page._sheetDrag && rect && rect.height) page._sheetDrag.height = rect.height
+  }).exec()
+}
+
+function moveSheetDrag(page, event) {
+  if (!page || !page._sheetDrag) return
+  const touch = event && event.touches && event.touches[0]
+  if (!touch) return
+  const y = touch.clientY != null ? touch.clientY : touch.pageY
+  const drag = page._sheetDrag
+  const dy = Math.max(0, y - drag.startY)
+  drag.dy = dy
+  drag.lastY = y
+  drag.lastAt = Date.now()
+  page.setData({ sheetDragY: Math.round(dy) })
+}
+
+function finishSheetDrag(page, event, options, allowClose) {
+  if (!page || !page._sheetDrag) return
+  const drag = page._sheetDrag
+  page._sheetDrag = null
+  const touch = event && event.changedTouches && event.changedTouches[0]
+  const endY = touch ? (touch.clientY != null ? touch.clientY : touch.pageY) : drag.lastY
+  const finalDy = Math.max(drag.dy, Math.max(0, endY - drag.startY))
+  const elapsed = Math.max(1, Date.now() - drag.lastAt)
+  const speed = Math.max(0, (endY - drag.lastY) / elapsed)
+  const threshold = drag.height ? Math.min(140, Math.max(64, drag.height * 0.22)) : 88
+  const shouldClose = allowClose && (finalDy > threshold || (finalDy > 32 && speed > 0.55))
+  if (shouldClose) {
+    const fall = drag.height || Math.max(240, finalDy + 120)
+    page.setData({ sheetDragY: Math.round(fall), sheetDragging: false, sheetSettling: true })
+    page._sheetDragTimer = setTimeout(() => {
+      page._sheetDragTimer = null
+      const close = (options && options.close) || drag.close
+      if (close && typeof page[close] === 'function') page[close]()
+      else page.setData({ sheetDragY: 0, sheetDragging: false, sheetSettling: false })
+    }, 260)
+    return
+  }
+  page.setData({ sheetDragY: 0, sheetDragging: false, sheetSettling: true })
+  page._sheetDragTimer = setTimeout(() => {
+    page._sheetDragTimer = null
+    if (page.data && page.data.sheetSettling) page.setData({ sheetSettling: false })
+  }, 280)
+}
+
+function endSheetDrag(page, event, options) {
+  finishSheetDrag(page, event, options, true)
+}
+
+function cancelSheetDrag(page) {
+  finishSheetDrag(page, null, null, false)
+}
+
 module.exports = {
   pad,
   clock,
@@ -123,5 +213,10 @@ module.exports = {
   LED_PATTERNS,
   DEFAULT_CLOCK_STYLE,
   resolveClockStyle,
-  bindKeyboardHeight
+  bindKeyboardHeight,
+  resetSheetDrag,
+  startSheetDrag,
+  moveSheetDrag,
+  endSheetDrag,
+  cancelSheetDrag
 }

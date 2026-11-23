@@ -1070,3 +1070,23 @@ button.round-small:last-child { border-radius: 0 999rpx 999rpx 0 !important; }
  * 页面用 utils/keyboard.js 把键盘高度写进 --kb，这里把弹窗内容整体上移。
  * 用 !important 是因为各页 wxss 里的 `padding: 0 xx` 简写会覆盖 padding-bottom。 */
 .modal-mask { padding-bottom: var(--kb, 0px) !important; }
+
+/* ===== 底部面板下拉关闭 =====
+ * 只让顶部横杆接管纵向拖动；面板主体仍可正常滚动/输入。
+ * 拖动值通过 --sheet-y 传给具体面板，避免在 WXML 里写 position/left/top 这类内联样式。
+ */
+.sheet-drag-hit {
+  flex: 0 0 auto;
+  width: 100%;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+@media (min-width: 700px) {
+  .sheet-drag-hit { height: 30px; }
+}
+.sheet-drag-surface { transform: translate3d(0, var(--sheet-y, 0px), 0); }
+.sheet-drag-surface.is-dragging { animation: none !important; transition: none !important; }
+.sheet-drag-surface.is-settling { animation: none !important; transition: transform .24s cubic-bezier(.2,.8,.3,1) !important; }

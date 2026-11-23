@@ -110,7 +110,7 @@
                 <button class="round-small" data-index="{{index}}" data-step="1" bindtap="adjustMinutes">＋</button>
               </view>
               <view class="slider-wrap">
-                <view id="sketch-slider-{{index}}" class="sketch-slider" data-index="{{index}}" catchtouchstart="startSketchSlider" catchtouchmove="moveSketchSlider" catchtouchend="endSketchSlider" catchtouchcancel="endSketchSlider">
+                <view id="sketch-slider-{{index}}" class="sketch-slider" data-index="{{index}}" catchtouchstart="startSketchSlider" catchlongpress="cancelSketchSlider" bindtouchmove="moveSketchSlider" bindtouchend="endSketchSlider" bindtouchcancel="cancelSketchSlider">
                   <view class="sketch-track">
                     <view class="sketch-fill" style="width: {{item.targetMinutes / 60 * 100}}%;"></view>
                   </view>

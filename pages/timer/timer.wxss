@@ -418,7 +418,7 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
 .module-list.selected { transform: translateX(-2rpx); }
 
 /* 进度条略微加粗，下方品牌 logo 跟随进度移动 */
-.progress-rail { position: relative; width: 100%; max-width: none; box-sizing: border-box; padding-bottom: 42rpx; }
+.progress-rail { position: relative; width: 100%; max-width: none; box-sizing: border-box; --rail-pad: 42rpx; padding-bottom: var(--rail-pad); }
 .progress-rail .stage-progress { width: 100%; max-width: none; height: 12rpx; margin: 0; }
 .progress-logo { position: absolute; top: -10rpx; width: 32rpx; height: 32rpx; margin-left: -16rpx; transition: left .35s ease; animation: progress-logo-bob 1.8s ease-in-out infinite; }
 .progress-logo-img { width: 32rpx; height: 32rpx; display: block; }
@@ -426,7 +426,7 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
   0%, 100% { transform: translateY(0) scale(1); }
   50% { transform: translateY(-4rpx) scale(1.05); }
 }
-.timer-page.compact .progress-rail { max-width: 100%; padding-bottom: 22px; }
+.timer-page.compact .progress-rail { --rail-pad: 32px; max-width: 100%; padding-bottom: var(--rail-pad); }
 .timer-page.compact .progress-rail .stage-progress { height: 9px; }
 .timer-page.compact .progress-logo { top: -6px; width: 22px; height: 22px; margin-left: -11px; }
 .timer-page.compact .progress-logo-img { width: 22px; height: 22px; }
@@ -1275,9 +1275,10 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
 }
 /* 第四行：进度条 */
 .timer-page.portrait .progress-rail {
+  --rail-pad: 32px;
   width: 92%;
   margin: 0 auto;
-  padding-bottom: 14px;
+  padding-bottom: var(--rail-pad);
 }
 .timer-page.portrait .stage-progress { max-width: 100%; }
 .timer-page.portrait .quote-slot { margin: 0; }
@@ -1555,10 +1556,14 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
  */
 /* 外围组件：模块名 / 目标 / 进度 / 控制按钮 / 状态胶囊，温和跟随 */
 .timer-page.wide:not(.immersive) .stage-meta {
-  font-size: calc(15px * var(--cs, 1));
-  gap: calc(18px * var(--cs, 1));
+  font-size: 20px;
+  gap: 14px;
   margin: 2px 0 calc(16px * var(--cs, 1));
 }
+/* 模块名和时间在 rpx 下会跟着大窗口一起涨到 30px 以上，挤出进度条下方的空隙；
+   这里单独设上限，保证只占一行、不压到目标与名言 */
+.timer-page.wide:not(.immersive) .stage-meta .meta-module { font-size: 20px; }
+.timer-page.wide:not(.immersive) .stage-meta .meta-total { margin-left: 0; font-size: 18px; }
 .timer-page.wide:not(.immersive) .stage-target {
   max-width: var(--slot-w, 100%);
   margin: calc(6px * var(--cs, 1)) auto 0;
@@ -1566,8 +1571,9 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
   padding: 0 calc(12px * var(--cs, 1));
 }
 .timer-page.wide:not(.immersive) .progress-rail {
+  --rail-pad: 28px;
   max-width: var(--slot-w, 100%);
-  padding-bottom: calc(10px * var(--cs, 1));
+  padding-bottom: var(--rail-pad);
 }
 .timer-page.wide:not(.immersive) .progress-rail .stage-progress { height: calc(7px * var(--cs, 1)); }
 .timer-page.wide:not(.immersive) .controls { max-width: var(--slot-w, 100%); gap: 0; }
@@ -1663,12 +1669,12 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
   .timer-page.compact .complete-button { font-size: 29px; }
 }
 
-/* 模块名与模块时间钉在安全区顶部，脱离中央舞台的高度计算：
-   矮屏 / 不同刘海安全区下，中央内容再怎么浮动，这一行也不会被顶出屏幕。 */
+/* 模块名与模块时间悬浮在进度条与名言之间：绝对定位在进度轨道的底部内距里，
+   不参与中部舞台的高度计算，进度条和时钟的尺寸都不动。 */
 .timer-page:not(.immersive) .stage-meta {
   position: absolute;
   z-index: 12;
-  top: calc(env(safe-area-inset-top) + 6px);
+  top: calc(100% - var(--rail-pad, 22px));
   left: 0;
   right: 0;
   width: 100%;
@@ -1681,7 +1687,7 @@ page { height: 100%; overflow: hidden; background:var(--bg); }
   pointer-events: none;
 }
 .timer-page.wide:not(.immersive) .stage-meta {
-  top: calc(env(safe-area-inset-top) + 6px);
+  top: calc(100% - var(--rail-pad, 22px));
   margin: 0;
 }
 

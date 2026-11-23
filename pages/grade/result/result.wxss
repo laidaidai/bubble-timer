@@ -72,6 +72,24 @@
 }
 .unit { font-size: 24rpx; font-weight: 800; margin-left: 5rpx; color: var(--text-2); letter-spacing: 0; }
 .score-note { margin-top: 16rpx; font-size: 22rpx; color: var(--text-3); }
+.score-timer {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8rpx;
+  margin: 18rpx 22rpx 0;
+  padding-top: 14rpx;
+  border-top: 2rpx dashed var(--edge);
+  font-size: 23rpx;
+  line-height: 1.4;
+}
+.score-timer-label { color: var(--text-3); }
+.score-timer-value { color: var(--text-2); font-weight: 900; letter-spacing: -.3rpx; }
+.score-timer-target { color: var(--text-3); }
+.score-timer-delta { margin-left: 2rpx; font-weight: 800; color: var(--text-3); }
+.score-timer-delta.late { color: var(--danger-text); }
+.score-timer-delta.early { color: var(--success-text); }
+
 
 .acc-row {
   display: flex;
@@ -314,6 +332,24 @@
   gap: 14rpx;
   padding: 0 22rpx 20rpx;
 }
+/* 模块用时只跟着模块卡走，展开逐题时仍留在卡头下方 */
+.mod-time-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7rpx;
+  margin-top: -8rpx;
+  padding: 0 22rpx 18rpx;
+  font-size: 21rpx;
+  line-height: 1.35;
+}
+.mod-time-label { color: var(--text-3); }
+.mod-time-value { color: var(--text-2); font-weight: 800; }
+.mod-time-target { color: var(--text-3); }
+.mod-time-delta { margin-left: 2rpx; font-weight: 700; color: var(--text-3); }
+.mod-time-delta.late { color: var(--danger-text); }
+.mod-time-delta.early { color: var(--success-text); }
+
 .mod-bar {
   flex: 1;
   min-width: 0;
@@ -408,6 +444,7 @@
   .big-score { font-size: 58px; letter-spacing: -2px; }
   .unit { font-size: 14px; margin-left: 3px; }
   .score-note { font-size: 12px; margin-top: 8px; }
+  .score-timer { gap: 4px; margin: 9px 12px 0; padding-top: 7px; font-size: 12px; border-top-width: 1px; }
   .acc-row { gap: 7px; margin-top: 6px; }
   .acc-label { font-size: 11px; }
   .acc-val { font-size: 23px; }
@@ -438,6 +475,7 @@
   .mod-points { padding: 1px 6px; font-size: 11px; border-width: 1px; }
   .mod-meta { gap: 2px; }
   .mod-bar-row { gap: 8px; padding: 0 13px 11px; }
+  .mod-time-row { gap: 4px; margin-top: -4px; padding: 0 13px 10px; font-size: 11px; }
   .mod-bar { height: 7px; border-width: 1px; }
   .q-wrap { border-top-width: 1px; }
   .q-body { padding: 7px 10px 5px; }
@@ -494,7 +532,7 @@
   flex: 0 0 auto;
   width: 64rpx;
   height: 7rpx;
-  margin: 12rpx auto 0;
+  margin: 0 auto;
   background: var(--line-strong);
   border: 2rpx solid var(--edge-soft);
   border-radius: 999rpx;

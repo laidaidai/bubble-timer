@@ -3,6 +3,16 @@ const store = require('../utils/store.js');
 const { getPaper } = require('../utils/data.js');
 const theme = require('../utils/theme.js');
 
+function formatDuration(seconds) {
+  const total = Math.max(0, Math.round(Number(seconds) || 0));
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const sec = total % 60;
+  const mm = String(m).padStart(2, '0');
+  const ss = String(sec).padStart(2, '0');
+  return h ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+}
+
 function formatTime(ts) {
   const d = new Date(ts);
   const pad = (n) => String(n).padStart(2, '0');
@@ -15,6 +25,7 @@ Page({
     themeStyle: themeBind.themeData().themeStyle,
     isDesktop: false,
     list: [],
+    pending: [],
     countText: '0',
     paperName: '',
     paperId: '',
@@ -38,6 +49,18 @@ Page({
     const paperId = this.paperId || this.data.paperId || '';
     const found = paperId ? getPaper(paperId) : null;
     const raw = paperId ? store.getRecordsByPaper(paperId) : store.getRecords();
+    // 计时已完成但还没交卷的会话单独置顶：答案入口不能因为离开答题页就消失。
+    const pending = store.getPendingTimerRecords(paperId).map((t) => {
+      const ctx = t.context || {};
+      const target = Number(t.totalTarget) || 0;
+      return {
+        id: t.id,
+        paperId: ctx.paperId,
+        paperName: ctx.paperName || (found ? found.paper.name : ''),
+        totalText: t.totalActualText || formatDuration(t.totalActual),
+        metaText: target ? `已计时 ${t.totalActualText || formatDuration(t.totalActual)} · 目标 ${target} 分钟` : `已计时 ${t.totalActualText || formatDuration(t.totalActual)}`,
+      };
+    });
     const list = raw.map((r) => {
       const done = (r.right || 0) + (r.wrong || 0) + (r.blank || 0);
       const acc = done ? ((r.right || 0) / done) * 100 : 0;
@@ -48,6 +71,7 @@ Page({
     });
     this.setData({
       list,
+      pending,
       countText: String(list.length),
       paperId,
       paperName: found ? found.paper.name : '',
@@ -76,6 +100,16 @@ Page({
     wx.navigateTo({ url: `/pages/grade/result/result?recordId=${id}` });
   },
 
+  // 从历史直接回到这套卷的待填会话，不需要重新计时
+  goFill(e) {
+    const { paperId, timerId } = e.currentTarget.dataset;
+    if (!paperId || !timerId) return;
+    wx.navigateTo({
+      url: `/pages/grade/answer/answer?paperId=${encodeURIComponent(paperId)}&timerId=${encodeURIComponent(timerId)}`,
+      fail: () => wx.showToast({ title: '打开答题页失败，请重试', icon: 'none' }),
+    });
+  },
+
   // 从历史直接重新作答这套卷（清掉旧草稿，避免上次没选完的答案串进来）
   retry() {
     const paperId = this.data.paperId;
@@ -83,7 +117,7 @@ Page({
     store.clearDraft(paperId);
     // redirectTo：交卷后是替代当前页，返回时不会再堆一层旧页
     wx.redirectTo({
-      url: `/pages/grade/answer/answer?paperId=${paperId}&mode=single`,
+      url: `/pages/grade/answer/answer?paperId=${paperId}&mode=single&noTimer=1`,
       fail: () => wx.showToast({ title: '打开答题页失败，请重试', icon: 'none' }),
     });
   },

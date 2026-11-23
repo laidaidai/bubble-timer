@@ -67,6 +67,73 @@
 .empty-title { font-size: 28rpx; font-weight: 900; }
 .empty-sub { font-size: 22rpx; color: var(--text-3); margin-top: 8rpx; }
 
+/* 待填答案：计时已完成但还没交卷，置顶提醒，点一下回到原会话 */
+.pending-block { margin-bottom: 20rpx; }
+.pending-head {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  margin: 0 2rpx 10rpx;
+}
+.pending-title { font-size: 24rpx; font-weight: 900; color: var(--ink); }
+.pending-count {
+  min-width: 32rpx;
+  padding: 1rpx 9rpx;
+  color: var(--on-primary);
+  background: var(--primary);
+  border-radius: 999rpx;
+  font-size: 19rpx;
+  font-weight: 900;
+  text-align: center;
+  box-sizing: border-box;
+}
+.pending-card {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  margin-bottom: 12rpx;
+  padding: 16rpx 18rpx;
+  background: var(--accent-bg);
+  border: 2rpx solid var(--primary);
+  border-radius: 20rpx;
+  box-shadow: 3rpx 4rpx 0 var(--shadow-soft);
+  box-sizing: border-box;
+  transition: transform .12s cubic-bezier(.2,.8,.3,1), box-shadow .12s cubic-bezier(.2,.8,.3,1);
+}
+.pending-pressed { transform: translate(1rpx, 2rpx); box-shadow: none; }
+.pending-main { flex: 1; min-width: 0; }
+.pending-top { display: flex; align-items: center; gap: 8rpx; }
+.pending-dot {
+  flex: 0 0 auto;
+  width: 9rpx;
+  height: 9rpx;
+  border-radius: 50%;
+  background: var(--primary);
+}
+.pending-paper {
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 27rpx;
+  font-weight: 900;
+  line-height: 1.25;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.pending-meta { margin-top: 5rpx; color: var(--text-3); font-size: 20rpx; line-height: 1.35; }
+.pending-go {
+  flex: 0 0 auto;
+  padding: 8rpx 12rpx;
+  color: var(--on-primary);
+  background: var(--primary);
+  border: 2rpx solid var(--edge);
+  border-radius: 999rpx;
+  font-size: 20rpx;
+  font-weight: 900;
+  line-height: 1;
+  box-shadow: 2rpx 2rpx 0 var(--shadow-soft);
+}
+.pending-go-arrow { margin-left: 2rpx; font-size: 22rpx; }
+
 /* 记录卡：日期 + 得分 → 四项图标统计 → 查看 / 删除图标 */
 .record-row {
   width: 100%;
@@ -322,6 +389,14 @@
 
 /* 桌面档：rpx 随窗口放大，这里统一 px 化 */
 @media (min-width: 700px) {
+  .pending-title { font-size: 13px; }
+  .pending-count { min-width: 17px; padding: 1px 5px; font-size: 10px; }
+  .pending-card { gap: 8px; margin-bottom: 7px; padding: 9px 10px; border-width: 2px; border-radius: 11px; box-shadow: 2px 2px 0 var(--shadow-soft); }
+  .pending-dot { width: 5px; height: 5px; }
+  .pending-paper { font-size: 14px; }
+  .pending-meta { margin-top: 3px; font-size: 11px; }
+  .pending-go { padding: 4px 7px; border-width: 1px; font-size: 11px; }
+  .pending-go-arrow { font-size: 12px; }
   .history-page { padding-top: 15px; }
   .page-title { font-size: 22px; margin-bottom: 13px; }
   .hist-tools { margin-bottom: 11px; gap: 8px; }

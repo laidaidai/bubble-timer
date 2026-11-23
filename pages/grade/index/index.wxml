@@ -77,6 +77,8 @@
               <text class="meta-text">{{p.meta}}</text>
               <text wx:if="{{p.edited}}" class="pill edit-tag">已自定义</text>
               <text wx:if="{{p.draftCount > 0}}" class="pill draft-tag num">未交卷 {{p.draftCount}} 题</text>
+              <text wx:if="{{p.timerState === 'active'}}" class="pill timer-tag is-live">计时中</text>
+              <text wx:if="{{p.timerState === 'pending'}}" class="pill timer-tag">待填答案</text>
             </view>
           </view>
           <view class="paper-tail">
@@ -97,7 +99,10 @@
             <view wx:if="{{p.draftCount > 0}}" class="paper-icon-btn is-danger" data-id="{{p.id}}" data-name="{{p.name}}" aria-label="清空重做 {{p.name}}" bindtap="restartPaper" hover-class="paper-icon-press">
               <text class="paper-icon-glyph">↺</text>
             </view>
-            <view class="paper-icon-btn" data-id="{{p.id}}" aria-label="查看 {{p.name}} 的答题历史" bindtap="goHistory" hover-class="paper-icon-press">
+            <view class="paper-icon-btn is-timer {{p.timerState === 'active' ? 'is-live' : ''}}" data-id="{{p.id}}" aria-label="计时作答 {{p.name}}" bindtap="goTimedPaper" hover-class="paper-icon-press">
+              <text class="paper-icon-glyph timer-play">▶</text>
+            </view>
+            <view class="paper-icon-btn is-history" data-id="{{p.id}}" aria-label="查看 {{p.name}} 的答题历史" bindtap="goHistory" hover-class="paper-icon-press">
               <view class="paper-icon paper-icon-clock"></view>
             </view>
           </view>

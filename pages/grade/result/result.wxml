@@ -46,6 +46,12 @@
         </view>
       </view>
     </view>
+    <view wx:if="{{timerSummary}}" class="score-timer">
+      <text class="score-timer-label">本次用时</text>
+      <text class="score-timer-value num">{{timerSummary.totalText}}</text>
+      <text wx:if="{{timerSummary.targetText}}" class="score-timer-target">/ 目标 {{timerSummary.targetText}}</text>
+      <text wx:if="{{timerSummary.deltaText}}" class="score-timer-delta {{timerSummary.tone}}">{{timerSummary.deltaText}}</text>
+    </view>
     <view wx:if="{{detail.pointText}}" class="score-note">{{detail.pointText}}</view>
   </view>
 
@@ -116,6 +122,12 @@
         <text class="mod-pct">{{item.pctText}}%</text>
       </view>
     </view>
+    <view wx:if="{{item.timeText}}" class="mod-time-row">
+      <text class="mod-time-label">用时</text>
+      <text class="mod-time-value num">{{item.timeText}}</text>
+      <text wx:if="{{item.timeTargetText}}" class="mod-time-target">/ {{item.timeTargetText}}</text>
+      <text class="mod-time-delta {{item.timeTone}}">{{item.timeDeltaText}}</text>
+    </view>
 
     <!-- 逐题对错：题号色块 + A/B/C/D 四格（只标正解与你选，不含统计） -->
     <view wx:if="{{item.open}}" id="qw-{{item.key}}" class="q-wrap" style="{{item.h ? 'height:' + item.h : ''}}">
@@ -145,8 +157,10 @@
 
   <!-- 答题卡：按章节列题号与正确答案；对题浅绿、错题浅红 -->
   <view wx:if="{{reviewOpen}}" class="mask review-mask anim-fade grade-root theme-{{theme}}" style="{{themeStyle}}" bindtap="closeReview">
-    <view class="review-sheet anim-sheet" catchtap="noop">
-      <view class="review-handle"></view>
+    <view class="review-sheet sheet-drag-surface anim-sheet {{sheetDragging ? 'is-dragging' : ''}} {{sheetSettling ? 'is-settling' : ''}}" style="--sheet-y: {{sheetDragY}}px;" catchtap="noop">
+      <view class="sheet-drag-hit" data-selector=".review-sheet" data-close="closeReview" catchtap="noop" catchtouchstart="onSheetGripStart" catchtouchmove="onSheetGripMove" catchtouchend="onSheetGripEnd" catchtouchcancel="onSheetGripCancel" aria-label="下拉关闭答题卡">
+        <view class="review-handle"></view>
+      </view>
       <view class="review-head">
         <view class="review-title">答题卡</view>
         <view class="review-close" bindtap="closeReview" aria-label="关闭答题卡">×</view>

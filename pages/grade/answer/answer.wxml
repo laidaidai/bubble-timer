@@ -37,6 +37,15 @@
     <view wx:if="{{mode === 'list'}}" class="sheet-chip" bindtap="openCard" hover-class="is-press">答题卡</view>
   </view>
 
+  <!-- 只显示一条轻量计时摘要；第二个计时器不会再出现在答题页 -->
+  <view wx:if="{{timerSummary}}" class="timer-strip anim-fade">
+    <view class="timer-strip-dot {{timerSummary.tone}}"></view>
+    <text class="timer-strip-label">本次计时</text>
+    <text class="timer-strip-value num">{{timerSummary.totalText}}</text>
+    <text wx:if="{{timerSummary.targetText}}" class="timer-strip-target">/ 目标 {{timerSummary.targetText}}</text>
+    <text wx:if="{{timerSummary.deltaText}}" class="timer-strip-delta {{timerSummary.tone}}">{{timerSummary.deltaText}}</text>
+  </view>
+
   <!-- 章节填写模式 -->
   <view wx:if="{{mode === 'list'}}" class="list-view anim-fade" bindtouchstart="onTouchStart" bindtouchend="onTouchEnd" bindtouchmove="onTouchMove">
     <view class="section-head anim-rise">
@@ -136,8 +145,10 @@
 
 <!-- AI 识别导入：复制提示词给外部 AI，拍照识别答题卡后把选项粘回来 -->
 <view wx:if="{{showImport}}" class="mask import-mask anim-fade grade-root theme-{{theme}}" style="{{themeStyle}}" bindtap="closeImport">
-  <view class="import-sheet anim-sheet" catchtap="noop">
-    <view class="import-handle"></view>
+  <view class="import-sheet sheet-drag-surface anim-sheet {{sheetDragging ? 'is-dragging' : ''}} {{sheetSettling ? 'is-settling' : ''}}" style="--sheet-y: {{sheetDragY}}px;" catchtap="noop">
+    <view class="sheet-drag-hit" data-selector=".import-sheet" data-close="closeImport" catchtap="noop" catchtouchstart="onSheetGripStart" catchtouchmove="onSheetGripMove" catchtouchend="onSheetGripEnd" catchtouchcancel="onSheetGripCancel" aria-label="下拉关闭 AI 识别导入">
+      <view class="import-handle"></view>
+    </view>
     <view class="import-head">
       <view class="import-title">AI 识别导入</view>
       <view class="import-copy" bindtap="copyAiPrompt" hover-class="is-press" aria-label="复制给 AI 的识别提示词">复制提示词</view>
@@ -169,8 +180,10 @@
 
 <!-- 答题卡浮窗 -->
 <view wx:if="{{showCard}}" class="mask anim-fade grade-root theme-{{theme}}" style="{{themeStyle}}" bindtap="closeCard">
-  <view class="sheet anim-sheet" catchtap="noop">
-    <view class="sheet-handle"></view>
+  <view class="sheet sheet-drag-surface anim-sheet {{sheetDragging ? 'is-dragging' : ''}} {{sheetSettling ? 'is-settling' : ''}}" style="--sheet-y: {{sheetDragY}}px;" catchtap="noop">
+    <view class="sheet-drag-hit" data-selector=".sheet" data-close="closeCard" catchtap="noop" catchtouchstart="onSheetGripStart" catchtouchmove="onSheetGripMove" catchtouchend="onSheetGripEnd" catchtouchcancel="onSheetGripCancel" aria-label="下拉关闭答题卡">
+      <view class="sheet-handle"></view>
+    </view>
     <scroll-view scroll-y class="sheet-body">
       <view wx:for="{{sheetGroups}}" wx:key="key" class="sheet-group">
         <view class="sheet-group-name">{{item.name}}</view>

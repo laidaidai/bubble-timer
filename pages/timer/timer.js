@@ -78,6 +78,9 @@ Page({
     }
 
     // 旧版本保存过已删除的皮肤（gradient / neon / minimal）时，按 utils/format 的 legacy 表迁移到新皮肤
+    // 带卷计时时，session.context 会一路带到报告和答题页；普通训练为 null。
+    this.sessionContext = session.context && session.context.paperId ? session.context : null
+    this.finishedRecordId = ''
     const clockStyle = resolveClockStyle(wx.getStorageSync(app.globalData.clockStyleKey))
     const mode = session.mode || wx.getStorageSync(app.globalData.modeKey) || 'countup'
     const modeInfo = (app.modes || []).find(item => item.key === mode)
@@ -118,6 +121,16 @@ Page({
 
   onReady() {
     this.measureModuleFabPage()
+    // onShow / onLoad 早于首次渲染，getWindowInfo 在横屏桌面页还可能返回竖屏宽高；
+    // 页面真正渲染出来后先用实测尺寸校准方向和槽位，再补一次时钟倍率。
+    this.readPageViewport(rect => {
+      if (rect && (rect.w !== this.viewportW || rect.h !== this.viewportH)) {
+        this.viewportW = rect.w
+        this.viewportH = rect.h
+        this.syncOrientation()
+      }
+      this.scheduleFitClock()
+    })
   },
 
   onShow() {
@@ -137,9 +150,44 @@ Page({
     }, 32)
   },
 
-  clockNaturalKey(style) {
+  clockNaturalKey(style, mode) {
     const name = style || this.data.clockStyle
-    return `${name}|${this.data.portrait ? 'p' : 'l'}|${this.data.compact ? 'c' : 'n'}|${this.data.wide ? 'w' : 'n'}`
+    const state = mode || this.data
+    return `${name}|${state.portrait ? 'p' : 'l'}|${state.compact ? 'c' : 'n'}|${state.wide ? 'w' : 'n'}`
+  },
+
+  // 窗口档位切换时，新布局可能比旧布局窄很多。若等到 setData 之后再量、再写 --clk-fit，
+  // 旧倍率会先套在更小的槽位上闪一帧。这里在改 wide / slot 之前，先用目标档位的原始尺寸
+  // 和目标槽位算出倍率，跟布局变化放进同一次 setData，保证第一帧就是对的。
+  clockFitForSlot(slot, wide, portrait, fromSlot) {
+    if (this.data.immersive || !slot || !slot.w || !slot.h) return null
+    const style = this.data.clockStyle || 'flip'
+    const targetKey = this.clockNaturalKey(style, {
+      portrait,
+      compact: this.data.compact,
+      wide
+    })
+    const natural = this.clockNatural && this.clockNatural[targetKey]
+    if (natural && natural.w && natural.h) {
+      const fit = fitScale(slot.w, slot.h, natural.w, natural.h, { pad: 4, max: 4.2 })
+      return {
+        fit,
+        vars: Math.abs(fit - 1) < 0.02 ? '' : `--clk-fit: ${fit};`
+      }
+    }
+    // 目标档位还没实测过（例如大屏启动后第一次缩回小窗）：不要凭空猜原始尺寸，
+    // 用「旧槽位 → 新槽位」的缩放比例推一个首帧倍率，旧倍率本来就是按旧槽位实测的。
+    // 新槽位两个方向都可能收窄，取更小的比例，避免首帧先在高度上溢出。
+    const oldFit = this.clockFitValue
+    if (fromSlot && fromSlot.w && fromSlot.h && oldFit) {
+      const ratio = Math.min(slot.w / fromSlot.w, slot.h / fromSlot.h)
+      const fit = Math.min(4.2, Math.max(0.2, Math.round(oldFit * ratio * 1000) / 1000))
+      return {
+        fit,
+        vars: Math.abs(fit - 1) < 0.02 ? '' : `--clk-fit: ${fit};`
+      }
+    }
+    return null
   },
 
   // 进出全屏的形态过渡期间不许量尺寸：
@@ -181,7 +229,9 @@ Page({
       // 容器尺寸只跟窗口有关，皮肤只决定自己被缩到多少
       const fit = fitScale(slot.width, slot.height, naturalW, naturalH, { max: 4.2 })
       if (Math.abs(fit - current) < 0.02) {
-        this.clockFitValue = fit
+        // 视觉上已经是当前变量的倍率；不要用几乎相同的 fit 覆盖 clockFitValue，
+        // 否则下一次「按旧倍率推新槽位」会继承这 <2% 的偏差。
+        this.clockFitValue = this.data.clockFitVars ? current : 1
         return
       }
       this.clockFitValue = fit
@@ -204,6 +254,25 @@ Page({
     })
   },
 
+  // 桌面端小程序窗口的实际页面尺寸不等于 wx.getWindowInfo 上报的窗口尺寸：
+  // 横屏页在开发者工具里 getWindowInfo 仍可能返回竖屏宽高，按它算槽位/全屏倍率，
+  // 时钟会偏小，沉浸式 stage 也会按错误方向铺开。页面实测尺寸才是唯一可靠口径。
+  readPageViewport(callback) {
+    try {
+      wx.createSelectorQuery().in(this)
+        .select('.timer-page')
+        .boundingClientRect()
+        .exec(res => {
+          const rect = res && res[0]
+          callback(rect && rect.width > 10 && rect.height > 10
+            ? { w: rect.width, h: rect.height }
+            : null)
+        })
+    } catch (error) {
+      callback(null)
+    }
+  },
+
   // 竖屏判定：窗口比宽高「高」就走竖屏那一套（手机计时页强制横屏，只有电脑/平板的窄竖窗口会命中）
   syncOrientation() {
     let info = null
@@ -212,18 +281,24 @@ Page({
     } catch (error) {
       info = null
     }
-    if (!info || !info.windowWidth || !info.windowHeight) return
-    const portrait = info.windowHeight > info.windowWidth
-    const winChanged = info.windowWidth !== this.lastWinW || info.windowHeight !== this.lastWinH
-    this.lastWinW = info.windowWidth
-    this.lastWinH = info.windowHeight
+    if (!info) return
+    const winW = this.viewportW || info.windowWidth
+    const winH = this.viewportH || info.windowHeight
+    if (!winW || !winH) return
+    const portrait = winH > winW
+    const winChanged = winW !== this.lastWinW || winH !== this.lastWinH
+    this.lastWinW = winW
+    this.lastWinH = winH
     // 宽窗口（电脑/平板横屏）：组件往屏幕四周铺开，只略微放大，不再挤在中间
-    const wide = !portrait && info.windowWidth >= 900
+    const wide = !portrait && winW >= 900
     // 时钟装在一个“只跟窗口有关”的容器里（尺寸写进 --slot-w / --slot-h），
     // 每种皮肤只负责等比缩放到容器内（JS 算 --clk-fit），所以换皮肤时容器和周围组件都不动。
-    const slot = computeSlotSize(info.windowWidth, info.windowHeight, portrait)
+    const slot = computeSlotSize(winW, winH, portrait)
+    const fromSlot = this.lastSlot
     this.lastSlot = slot
-    if (winChanged) this.clockNatural = {}
+    const wideChanged = wide !== this.data.wide
+    // 目标档位的实测尺寸缓存保留：紧凑档/宽屏档的时钟尺寸都是固定 px，不随窗口宽度变化。
+    // 这样从宽屏缩回小窗时能直接拿到小窗的原始尺寸，提前算好倍率，不留一帧旧倍率。
     const slotVars = `--slot-w: ${slot.w}px; --slot-h: ${slot.h}px;`
     // 外围组件（模块名、进度、按钮）只温和跟随窗口，避免按钮在大屏上变成巨块；
     // 时钟本身不再吃 --ts / --fc-scale，全部交给容器。
@@ -232,6 +307,14 @@ Page({
     const patch = { wide }
     if (slotVars !== this.data.slotVars) patch.slotVars = slotVars
     if (stageVars !== this.data.stageVars) patch.stageVars = stageVars
+    // 档位或槽位变了，就在同一次 setData 里把新倍率一起写下去，避免旧倍率先闪一帧。
+    if (winChanged || wideChanged) {
+      const nextFit = this.clockFitForSlot(slot, wide, portrait, fromSlot)
+      if (nextFit) {
+        this.clockFitValue = nextFit.fit
+        patch.clockFitVars = nextFit.vars
+      }
+    }
     this.setData(patch)
     if (portrait !== this.data.portrait) this.switchOrientation(portrait)
     else if (winChanged && this.data.immersive) this.refreshImmersiveScale()
@@ -287,7 +370,14 @@ Page({
   },
 
   onResize() {
-    this.syncOrientation()
+    // 页面尺寸变化后 .timer-page 的 rect 才是新值，getWindowInfo 在横屏桌面页不可靠
+    this.readPageViewport(rect => {
+      if (rect) {
+        this.viewportW = rect.w
+        this.viewportH = rect.h
+      }
+      this.syncOrientation()
+    })
   },
 
   // 进入 / 返回计时页时重新播放入场动效
@@ -838,8 +928,8 @@ Page({
   // 现在统一用 natural × scale ≈ 可用宽高，左右留 3%、上下留 14%（退出键 + 安全区）。
   computeImmersiveScale(natural) {
     const info = (wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync()) || {}
-    const winW = info.windowWidth || 375
-    const winH = info.windowHeight || 667
+    const winW = this.viewportW || info.windowWidth || 375
+    const winH = this.viewportH || info.windowHeight || 667
     const cached = natural || (this.clockNatural || {})[this.clockNaturalKey()]
     const base = CLOCK_BASE[this.data.clockStyle] || CLOCK_BASE.flip
     const natW = (cached && cached.w > 1) ? cached.w : base.w
@@ -847,13 +937,16 @@ Page({
     const byWidth = (winW * 0.94) / natW
     const byHeight = (winH * 0.86) / natH
     const scale = Math.min(byWidth, byHeight)
-    return Math.round(Math.min(12, Math.max(0.8, scale)) * 100) / 100
+    // 不能为了“看着不小”把倍率抬到 0.8：极窄窗口下会直接把时钟顶出屏幕。
+    // 下限只防 0，实际大小由窗口决定，保证全屏时钟永远在边界内。
+    return Math.round(Math.min(12, Math.max(0.2, scale)) * 100) / 100
   },
 
-  // 读当前皮肤的原始（未缩放）尺寸：优先用 fitClock 的缓存，缺失时现场量一次
-  readNaturalSize(callback) {
+  // 读当前皮肤的原始（未缩放）尺寸：优先用 fitClock 的缓存，缺失时现场量一次。
+  // force=true 用于进全屏前：文本长度变化后缓存未必还准，必须以当前这一帧为准。
+  readNaturalSize(callback, force) {
     const cached = (this.clockNatural || {})[this.clockNaturalKey()]
-    if (cached && cached.w > 1 && cached.h > 1) {
+    if (!force && cached && cached.w > 1 && cached.h > 1) {
       callback(cached)
       return
     }
@@ -866,6 +959,28 @@ Page({
           if (!rect || !rect.width) { callback(null); return }
           const current = this.data.immersive ? 1 : (this.clockFitValue || 1)
           const nat = { w: rect.width / current, h: rect.height / current }
+          this.clockNatural = this.clockNatural || {}
+          this.clockNatural[this.clockNaturalKey()] = nat
+          callback(nat)
+        })
+    } catch (error) {
+      callback(null)
+    }
+  },
+
+  // 读全屏时的当前档位原始尺寸：.clock-body 本身 zoom:1，外层 .clock-stage 还挂着 --ic 倍率，
+  // 所以要把 rect 除以 immersiveScale，不能像普通档那样直接除以 clockFitValue。
+  readImmersiveNatural(callback) {
+    const scale = this.data.immersiveScale || 0
+    if (!scale) { callback(null); return }
+    try {
+      wx.createSelectorQuery().in(this)
+        .select('.clock-body')
+        .boundingClientRect()
+        .exec(res => {
+          const rect = res && res[0]
+          if (!rect || !rect.width || !rect.height) { callback(null); return }
+          const nat = { w: rect.width / scale, h: rect.height / scale }
           this.clockNatural = this.clockNatural || {}
           this.clockNatural[this.clockNaturalKey()] = nat
           callback(nat)
@@ -945,20 +1060,46 @@ Page({
           })
         }, OUTRO_DELAY)
       })
-    })
+    }, true)
+  },
+
+  // 量普通布局下真实可用的时钟槽位：CSS 的 max-height 等约束可能与 computeSlotSize 有出入。
+  // 退出全屏的最终倍率必须按真实槽位算，否则权重完以后 fitClock 还会再纠一次。
+  readClockSlot(callback) {
+    try {
+      wx.createSelectorQuery().in(this)
+        .select('.clock-slot')
+        .boundingClientRect()
+        .exec(res => {
+          const rect = res && res[0]
+          callback(rect && rect.width ? { w: rect.width, h: rect.height } : null)
+        })
+    } catch (error) {
+      callback(null)
+    }
   },
 
   closeImmersive() {
+    const slot = this.lastSlot
+    const cached = (this.clockNatural || {})[this.clockNaturalKey()]
+    this.immersiveBusy = true
+    // 全屏里时钟的文本长度可能已经变化，缓存的原始宽高未必是当前这一刻的；
+    // 稳定态退出时实测一次当前 .clock-body，退出倍率才能和普通档完全对上。
+    if (this.data.clockMorph || this.data.clockMorphStyle) {
+      this.closeImmersiveNow(slot, cached)
+      return
+    }
+    this.readImmersiveNatural(nat => {
+      this.closeImmersiveNow(slot || this.lastSlot, nat || cached)
+    })
+  },
+
+  closeImmersiveNow(slot, cached) {
     this.immersiveBusy = true
     this.clearChromeIdle()
     if (this.data.chromeIdle) this.setData({ chromeIdle: false })
     const shift = this.immersiveShift || { dx: 0, dy: 0 }
     const scale = this.data.immersiveScale || IMMERSIVE_CLOCK_SCALE[this.data.clockStyle] || 1.26
-    // 退出前先按缓存算好普通档的倍率：全屏期间可能切过皮肤，数据里的 --clk-fit 未必对应当前皮肤
-    const slot = this.lastSlot
-    const cached = (this.clockNatural || {})[this.clockNaturalKey()]
-    const exitFit = (slot && cached) ? fitScale(slot.w, slot.h, cached.w, cached.h, { max: 4.2 }) : null
-    const exitFitVars = exitFit === null ? '' : (Math.abs(exitFit - 1) < 0.02 ? '' : `--clk-fit: ${exitFit};`)
     // 退场期间关掉 reveal：出全屏动画收尾时 immersiveAnim 撤掉，
     // reveal 那套入场动画会被重新命中再播一遍（内容都复原了才突然多一下）
     clearTimeout(this.timerRevealTimer)
@@ -974,31 +1115,48 @@ Page({
       clockFitVars: '',
       clockMorphStyle: `transform: translate3d(${shift.dx}px, ${shift.dy}px, 0) scale(${scale});`
     }, () => {
-      this.immersiveAnimTimer = setTimeout(() => {
-        this.clockMorphAt = Date.now()
-        if (exitFit !== null) {
-          // 第二步：用 transform 从全屏倍率平滑收回普通档倍率（此时 zoom 还是 1）
-          this.setData({ clockMorph: false, clockMorphStyle: `transform: translate3d(0, 0, 0) scale(${exitFit});` })
-          this.immersivePhaseTimer = setTimeout(() => {
-            this.clockMorphAt = Date.now()
-            // 第三步：同一帧把 transform 交还给 zoom（视觉尺寸完全一致，所以不会跳）
-            this.clockFitValue = exitFit
-            this.setData({ clockMorph: true, clockMorphStyle: '', clockFitVars: exitFitVars, immersiveAnim: false }, () => {
-              this.setData({ clockMorph: false })
-              // 过渡结束后再校准一次（此时不会再量到 transform 的放大量）
+      // 普通布局已经落下，此时量到的 .clock-slot 才是真实可用尺寸（含 max-height 约束）
+      this.readClockSlot(actual => {
+        const targetSlot = actual || slot
+        const exitFit = (targetSlot && cached && cached.w > 1 && cached.h > 1)
+          ? fitScale(targetSlot.w, targetSlot.h, cached.w, cached.h, { max: 4.2 })
+          : null
+        // 这里必须写成和 transform 完全相同的值：exitFit 接近 1 时若省略 --clk-fit，
+        // 最后一步 transform 撤回后会变成 zoom 1，视觉会突然变大再被 fitClock 缩回去。
+        const exitFitVars = exitFit === null ? '' : `--clk-fit: ${exitFit};`
+        this.immersiveAnimTimer = setTimeout(() => {
+          this.clockMorphAt = Date.now()
+          if (exitFit !== null) {
+            // 第二步：用 transform 从全屏倍率平滑收回普通档倍率（此时 zoom 还是 1）
+            this.setData({ clockMorph: false, clockMorphStyle: `transform: translate3d(0, 0, 0) scale(${exitFit});` })
+            this.immersivePhaseTimer = setTimeout(() => {
+              this.clockMorphAt = Date.now()
+              // 第三步：同一帧把 transform 交还给 zoom（视觉尺寸完全一致，所以不会跳）。
+              // transform 要等 zoom 真正生效后再放开过渡，否则会从旧 scale 再补间一次，
+              // 出现「缩小完成后突然变大再缩回去」的双重缩放。
+              this.clockFitValue = exitFit
+              this.setData({ clockMorph: true, clockMorphStyle: '', clockFitVars: exitFitVars, immersiveAnim: false }, () => {
+                this.immersivePhaseTimer = setTimeout(() => {
+                  this.immersivePhaseTimer = null
+                  this.clockMorphAt = 0
+                  this.setData({ clockMorph: false }, () => {
+                    // 交接时 --clk-fit 已按实测槽位/原始尺寸写好，不再二次 fitClock；
+                    // 否则几十毫秒后还会微调 1~3px，视觉上就是动画结束又动了一下。
+                    this.immersiveBusy = false
+                  })
+                }, 80)
+              })
+            }, 460)
+          } else {
+            this.setData({ clockMorph: false, clockMorphStyle: '' })
+            this.immersivePhaseTimer = setTimeout(() => {
+              this.setData({ immersiveAnim: false })
               this.scheduleFitClock()
               this.immersiveBusy = false
-            })
-          }, 460)
-        } else {
-          this.setData({ clockMorph: false, clockMorphStyle: '' })
-          this.immersivePhaseTimer = setTimeout(() => {
-            this.setData({ immersiveAnim: false })
-            this.scheduleFitClock()
-            this.immersiveBusy = false
-          }, 460)
-        }
-      }, MORPH_GAP)
+            }, 460)
+          }
+        }, MORPH_GAP)
+      })
     })
   },
 
@@ -1101,7 +1259,8 @@ Page({
       pomodoroPhase: this.pomodoroPhase,
       phaseRemaining: this.phaseRemaining,
       pomodoroCycle: this.pomodoroCycle,
-      tickSound: !this.data.tickMuted
+      tickSound: !this.data.tickMuted,
+      context: this.sessionContext || null
     })
   },
 
@@ -1150,8 +1309,11 @@ Page({
       rows,
       mode: this.data.mode,
       modeName: this.data.modeName,
-      quote: '稳定节奏，持续精进。'
+      quote: '稳定节奏，持续精进。',
+      paperId: this.sessionContext ? this.sessionContext.paperId : '',
+      context: this.sessionContext ? Object.assign({}, this.sessionContext) : null
     }
+    this.finishedRecordId = report.id
     const records = [report].concat(wx.getStorageSync(app.globalData.recordsKey) || []).slice(0, RECORD_LIMIT)
     wx.setStorageSync(app.globalData.recordsKey, records)
     wx.setStorageSync('exam-timer-pending-report', report)
@@ -1184,8 +1346,23 @@ Page({
     }
   },
 
-  // 横屏计时页先经过竖屏空白页，规避微信「横屏直接返回竖屏」导致的 rpx 放大
+  // 横屏计时页先经过竖屏空白页，规避微信「横屏直接返回竖屏」导致的 rpx 放大。
+  // 带卷计时完成后不回家，直接去填答案；忘记填也能从历史里的待填会话回来。
   leaveTimer() {
+    const ctx = this.sessionContext
+    if (ctx && ctx.paperId && this.finishedRecordId) {
+      const url = `/pages/blank/blank?mode=grade&paperId=${encodeURIComponent(ctx.paperId)}&timerId=${encodeURIComponent(this.finishedRecordId)}`
+      wx.redirectTo({
+        url,
+        fail: () => {
+          wx.redirectTo({
+            url: `/pages/grade/answer/answer?paperId=${encodeURIComponent(ctx.paperId)}&timerId=${encodeURIComponent(this.finishedRecordId)}`,
+            fail: () => wx.navigateBack()
+          })
+        }
+      })
+      return
+    }
     wx.redirectTo({
       url: '/pages/blank/blank',
       fail: () => wx.navigateBack()

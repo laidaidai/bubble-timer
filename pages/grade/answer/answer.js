@@ -2,6 +2,13 @@ const themeBind = require('../utils/theme-bind.js');
 const { OPTIONS, getPaper, paperSize, paperModules, questionPoints } = require('../utils/data.js');
 const store = require('../utils/store.js');
 const { grade, parseAnswerText } = require('../utils/score.js');
+const {
+  resetSheetDrag,
+  startSheetDrag,
+  moveSheetDrag,
+  endSheetDrag,
+  cancelSheetDrag,
+} = require('../../../utils/format.js');
 
 // 分值展示：整数直接显示，0.5 / 1.5 这类保留一位；附加题（0 分）留空不显示
 function fmtPoint(v) {
@@ -278,6 +285,9 @@ Page({
     answeredCount: 0,
     showCard: false,
     sheetGroups: [],
+    sheetDragY: 0,
+    sheetDragging: false,
+    sheetSettling: false,
     canPrev: false,
     canNext: true,
     submitting: false,
@@ -286,6 +296,7 @@ Page({
     importHasText: false,
     importParsed: 0,
     importError: '',
+    timerSummary: null,
   },
 
   onLoad(query) {
@@ -306,6 +317,11 @@ Page({
     // 归一化键为数字
     const normalized = {};
     Object.keys(answers).forEach((k) => { normalized[Number(k)] = answers[k]; });
+
+    // 带卷计时结束会带 timerId 进来；从历史补填时没有 timerId，自动匹配本卷最近的待填计时。
+    const timerRecord = this.findTimerRecord(paperId, query.timerId, query.noTimer !== '1');
+    this.timerRecord = timerRecord;
+    const timerSummary = timerRecord ? this.buildTimerSummary(timerRecord) : null;
 
     // 每题真实分值（政治 0.5 / 资料 1.0 …），批改时按它累加
     const points = questionPoints(paper);
@@ -331,9 +347,77 @@ Page({
       mode,
       answers: normalized,
       currentNo,
+      timerSummary,
     });
 
     this.refreshDerived();
+  },
+
+  // 只接受同一套卷、未交卷的带卷计时。旧训练记录没有 context，不参与关联。
+  findTimerRecord(paperId, timerId, allowPending) {
+    let timer = timerId ? store.getTimerRecord(timerId) : null;
+    // 明确带了 timerId 就只认那一条；只有没带 id 的普通进入才自动匹配最近的待填会话。
+    if (!timer && !timerId && allowPending !== false) timer = store.getPendingTimerForPaper(paperId);
+    if (!timer || !timer.context || timer.context.paperId !== paperId) return null;
+    if (timer.gradeRecordId) return null;
+    return timer;
+  },
+
+  formatClock(seconds) {
+    const total = Math.max(0, Math.round(Number(seconds) || 0));
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    const s = total % 60;
+    const mm = String(m).padStart(2, '0');
+    const ss = String(s).padStart(2, '0');
+    return h ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+  },
+
+  timerPayload(timer) {
+    const targetMinutes = Number(timer.totalTarget) || (timer.rows || []).reduce((sum, r) => sum + (Number(r.targetMinutes) || 0), 0);
+    const targetSeconds = targetMinutes * 60;
+    const actualSeconds = Math.max(0, Number(timer.totalActual) || 0);
+    const deltaSeconds = actualSeconds - targetSeconds;
+    let deltaText = '';
+    if (targetMinutes) {
+      if (deltaSeconds === 0) deltaText = '持平';
+      else {
+        const span = Math.abs(deltaSeconds) < 60
+          ? `${Math.round(Math.abs(deltaSeconds))} 秒`
+          : `${Math.round(Math.abs(deltaSeconds) / 60)} 分钟`;
+        deltaText = `${deltaSeconds > 0 ? '超' : '提前'} ${span}`;
+      }
+    }
+    return {
+      id: timer.id,
+      totalActual: actualSeconds,
+      totalTarget: targetMinutes,
+      totalActualText: timer.totalActualText || this.formatClock(actualSeconds),
+      totalTargetText: targetMinutes ? `${targetMinutes} 分钟` : '',
+      deltaSeconds,
+      deltaText,
+      tone: deltaSeconds > 0 ? 'late' : (deltaSeconds < 0 ? 'early' : 'even'),
+      rows: (timer.rows || []).map((row) => ({
+        moduleKey: row.moduleKey || '',
+        name: row.name || '',
+        targetMinutes: Number(row.targetMinutes) || 0,
+        elapsedSeconds: Math.max(0, Number(row.elapsedSeconds) || 0),
+        actualText: row.actualText || this.formatClock(row.elapsedSeconds),
+        deltaSeconds: Number(row.deltaSeconds) || 0,
+        deltaText: row.deltaText || '',
+      })),
+    };
+  },
+
+  buildTimerSummary(timer) {
+    const payload = this.timerPayload(timer);
+    return {
+      id: payload.id,
+      totalText: payload.totalActualText,
+      targetText: payload.totalTargetText,
+      deltaText: payload.deltaText,
+      tone: payload.tone,
+    };
   },
 
   rangeQuestions(start, end, answers, total, points) {
@@ -582,10 +666,34 @@ Page({
 
 
   // 答题卡只在打开时重建题号状态，平时不占 setData 预算
-  openCard() { this.refreshDerived({ showCard: true }, true); },
-  closeCard() { this.setData({ showCard: false }); },
+  openCard() {
+    resetSheetDrag(this);
+    this.refreshDerived({ showCard: true }, true);
+  },
+  closeCard() {
+    resetSheetDrag(this);
+    this.setData({ showCard: false });
+  },
   // 只在蒙层内层 / 离场卡片 catchtap 用：挡住冒泡，避免误关答题卡或误触发翻题
   noop() {},
+
+  onSheetGripStart(e) {
+    const dataset = (e && e.currentTarget && e.currentTarget.dataset) || {};
+    startSheetDrag(this, e, { selector: dataset.selector, close: dataset.close });
+  },
+
+  onSheetGripMove(e) {
+    moveSheetDrag(this, e);
+  },
+
+  onSheetGripEnd(e) {
+    const dataset = (e && e.currentTarget && e.currentTarget.dataset) || {};
+    endSheetDrag(this, e, { selector: dataset.selector, close: dataset.close });
+  },
+
+  onSheetGripCancel() {
+    cancelSheetDrag(this);
+  },
 
   // AI 识别导入：复制提示词 → 拍照识别 → 粘贴结果 → 自动填涂
   buildAiPrompt() {
@@ -604,6 +712,7 @@ Page({
 
   openImport() {
     this.importTextCache = '';
+    resetSheetDrag(this);
     this.setData({
       showImport: true,
       showCard: false,
@@ -614,6 +723,7 @@ Page({
   },
 
   closeImport() {
+    resetSheetDrag(this);
     this.setData({ showImport: false, importHasText: false, importParsed: 0, importError: '' });
   },
 
@@ -671,7 +781,12 @@ Page({
         confirmText: '去导入',
         success: (r) => {
           this.confirming = false;
-          if (r.confirm) wx.navigateTo({ url: `/pages/grade/answers/answers?paperId=${paperId}` });
+          if (r.confirm) {
+            const timerId = this.timerRecord ? this.timerRecord.id : '';
+            wx.navigateTo({
+              url: `/pages/grade/answers/answers?paperId=${paperId}${timerId ? `&timerId=${encodeURIComponent(timerId)}` : ''}`,
+            });
+          }
         },
         fail: () => { this.confirming = false; },
       });
@@ -691,6 +806,7 @@ Page({
         return;
       }
       const result = grade(found.paper, answers, standard);
+      const timerPayload = this.timerRecord ? this.timerPayload(this.timerRecord) : null;
       const record = {
         id: 'r' + Date.now(),
         paperId,
@@ -705,7 +821,16 @@ Page({
         customStandard: true,
         detail: result,
       };
+      if (timerPayload) record.timer = timerPayload;
       store.addRecord(record);
+      if (timerPayload) {
+        store.linkTimerRecord(timerPayload.id, record.id, {
+          score: record.score,
+          totalActual: timerPayload.totalActual,
+          totalActualText: timerPayload.totalActualText,
+          gradeTime: record.time,
+        });
+      }
       store.clearDraft(paperId);
       wx.redirectTo({
         url: `/pages/grade/result/result?recordId=${record.id}`,

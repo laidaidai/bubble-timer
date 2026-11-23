@@ -1,0 +1,129 @@
+<view class="topbar grade-topbar theme-{{theme}}" style="{{themeStyle}}" wx:if="{{!isDesktop}}">
+  <view class="back-icon" bindtap="goBack" aria-label="返回过关斩将">‹</view>
+  <view class="topbar-title">本卷配时</view>
+  <view class="topbar-spacer"></view>
+</view>
+
+<view class="page plan-page {{isDesktop ? 'desk' : ''}} {{!isDesktop ? 'has-grade-topbar' : ''}} grade-root theme-{{theme}}" style="{{themeStyle}}">
+  <view class="plan-hero">
+    <view class="plan-hero-top">
+      <text class="plan-kicker">目标总时长</text>
+      <view
+        wx:if="{{isCustom}}"
+        class="plan-reset"
+        bindtap="resetDefault"
+        hover-class="plan-reset-press"
+        aria-role="button"
+        aria-label="恢复这套卷的默认配时"
+      >恢复默认</view>
+    </view>
+    <text class="plan-paper">{{paperName}}</text>
+    <view class="plan-sum">
+      <view class="plan-sum-main">
+        <text class="plan-total num">{{totalMinutes}}</text>
+        <text class="plan-total-unit">分钟</text>
+      </view>
+      <text class="plan-meta">共 {{paperTotal}} 题 · {{modules.length}} 个模块</text>
+    </view>
+  </view>
+
+  <view class="plan-section-head">
+    <text class="plan-section-title">模块时长</text>
+  </view>
+
+  <view class="plan-list" wx:if="{{modules.length}}">
+    <view
+      wx:for="{{modules}}"
+      wx:key="key"
+      class="plan-card module-card {{dragIndex === index ? 'dragging' : ''}} {{dragging && dragIndex !== index ? 'drag-mode' : ''}}"
+      style="{{dragIndex === index ? dragStyle : settleIndex === index ? settleStyle : dragStyles[index]}}; animation-delay: {{index * 34}}ms;"
+      data-index="{{index}}"
+      bindtouchstart="touchStart"
+      bindlongpress="activateDrag"
+      bindtouchmove="touchMove"
+      bindtouchend="touchEnd"
+      bindtouchcancel="touchEnd"
+    >
+      <view class="plan-card-head">
+        <text class="plan-name">{{item.name}}</text>
+        <text class="plan-count">{{item.count}} 题</text>
+      </view>
+      <view class="plan-controls">
+        <view class="plan-stepper">
+          <button
+            class="round-small plan-step"
+            data-index="{{index}}"
+            data-step="-1"
+            catchtap="adjustMinutes"
+            aria-label="减少{{item.name}}时长"
+          >−</button>
+          <input
+            class="plan-input num"
+            type="number"
+            value="{{item.input}}"
+            data-index="{{index}}"
+            bindinput="onMinuteInput"
+            bindblur="onMinuteBlur"
+            bindconfirm="onMinuteBlur"
+            aria-label="{{item.name}}分钟"
+          />
+          <button
+            class="round-small plan-step"
+            data-index="{{index}}"
+            data-step="1"
+            catchtap="adjustMinutes"
+            aria-label="增加{{item.name}}时长"
+          >＋</button>
+        </view>
+        <view
+          class="plan-slider"
+          id="plan-slider-{{index}}"
+          data-index="{{index}}"
+          catchtouchstart="startSlider"
+          catchlongpress="cancelSlider"
+          bindtouchmove="moveSlider"
+          bindtouchend="endSlider"
+          bindtouchcancel="cancelSlider"
+          aria-role="slider"
+          aria-label="{{item.name}}时长滑杆"
+        >
+          <view class="plan-track">
+            <view class="plan-fill" style="width: {{item.percent}}%;"></view>
+          </view>
+          <view class="plan-knob" style="left: {{item.percent}}%;"></view>
+        </view>
+      </view>
+      <view
+        class="plan-drag"
+        data-index="{{index}}"
+        catchtouchstart="handleTouchStart"
+        catchtouchmove="touchMove"
+        catchtouchend="touchEnd"
+        catchtouchcancel="touchEnd"
+        aria-role="button"
+        aria-label="拖动{{item.name}}排序"
+      >
+        <text class="plan-drag-handle">☰</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="plan-empty" wx:else>
+    <text>这套卷还没有可配时的模块</text>
+  </view>
+
+  <view class="plan-actions">
+    <view
+      class="plan-save {{saveLabel === '已保存' ? 'is-clean' : ''}}"
+      bindtap="savePlan"
+      hover-class="plan-press"
+      aria-role="button"
+    >{{saveLabel}}</view>
+    <view
+      class="plan-start {{canStart ? '' : 'is-disabled'}}"
+      bindtap="startTiming"
+      hover-class="{{canStart ? 'plan-press' : ''}}"
+      aria-role="button"
+    >开始计时</view>
+  </view>
+</view>

@@ -336,7 +336,9 @@ App({
   },
 
   // 起一局训练：写会话 + 模式，调用方负责跳转（训练页 / 工具页 / 首页共用同一口径）
-  startTrainingSession(modules, mode) {
+  // 训练入口统一在这里起会话。context 只在「从过关斩将带卷计时」时传入，
+  // 普通训练 / 快捷 / 历史重跑不传，保持和以前完全一样。
+  startTrainingSession(modules, mode, context) {
     const runtimeModules = (modules || [])
       .filter(item => item && Number(item.targetMinutes) > 0)
       .map((item, index) => ({
@@ -344,7 +346,11 @@ App({
         name: item.name || '训练模块',
         targetMinutes: Number(item.targetMinutes) || 0,
         elapsedSeconds: 0,
-        status: 'pending'
+        status: 'pending',
+        moduleKey: item.moduleKey || '',
+        start: Number(item.start) || 0,
+        end: Number(item.end) || 0,
+        questionCount: Number(item.count) || 0
       }))
     if (!runtimeModules.length) return false
     const firstIndex = 0
@@ -352,6 +358,10 @@ App({
     const useMode = mode || wx.getStorageSync(this.globalData.modeKey) || 'countup'
     wx.setStorageSync(this.globalData.modeKey, useMode)
     const settings = this.getSettings ? this.getSettings() : {}
+    const runtimeContext = context && context.paperId ? Object.assign({}, context, {
+      source: context.source || 'grade',
+      linkedAt: Date.now()
+    }) : null
     wx.setStorageSync(this.globalData.storageKey, {
       modules: runtimeModules,
       startedAt: Date.now(),
@@ -361,7 +371,8 @@ App({
       isPaused: false,
       mode: useMode,
       totalTargetSeconds: runtimeModules.reduce((sum, item) => sum + item.targetMinutes * 60, 0),
-      tickSound: settings.tickSound === true
+      tickSound: settings.tickSound === true,
+      context: runtimeContext
     })
     return true
   },
