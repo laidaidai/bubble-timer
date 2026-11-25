@@ -189,6 +189,26 @@ Page({
     wx.navigateTo({ url: `/pages/grade/custom/custom?paperId=${id}` });
   },
 
+  // 复制自定义卷：复制卷面结构和本卷配时，不带草稿、答案和成绩。
+  // 加同步锁，避免连点生成两卷。
+  copyCustomPaper(e) {
+    if (this._copyingPaper) return;
+    const { id } = e.currentTarget.dataset;
+    if (!id) return;
+    this._copyingPaper = true;
+    setTimeout(() => { this._copyingPaper = false; }, 600);
+    const copy = custom.duplicate(id);
+    if (!copy) {
+      wx.showToast({ title: '没有可复制的卷面', icon: 'none' });
+      return;
+    }
+    // 配时方案跟着卷走，副本不重新配一遍；作答、答案、成绩仍留在原卷。
+    store.savePaperTimerPlan(copy.id, store.getPaperTimerPlan(id));
+    store.savePaperTimerOrder(copy.id, store.getPaperTimerOrder(id));
+    this.refreshGroups();
+    wx.showToast({ title: '已复制', icon: 'none' });
+  },
+
   goHistory(e) {
     const { id } = e.currentTarget.dataset;
     wx.navigateTo({ url: `/pages/grade/history/history?paperId=${id}` });

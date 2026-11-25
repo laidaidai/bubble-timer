@@ -1,4 +1,43 @@
 const app = getApp()
+
+const BACKUP_COPY_LIMIT = 1024 * 1024
+const pad2 = (value) => String(value).padStart(2, '0')
+const backupFileName = () => {
+  const now = new Date()
+  return `fish-timer-backup-${now.getFullYear()}${pad2(now.getMonth() + 1)}${pad2(now.getDate())}-${pad2(now.getHours())}${pad2(now.getMinutes())}${pad2(now.getSeconds())}.json`
+}
+const formatBytes = (bytes) => {
+  const value = Number(bytes) || 0
+  if (value < 1024) return `${value} B`
+  if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KB`
+  return `${(value / 1024 / 1024).toFixed(1)} MB`
+}
+
+const cleanupOldBackups = (fs) => {
+  try {
+    const dir = wx.env.USER_DATA_PATH
+    const files = fs.readdirSync(dir)
+      .filter(name => /^fish-timer-backup-.*\.json$/.test(name))
+      .sort()
+    while (files.length > 5) {
+      const name = files.shift()
+      try { fs.unlinkSync(`${dir}/${name}`) } catch (error) {}
+    }
+  } catch (error) {}
+}
+
+const listLength = (value) => (Array.isArray(value) ? value.length : 0)
+const backupCountsText = (payload) => {
+  const data = (payload && payload.data) || {}
+  const parts = []
+  const mark = (label, value) => { if (value) parts.push(`${label} ${value}`) }
+  mark('训练记录', listLength(data['exam-timer-records']))
+  mark('过关记录', listLength(data['xc_records']))
+  mark('待办', listLength(data['exam-timer-todos']))
+  mark('重要日子', listLength(data['exam-timer-important-dates']))
+  mark('自定义卷', listLength(data['xc_custom_papers']))
+  return parts.length ? parts.join(' · ') : `${Object.keys(data).length} 项数据`
+}
 const { fold, CLOCK_STYLES, resolveClockStyle } = require('../../utils/format')
 
 const SOUND_MODES = [
@@ -121,6 +160,14 @@ Page({
       if (this.data.section !== 'clock') return
       this.updateClockPreview()
     }, 1000)
+  },
+
+  // 在设置页里拖动窗口：重判桌面档，避免整页继续按手机 rpx 等比放大
+  onResize() {
+    const desktop = app && app.detectEnvironment
+      ? app.detectEnvironment()
+      : !!(app && app.globalData && app.globalData.isDesktop)
+    if (desktop !== this.data.isDesktop) this.setData({ isDesktop: desktop })
   },
 
   onUnload() {
@@ -647,10 +694,166 @@ Page({
     })
   },
 
+  // 导出：生成 JSON 备份文件并走微信文件分享；不支持分享时退化为剪贴板文本
+  exportData() {
+    if (this._exporting) return
+    this._exporting = true
+    let payload = null
+    let json = ''
+    let filePath = ''
+    let fileName = ''
+    try {
+      payload = app.buildLocalBackup ? app.buildLocalBackup() : null
+      if (!payload || !Object.keys(payload.data || {}).length) {
+        wx.showToast({ title: '暂无可导出的数据', icon: 'none' })
+        return
+      }
+      const size = app.getLocalBackupSize ? app.getLocalBackupSize(payload) : 0
+      const maxBytes = (app.globalData && app.globalData.maxBackupBytes) || 8 * 1024 * 1024
+      if (size > maxBytes) {
+        wx.showModal({
+          title: '备份太大',
+          content: `当前数据约 ${formatBytes(size)}，超过小程序本地存储上限，请先清理部分历史记录。`,
+          showCancel: false,
+        })
+        return
+      }
+      json = JSON.stringify(payload)
+      fileName = backupFileName()
+      filePath = `${wx.env.USER_DATA_PATH}/${fileName}`
+      const fs = wx.getFileSystemManager()
+      fs.writeFileSync(filePath, json, 'utf8')
+      cleanupOldBackups(fs)
+    } catch (error) {
+      wx.showModal({ title: '导出失败', content: error && error.message ? error.message : '请稍后重试', showCancel: false })
+      return
+    } finally {
+      this._exporting = false
+    }
+
+    const copyText = () => {
+      if (json.length > BACKUP_COPY_LIMIT) {
+        wx.showModal({
+          title: '无法直接分享',
+          content: `备份约 ${formatBytes(app.getLocalBackupSize ? app.getLocalBackupSize(payload) : 0)}，当前环境不支持发送文件，请在手机微信中导出后发送到文件传输助手。`,
+          showCancel: false,
+        })
+        return
+      }
+      wx.setClipboardData({
+        data: json,
+        success: () => wx.showToast({ title: '备份已复制', icon: 'none' }),
+        fail: () => wx.showToast({ title: '复制失败，请重试', icon: 'none' }),
+      })
+    }
+
+    if (wx.shareFileMessage) {
+      wx.shareFileMessage({
+        filePath,
+        fileName,
+        success: () => wx.showToast({ title: '备份已生成', icon: 'success' }),
+        fail: (error) => {
+          if (/cancel/i.test((error && error.errMsg) || '')) return
+          copyText()
+        },
+      })
+      return
+    }
+    copyText()
+  },
+
+  importData() {
+    if (this._importing) return
+    this._importing = true
+    wx.chooseMessageFile({
+      count: 1,
+      type: 'file',
+      extension: ['json'],
+      success: (result) => {
+        const file = result && result.tempFiles && result.tempFiles[0]
+        if (!file) return
+        const maxBytes = (app.globalData && app.globalData.maxBackupBytes) || 8 * 1024 * 1024
+        if (Number(file.size) > maxBytes) {
+          wx.showModal({ title: '备份太大', content: '这个文件超过本地存储上限，无法导入。', showCancel: false })
+          return
+        }
+        try {
+          const text = wx.getFileSystemManager().readFileSync(file.path, 'utf8')
+          this.handleBackupText(text, file.name || '备份文件')
+        } catch (error) {
+          wx.showModal({ title: '读取失败', content: '无法读取这个文件，请重新选择备份。', showCancel: false })
+        }
+      },
+      fail: (error) => {
+        if (!/cancel/i.test((error && error.errMsg) || '')) {
+          wx.showToast({ title: '选择文件失败', icon: 'none' })
+        }
+      },
+      complete: () => { this._importing = false },
+    })
+  },
+
+  importFromClipboard() {
+    wx.getClipboardData({
+      success: (result) => this.handleBackupText(result.data || '', '剪贴板'),
+      fail: () => wx.showToast({ title: '读取剪贴板失败', icon: 'none' }),
+    })
+  },
+
+  // 文件与剪贴板共用一套校验 + 覆盖确认；避免两处逻辑各写一份
+  handleBackupText(text, sourceName) {
+    let payload = null
+    try {
+      payload = JSON.parse(String(text || ''))
+    } catch (error) {
+      wx.showModal({ title: '备份格式不正确', content: '请选择小鱼计时器导出的 JSON 备份。', showCancel: false })
+      return
+    }
+    let normalized = null
+    try {
+      normalized = app.normalizeBackup ? app.normalizeBackup(payload) : null
+      if (!normalized) throw new Error('备份功能暂不可用')
+    } catch (error) {
+      wx.showModal({
+        title: '无法导入',
+        content: (error && error.message) || '备份内容不完整',
+        showCancel: false,
+      })
+      return
+    }
+    const maxBytes = (app.globalData && app.globalData.maxBackupBytes) || 8 * 1024 * 1024
+    if (normalized.size > maxBytes) {
+      wx.showModal({ title: '备份太大', content: '这个备份超过本地存储上限，无法导入。', showCancel: false })
+      return
+    }
+    const source = String(sourceName || '备份').slice(0, 28)
+    const counts = backupCountsText(payload)
+    wx.showModal({
+      title: '导入备份？',
+      content: `将用「${source}」覆盖本机全部本地数据（${counts}，约 ${formatBytes(normalized.size)}）。导入后页面会重新启动。`,
+      confirmText: '导入',
+      confirmColor: '#E8442F',
+      success: (result) => {
+        if (!result.confirm) return
+        try {
+          app.applyLocalBackup(payload)
+          wx.showToast({ title: '导入完成', icon: 'success' })
+          setTimeout(() => wx.reLaunch({ url: '/pages/index/index' }), 650)
+        } catch (error) {
+          wx.showModal({
+            title: '导入失败',
+            content: (error && error.message) || '请检查备份文件后重试',
+            showCancel: false,
+          })
+        }
+      },
+    })
+  },
+
   clearLocalData() {
     wx.showModal({
       title: '清除全部本地数据？',
-      content: '训练记录、待办、模板、主题、铃声和设置都会被删除，且无法恢复。',
+      content: '训练记录、待办、模板、主题、铃声和设置都会被删除，且无法恢复；建议先导出备份。',
       confirmText: '清除',
       confirmColor: '#E8442F',
       success: ({ confirm }) => {

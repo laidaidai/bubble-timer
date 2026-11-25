@@ -12,7 +12,8 @@
 .total-target { color:var(--ink); font-size: 64rpx; font-weight: 900; line-height: 1.1; }
 .unit { margin-left: 8rpx; color:var(--text-warm); font-size: 24rpx; font-weight: 800; }
 .hero-sub { color:var(--text-mid); font-size: 22rpx; font-weight: 600; }
-.tomato-board { position: relative; flex: 0 0 48%; width: 48%; min-width: 0; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 7rpx; }
+/* 53%：给 8 个手绘激励图案留足一行的宽度，右侧不再顶出卡片 */
+.tomato-board { position: relative; flex: 0 0 53%; width: 53%; min-width: 0; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 7rpx; }
 .tomato-plus { position: absolute; z-index: 3; top: -22rpx; right: 6rpx; color: var(--text-warm); font-size: 26rpx; font-weight: 900; line-height: 1; text-shadow: 0 2rpx 0 var(--card); animation: tomato-plus .7s cubic-bezier(.2, .8, .3, 1) both; }
 .tomato-grid { width: 100%; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 5rpx; }
 .tomato { position: relative; width: 28rpx; height: 25rpx; box-sizing: border-box; background: #F2603C; border: 2rpx solid var(--edge); border-radius: 48% 48% 52% 52%; box-shadow: 2rpx 3rpx 0 var(--shadow); }
@@ -1471,6 +1472,16 @@
   justify-content: flex-start;
 }
 
+/* 满行按可用宽度均分；万一行内空间不足，换行而不是顶出卡片 */
+.tomato-row {
+  flex-wrap: wrap;
+  row-gap: 8rpx;
+}
+.tomato-row.full {
+  justify-content: space-between;
+  column-gap: 0;
+}
+
 /* ===== 分析报告 v5：一个部分一个框（沿用首页训练模块的粗描边 + 硬阴影） ===== */
 .rp4-frame {
   margin-top: 22rpx;
@@ -1808,7 +1819,7 @@
 .desk .report-page {
   max-width: 900px;
   margin: 0 auto;
-  padding-bottom: calc(32px + env(safe-area-inset-bottom));
+  padding-bottom: calc(72px + env(safe-area-inset-bottom));
 }
 .desk .report-page .rp3-brand-card {
   padding: 12px;

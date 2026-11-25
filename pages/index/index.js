@@ -765,7 +765,8 @@ Page({
     this.lastTomatoCount = count
     const rows = []
     for (let start = 0; start < icons.length; start += TOMATO_COLUMNS) {
-      rows.push({ key: `incentive-row-${start}`, items: icons.slice(start, start + TOMATO_COLUMNS) })
+      const items = icons.slice(start, start + TOMATO_COLUMNS)
+      rows.push({ key: `incentive-row-${start}`, items, full: items.length === TOMATO_COLUMNS })
     }
     const progress = Math.min(100, Math.round((count / tomatoTarget) * 100))
     this.setData({

@@ -68,7 +68,7 @@
       </view>
     </view>
 
-    <view wx:if="{{!collapsed[item.id]}}" class="paper-list">
+    <view wx:if="{{!collapsed[item.id]}}" class="paper-list {{item.papers.length > 1 ? 'two-col' : ''}}">
       <view wx:for="{{item.papers}}" wx:for-item="p" wx:for-index="pIndex" wx:key="id" class="paper-card" style="animation-delay: {{pIndex * 38}}ms;">
         <navigator class="paper-open" url="/pages/grade/answer/answer?paperId={{p.id}}" hover-class="paper-open-press">
           <view class="paper-main">
@@ -94,6 +94,7 @@
             <view class="paper-btn" data-id="{{p.id}}" bindtap="goAnswers" hover-class="paper-btn-press">导入答案</view>
             <view wx:if="{{!p.custom}}" class="paper-btn" data-id="{{p.id}}" bindtap="editPaper" hover-class="paper-btn-press">自定义</view>
             <view wx:if="{{p.custom}}" class="paper-btn" data-id="{{p.id}}" bindtap="editCustom" hover-class="paper-btn-press">编辑</view>
+            <view wx:if="{{p.custom}}" class="paper-btn" data-id="{{p.id}}" aria-label="复制 {{p.name}}" bindtap="copyCustomPaper" hover-class="paper-btn-press">复制</view>
           </view>
           <view class="paper-action-icons">
             <view wx:if="{{p.draftCount > 0}}" class="paper-icon-btn is-danger" data-id="{{p.id}}" data-name="{{p.name}}" aria-label="清空重做 {{p.name}}" bindtap="restartPaper" hover-class="paper-icon-press">

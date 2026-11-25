@@ -583,3 +583,7 @@
   .bar-fix { min-height: 31px; padding: 0 11px; border-width: 1px; font-size: 12px; }
   .bar-save { min-height: 40px; padding: 0 20px; }
 }
+
+/* 宽窗口：卷面编辑列与底部保存条放到 960px；控件保持手机档 */
+.page.custom-page.desk { max-width: 960px; }
+.page.custom-page.desk .save-bar { max-width: 960px; }

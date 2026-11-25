@@ -6,7 +6,7 @@
 
 - **目标：** 原生微信小程序「小鱼计时器」/「小鱼时钟」，面向备考场景：模块化训练计时、快捷秒表 / 计时器 / 番茄钟、待办、重要日子、打卡，以及本地批改「过关斩将」；不做服务端、网络题库或跨用户统计。
 - **架构：** WXML / WXSS / JS，无框架、无 npm 包、无构建脚本；`app.js` 统一主题、模板、训练会话、统计与全局存储 key，`pages/` 为页面，`components/` 为共用内容组件，`pages/grade/` 及其 `utils/` 承载过关斩将的题库、计分、存储和主题桥接；`pages/grade/plan/` 是按试卷模块调整时长与计时顺序的独立配时页。入口页面由 `app.json` 统一注册，共 18 个页面、3 个底部 Tab。
-- **约束：** 数据全部保存在本机 `wx.setStorageSync`；主题色只从 `theme/palette.js` 生成，`app.wxss` 的 `THEME-TOKENS:START/END` 区块不可手改；`pages/timer` 使用 `auto`，时钟方向默认 `landscape`（强制横屏），可在设置切换 `auto / landscape / portrait`；真实手机 / 平板按设置请求系统旋转，桌面宿主按页面实测宽高回退，布局按页面实测宽高切换，其余页面为竖屏；带卷计时的会话契约是 `paperId + 模块 + 目标时长 + 实际用时 + 作答/成绩`，每卷配时覆盖单独存于 `xc_timer_plan_<paperId>`，计时顺序偏离默认时另存 `xc_timer_plan_order_<paperId>`，删除卷时同步清理。
+- **约束：** 数据全部保存在本机 `wx.setStorageSync`；设置页支持 JSON 备份导出与覆盖式导入，瞬时会话和自定义铃声文件不迁移；主题色只从 `theme/palette.js` 生成，`app.wxss` 的 `THEME-TOKENS:START/END` 区块不可手改；`pages/timer` 使用 `auto`，时钟方向默认 `landscape`（强制横屏），可在设置切换 `auto / landscape / portrait`；真实手机 / 平板按设置请求系统旋转，桌面宿主按页面实测宽高回退，布局按页面实测宽高切换，其余页面为竖屏；带卷计时的会话契约是 `paperId + 模块 + 目标时长 + 实际用时 + 作答/成绩`，每卷配时覆盖单独存于 `xc_timer_plan_<paperId>`，计时顺序偏离默认时另存 `xc_timer_plan_order_<paperId>`，删除卷时同步清理。
 - **文档：** `README.md`（产品范围、目录、主题、本地存储与已知限制；改功能或数据前读）；`.claude/skills/fish-timer-ui/SKILL.md`（项目 UI 设计系统、时钟结构、主题 token、动效与截图验收；改任何界面前读，README 中的旧名路径已过期）；`.claude/skills/cross-device-responsive/SKILL.md` 与 `跨端自适应设计规范.md`（320px 到全宽桌面、断点、单位、安全区；改响应式或修溢出前读）；`HANDOFF.md`（历史交接与早期踩坑，状态可能滞后，仅作背景）。
 - **特殊路径：** `app.wxss` 的主题生成区只由 `tools/gen-theme-wxss.js` 改写；`.claude/skills/` 是本项目 UI 与响应式规范；`project.private.config.json`、`*.keystore` 等本机配置或密钥不入库。
 - **长期记录：** 根目录 `progress.txt`，有实质进展时追加 `YYYY-MM-DD 工作制` 记录，内容简洁规范；保留历史，不记重复内容、流水账或敏感信息。
@@ -83,11 +83,24 @@
 
 ## 本项目私有 Gotchas（仅本项目生效）
 
+- 【现象】：微信桌面版窗口缩窄后，页面左上同时出现系统返回键和自绘 topbar 的返回键；分析报告底部按钮被固定底栏遮住，滚不到完整可见。
+  - 【触发条件】：桌面「手机小程序」伪装成 `ios` 且窗口宽度收窄到 600 以下，单靠 `platform` / `windowWidth > 600` 判桌面会退回手机档；报告页后置的桌面规则把 `padding-bottom` 覆盖成小于底栏高度的值。
+  - 【规避做法】：`detectEnvironment` 增加桌面宿主特征：非 `devtools` 且 `statusBarHeight` 与 `safeArea.top` 同为 0，或 `screenWidth - windowWidth > 80`；页面 `onResize` 继续重判。桌面报告页底部留白至少覆盖 52px 底栏并留呼吸位，后置 `padding-bottom` 不得再压小。
+
+
 > 记录本项目独有的踩坑、业务特殊约束、偶然环境问题；本部分仅当前项目生效，新建其他项目不会继承此章节内的内容。
 
 - 【现象】：计时页在微信桌面「手机小程序」中仍按横屏布局，竖屏容器里时钟被裁切、右侧模块栏溢出；页面内容整体下移。
   - 【触发条件】：`pageOrientation` 固定 `landscape`，或方向判断只依赖 `platform` / `getWindowInfo`；Mac/Windows 微信「手机小程序」可能把 platform 伪装成 `ios`、没有手机状态栏，且窗口不能物理旋转。
   - 【规避做法】：计时页保持 `pageOrientation: auto`；时钟方向默认 `landscape`，可在设置切换 `auto / landscape / portrait`；强制档只对非桌面宿主请求系统旋转，桌面宿主（`isDesktop`、无状态栏、窗口远小于屏幕）按页面实测宽高回退；已是目标方向时不再调 `wx.setPageOrientation`，避免全屏被尺寸回调打断；`.timer-page` 用 `position: fixed; left:0; top:0; width:100%; height:100%` 铺满视口。
+
+- 【现象】：小屏进入设置 / 打卡 / 记录 / 待办 / 重要日子后把窗口拉大，页面仍按手机档 rpx 等比放大，要回首页才切到桌面档。
+  - 【触发条件】：页面根节点使用 `isDesktop ? 'desk'`，但该页缺少 `onResize`；或页面已切换，内嵌组件仍只按 `onLoad` / `pageLifetimes.show` 取桌面状态。
+  - 【规避做法】：所有带 `desk` 分支的页面都必须实现 `onResize`，调用 `app.detectEnvironment()` 并更新本页 `isDesktop`；带 `desk` 类的内嵌组件必须增加 `pageLifetimes.resize`，自行重判并更新组件 `isDesktop`，不能依赖页面数据透传。
+
+- 【现象】：桌面逐题答题看不到左右换题推拉；快速连点选项时答案偶尔被取消或点击被吞。
+  - 【触发条件】：桌面 `@media` 把 `push-in/push-out` 覆盖成淡入并 `display:none` 掉 ghost 卡；横滑抑制用布尔 `suppressTap`，在 touchmove 置真、只有成功横滑才复位；逐题模式再次点同一选项会取消已选答案。
+  - 【规避做法】：桌面保留与手机相同的 ghost + 左右 push 动画，只关闭整卡高光；手势后的点击屏蔽改用时间戳，只有真正跨过横滑阈值才设置；逐题模式重复点同一项保持答案，只有列表模式允许再点取消。
 
 ## 安全边界
 

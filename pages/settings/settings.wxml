@@ -180,8 +180,21 @@
     </view>
 
     <view class="data-zone">
-      <view class="data-title">本地数据</view>
-      <view class="data-desc">清除后不可恢复，日历提醒不受影响。</view>
+      <view class="data-title">数据迁移</view>
+      <view class="data-actions">
+        <button class="data-btn data-export" bindtap="exportData">导出备份</button>
+        <button class="data-btn data-import" bindtap="importData">导入备份</button>
+      </view>
+      <view class="data-meta">
+        <view class="data-warn">导入会覆盖本机数据</view>
+        <view class="data-link" bindtap="importFromClipboard" hover-class="data-link-press" aria-role="button" aria-label="从剪贴板导入备份">从剪贴板导入</view>
+      </view>
+
+      <view class="data-split"></view>
+      <view class="data-head">
+        <view class="data-title">本地数据</view>
+        <view class="data-danger">清除后不可恢复</view>
+      </view>
       <button class="data-clear-btn" bindtap="clearLocalData">清除本地数据</button>
     </view>
 

@@ -26,6 +26,14 @@ Page({
     this.loadRecords()
   },
 
+  // 在记录页拖动窗口：重判桌面档，避免整页继续按手机 rpx 等比放大
+  onResize() {
+    const desktop = app && app.detectEnvironment
+      ? app.detectEnvironment()
+      : !!(app && app.globalData && app.globalData.isDesktop)
+    if (desktop !== this.data.isDesktop) this.setData({ isDesktop: desktop })
+  },
+
   onShow() {
     if (this.data.timerLaunching) {
       clearTimeout(this.timerCoverTimer)

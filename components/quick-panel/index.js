@@ -232,8 +232,20 @@ Component({
     this.syncKeepScreenOn(false)
     },
     resize() {
-    this.syncClockBox()
-  
+    // 窗口从手机宽度拉到桌面宽度时，组件也要从 rpx 档切到 px 档，
+    // 否则内嵌的快捷计时仍会按手机版等比放大。
+    const app = getApp()
+    let winW = 0
+    try { winW = (wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync()).windowWidth || 0 } catch (e) { winW = 0 }
+    const desktop = (app && app.detectEnvironment
+      ? app.detectEnvironment()
+      : !!(app && app.globalData && app.globalData.isDesktop)) || winW > 600
+    const indicatorStyle = desktop ? 'height: 76px' : 'height: 88rpx'
+    if (desktop !== this.data.isDesktop || indicatorStyle !== this.data.indicatorStyle) {
+      this.setData({ isDesktop: desktop, indicatorStyle }, () => this.syncClockBox())
+    } else {
+      this.syncClockBox()
+    }
     }
   },
 

@@ -12,6 +12,7 @@
     <view class="btn-link" bindtap="goAnswer" hover-class="is-press">去答题</view>
   </view>
 
+  <view class="answers-body {{filled > 0 ? 'two-col' : 'single'}}">
   <view class="card input-card anim-rise" style="animation-delay: 70ms;">
     <textarea
       class="ans-textarea"
@@ -47,6 +48,7 @@
         <text class="ans-letter">{{item || '—'}}</text>
       </view>
     </view>
+  </view>
   </view>
 
   <view class="save-bar">

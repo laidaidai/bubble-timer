@@ -82,6 +82,38 @@ function get(id) {
   return null;
 }
 
+// 复制卷名：保留原名的可识别部分，避开已存在的重名；
+// 卷名输入上限 20 字，后缀“副本 / 副本 N”也要塞进这个长度。
+function copyNameOf(name) {
+  const raw = String(name || '').trim() || '自定义卷';
+  // 复制副本时往回收一层，避免出现「卷A 副本 副本」这种套娃名。
+  const source = raw.replace(/ 副本(?: \d+)?$/, '').trim() || raw;
+  const names = {};
+  readAll().forEach((item) => { names[String(item.name || '')] = true; });
+  const maxLength = 20;
+  let suffix = ' 副本';
+  let candidate = source.slice(0, Math.max(1, maxLength - suffix.length)) + suffix;
+  let n = 2;
+  while (names[candidate]) {
+    suffix = ' 副本 ' + n;
+    candidate = source.slice(0, Math.max(1, maxLength - suffix.length)) + suffix;
+    n += 1;
+  }
+  return candidate;
+}
+
+// 复制一份独立的自定义卷：只复制卷面结构，不带草稿、答案和成绩。
+function duplicate(id) {
+  const paper = get(id);
+  if (!paper) return null;
+  const layout = (paper.layout || []).map((seg) => Object.assign({}, seg));
+  return save({
+    id: nextId(),
+    name: copyNameOf(paper.name),
+    layout: layout,
+  });
+}
+
 function save(entry) {
   const all = readAll();
   let idx = -1;
@@ -101,8 +133,11 @@ function remove(id) {
   sync();
 }
 
+let idSeq = 0;
 function nextId() {
-  return 'paper-u' + Date.now();
+  // 连续复制 / 新建可能落在同一毫秒，补一个进程内序号，避免 id 撞车后覆盖上一卷。
+  idSeq = (idSeq + 1) % 100000;
+  return 'paper-u' + Date.now() + '-' + idSeq;
 }
 
 function bankId() {
@@ -113,6 +148,7 @@ module.exports = {
   list,
   get,
   save,
+  duplicate,
   remove,
   sync,
   nextId,

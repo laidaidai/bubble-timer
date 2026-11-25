@@ -1006,9 +1006,11 @@
   .single-total { font-size: 14px; margin-left: 4px; }
   .single-meta { gap: 5px; }
   .single-picked, .single-point { padding: 2px 7px; font-size: 11px; border-width: 1px; }
+  .single-layout-chip { min-height: 28px; padding: 0 8px; border-width: 1px; font-size: 11px; }
   .single-opts { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 8px; padding: 10px 13px 13px; }
   .single-stage.single-layout-grid .single-opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 11px 13px 14px; }
   .single-opt { height: auto; min-height: 0; font-size: 24px; border-radius: 13px; border-width: 2px; box-shadow: 3px 4px 0 var(--shadow-soft); }
+  .single-opt.selected { box-shadow: 4px 5px 0 var(--shadow); }
   .single-bar { max-width: 688px; gap: 9px; margin: 0; padding: 9px 16px 9px; border-top-width: 1px; box-shadow: 0 -3px 0 var(--shadow-soft); }
   .submit-strong {
   background: var(--primary-3);
@@ -1042,14 +1044,26 @@
   .circle.current { box-shadow: 0 0 0 2px var(--card), 0 0 0 4px var(--primary); }
   .sheet-foot { gap: 13px; padding: 9px 14px 10px; border-top-width: 1px; }
 
-  /* 桌面档换题不整卡横推：大幅面移动最吃帧，改成轻位移 + 淡入，读题节奏更稳 */
-  .single-card.ghost { display: none; }
-  .push-in-next-a, .push-in-next-b, .push-in-prev-a, .push-in-prev-b {
-    animation: desk-card-in .22s cubic-bezier(.2,.8,.3,1) both;
+  /* 桌面档同样保留左右推拉：大屏也需要明确的换题方向。
+     只关掉整卡高光，减少大幅面渐变重绘。 */
+}
+
+/* 宽窗口：答题页主体放到 1040px；逐题卡居中 780px，列表模式两列题卡 */
+.page.answer-page.desk { max-width: 1040px; }
+@media (min-width: 700px) {
+  .answer-page .single-stage {
+    width: 100%;
+    max-width: 780px;
+    margin: 0 auto;
   }
-  .push-out-next-a, .push-out-next-b, .push-out-prev-a, .push-out-prev-b { animation: none; }
-  @keyframes desk-card-in {
-    from { opacity: .55; transform: translate3d(0, 12px, 0); }
-    to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@media (min-width: 960px) {
+  .answer-page.desk .single-bar { max-width: 780px; }
+  .question-sheet.two-col {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+    align-items: start;
   }
+  .question-sheet.two-col .q-row { margin-bottom: 0; }
 }

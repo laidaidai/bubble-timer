@@ -47,13 +47,13 @@
   </view>
 
   <!-- 章节填写模式 -->
-  <view wx:if="{{mode === 'list'}}" class="list-view anim-fade" bindtouchstart="onTouchStart" bindtouchend="onTouchEnd" bindtouchmove="onTouchMove">
+  <view wx:if="{{mode === 'list'}}" class="list-view anim-fade" bindtouchstart="onTouchStart" bindtouchend="onTouchEnd">
     <view class="section-head anim-rise">
       <view class="section-title">{{activeModule.name}}</view>
       <view class="section-count">{{activeModule.pointsText}} 分 · 已答 {{answeredInModule}}/{{activeModule.questions.length}}</view>
     </view>
 
-    <view class="card question-sheet anim-rise">
+    <view class="card question-sheet anim-rise {{activeModule.questions.length > 1 ? 'two-col' : ''}}">
       <view wx:for="{{activeModule.questions}}" wx:key="no" class="q-row {{answers[item.no] ? 'is-answered' : ''}}">
         <view class="q-no num">{{item.no}}</view>
         <view class="opts">
@@ -108,7 +108,7 @@
       </view>
 
       <!-- 新题卡：从翻页方向推入 -->
-      <view class="card single-card push-in-{{flipDir}}-{{qFlip ? 'a' : 'b'}}" bindtouchstart="onTouchStart" bindtouchend="onTouchEnd" bindtouchmove="onTouchMove">
+      <view class="card single-card push-in-{{flipDir}}-{{qFlip ? 'a' : 'b'}}" bindtouchstart="onTouchStart" bindtouchend="onTouchEnd">
         <view class="glass-sheen sheen-{{flipDir}}-{{qFlip ? 'a' : 'b'}}"></view>
         <view class="single-head">
           <view class="single-no-wrap">

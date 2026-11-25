@@ -147,6 +147,44 @@ const MODES = [
   { key: 'pomodoro', name: '番茄钟', desc: '25 分钟专注 / 5 分钟休息，每 4 个后长休息' }
 ]
 
+// ---- 本地备份：把散落在 wx.setStorageSync 的用户数据收口成可迁移 JSON ----
+// 只迁移“可带走”的数据：进行中的会话、待填报告、快捷计时状态、界面位置等瞬时状态不写入备份。
+const BACKUP_FORMAT = 'xiaoyutimer-backup'
+const BACKUP_VERSION = 1
+const BACKUP_MAX_BYTES = 8 * 1024 * 1024
+const BACKUP_KEYS = [
+  'exam-timer-records',
+  'exam-timer-template',
+  'exam-timer-clock-style',
+  'exam-timer-todos',
+  'exam-timer-theme',
+  'exam-timer-daily',
+  'exam-timer-settings',
+  'exam-timer-mode',
+  'exam-timer-preset-select',
+  'exam-timer-important-dates',
+  'exam-timer-tomatoes',
+  'exam-timer-quick-preset-stats',
+  'xc_records',
+  'xc_last_score',
+  'xc_custom_papers',
+  'xc_paper_overrides'
+]
+const BACKUP_PREFIXES = ['xc_draft_', 'xc_answers_', 'xc_timer_plan_', 'xc_timer_plan_order_']
+
+const utf8Bytes = (text) => {
+  const value = String(text == null ? '' : text)
+  let bytes = 0
+  for (let i = 0; i < value.length; i += 1) {
+    const code = value.charCodeAt(i)
+    if (code < 0x80) bytes += 1
+    else if (code < 0x800) bytes += 2
+    else if (code >= 0xD800 && code <= 0xDBFF) { bytes += 4; i += 1 }
+    else bytes += 3
+  }
+  return bytes
+}
+
 const DEFAULT_SETTINGS = {
   theme: 'sky',
   soundMode: 'both',
@@ -180,6 +218,7 @@ App({
     presetLimit: 8,
     presetFold: 4,
     dailyTargetSeconds: 180 * 60,
+    maxBackupBytes: BACKUP_MAX_BYTES,
     windowWidth: 375
   },
   onLaunch() {
@@ -223,8 +262,18 @@ App({
       const info = (wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync()) || {}
       const platform = String(info.platform || '').toLowerCase()
       const width = Number(info.windowWidth || 0) || 375
+      const screenWidth = Number(info.screenWidth || 0)
+      const statusBarHeight = Number(info.statusBarHeight || 0)
+      const safeTop = info.safeArea && Number(info.safeArea.top)
       this.globalData.windowWidth = width
-      this.globalData.isDesktop = platform === 'windows' || platform === 'mac' || width > 600
+      // 微信桌面版可能是伪装成 ios 的「手机小程序」：没有手机状态栏，
+      // 窗口也可能远小于屏幕。这类宿主即使窗口收窄，也不能退回手机档，
+      // 否则系统标题栏和页面自绘 topbar 会同时出现两个返回键。
+      const desktopHost = platform !== 'devtools' && (
+        (!statusBarHeight && safeTop === 0) ||
+        (screenWidth > 0 && width > 0 && screenWidth - width > 80)
+      )
+      this.globalData.isDesktop = platform === 'windows' || platform === 'mac' || width > 600 || desktopHost
     } catch (error) {
       this.globalData.isDesktop = false
     }
@@ -535,6 +584,117 @@ App({
 
   getTomatoCount() {
     return Math.max(0, Number(wx.getStorageSync(this.globalData.tomatoKey) || 0) || 0)
+  },
+
+  // 备份键白名单：动态的草稿 / 标准答案 / 本卷配时按前缀收，避免把瞬时状态带过去
+  isBackupKey(key) {
+    if (BACKUP_KEYS.indexOf(key) >= 0) return true
+    return BACKUP_PREFIXES.some(prefix => String(key).indexOf(prefix) === 0)
+  },
+
+  // 自定义铃声指向本机 USER_DATA_PATH，换设备会失效；备份里去掉路径，保留其它设置
+  sanitizeBackupValue(key, value) {
+    if (key !== this.globalData.settingsKey || !value || typeof value !== 'object') return value
+    const copy = Object.assign({}, value)
+    delete copy.customRing
+    delete copy.customRings
+    if (copy.ring && /^(cr-|custom)/.test(String(copy.ring))) copy.ring = 'chime'
+    return copy
+  },
+
+  buildLocalBackup() {
+    let keys = []
+    try {
+      keys = (wx.getStorageInfoSync().keys || []).slice()
+    } catch (error) {
+      keys = []
+    }
+    const data = {}
+    keys.sort().forEach(key => {
+      if (!this.isBackupKey(key)) return
+      try {
+        const value = wx.getStorageSync(key)
+        if (value === '' || value === undefined || value === null) return
+        data[key] = this.sanitizeBackupValue(key, value)
+      } catch (error) { /* 单个键读失败不阻塞整份备份 */ }
+    })
+    return {
+      format: BACKUP_FORMAT,
+      version: BACKUP_VERSION,
+      app: '小鱼计时器',
+      createdAt: new Date().toISOString(),
+      data,
+    }
+  },
+
+  getLocalBackupSize(payload) {
+    try {
+      return utf8Bytes(JSON.stringify(payload))
+    } catch (error) {
+      return 0
+    }
+  },
+
+  normalizeBackup(payload) {
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+      throw new Error('备份文件格式不正确')
+    }
+    if (payload.format !== BACKUP_FORMAT) {
+      throw new Error('这不是小鱼计时器导出的备份')
+    }
+    if (Number(payload.version) !== BACKUP_VERSION) {
+      throw new Error(`备份版本 ${payload.version || '未知'} 暂不支持`)
+    }
+    const raw = payload.data
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+      throw new Error('备份缺少数据内容')
+    }
+    const data = {}
+    let skipped = 0
+    Object.keys(raw).forEach(key => {
+      if (!this.isBackupKey(key)) { skipped += 1; return }
+      if (raw[key] === undefined) return
+      data[key] = this.sanitizeBackupValue(key, raw[key])
+    })
+    if (!Object.keys(data).length) throw new Error('备份里没有可导入的数据')
+    return { data, skipped, size: this.getLocalBackupSize(payload) }
+  },
+
+  // 导入是覆盖式恢复：先清空本机存储，再写入备份，确保旧设备多出来的记录不会残留。
+  // 写入失败时用内存快照回滚，避免用户当前数据被清空后只剩一半。
+  applyLocalBackup(payload) {
+    const result = this.normalizeBackup(payload)
+    const snapshot = {}
+    try {
+      (wx.getStorageInfoSync().keys || []).forEach(key => {
+        snapshot[key] = wx.getStorageSync(key)
+      })
+    } catch (error) {
+      throw new Error('读取本机数据失败，未开始导入')
+    }
+    try {
+      wx.clearStorageSync()
+    } catch (error) {
+      throw new Error('清空本机数据失败，未写入备份')
+    }
+    try {
+      Object.keys(result.data).forEach(key => {
+        wx.setStorageSync(key, result.data[key])
+      })
+    } catch (error) {
+      let restored = true
+      try {
+        wx.clearStorageSync()
+        Object.keys(snapshot).forEach(key => wx.setStorageSync(key, snapshot[key]))
+      } catch (restoreError) {
+        restored = false
+      }
+      throw new Error(restored
+        ? '写入备份失败，已恢复导入前的数据'
+        : '写入备份失败，且恢复导入前数据失败，请重试')
+    }
+    this.detectEnvironment()
+    return result
   },
 
   // 每日汇总，供统计页使用

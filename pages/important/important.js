@@ -22,6 +22,14 @@ Page({
     this.syncTheme()
   },
 
+  // 桌面窗口拖动 / 平板横竖屏切换后重判，根节点 desk 类随之切换
+  onResize() {
+    const desktop = app && app.detectEnvironment
+      ? app.detectEnvironment()
+      : !!(app && app.globalData && app.globalData.isDesktop)
+    if (desktop !== this.data.isDesktop) this.setData({ isDesktop: desktop })
+  },
+
   syncTheme() {
     const theme = (app.getTheme && app.getTheme()) || { key: 'sky' }
     if (theme.key !== this.data.theme || (theme.style || '') !== this.data.themeStyle) {

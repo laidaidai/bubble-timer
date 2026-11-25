@@ -71,7 +71,35 @@
 /* 本地数据 */
 .data-zone { margin-top: 42rpx; padding: 26rpx; background: var(--card); border: 2rpx solid var(--edge); border-radius: 24rpx; box-shadow: 5rpx 5rpx 0 var(--shadow-soft); }
 .data-title { color: var(--ink); font-size: 25rpx; font-weight: 900; }
-.data-desc { margin-top: 8rpx; color: var(--text-2); font-size: 20rpx; line-height: 1.7; }
+.data-actions { display: flex; gap: 12rpx; margin-top: 20rpx; }
+.data-btn {
+  flex: 1 1 0;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  min-height: 70rpx;
+  margin: 0;
+  padding: 0 13rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border: 2rpx solid var(--edge);
+  border-radius: 999rpx;
+  font-size: 23rpx;
+  font-weight: 900;
+  line-height: 1.2;
+}
+.data-btn::after { border: none; }
+.data-export { color: var(--on-primary); background: var(--primary); box-shadow: 4rpx 5rpx 0 var(--shadow); }
+.data-import { color: var(--ink); background: var(--card); box-shadow: 4rpx 5rpx 0 var(--shadow-soft); }
+.data-meta { display: flex; align-items: center; justify-content: space-between; gap: 12rpx; margin-top: 8rpx; }
+.data-warn { flex: 1; min-width: 0; color: var(--text-3); font-size: 19rpx; line-height: 1.45; }
+.data-link { flex: 0 0 auto; padding: 2rpx 0; color: var(--text-warm); font-size: 19rpx; font-weight: 900; line-height: 1.4; }
+.data-link-press { opacity: .58; }
+.data-split { margin: 26rpx 0 18rpx; border-top: 2rpx solid var(--line); }
+.data-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12rpx; }
+.data-danger { color: var(--danger-text); font-size: 18rpx; font-weight: 800; white-space: nowrap; }
 .privacy-btn { display: flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box; margin: 18rpx 0 0; padding: 16rpx 10rpx; color: var(--ink); background: var(--cream-1); border: 2rpx solid var(--edge); border-radius: 999rpx; box-shadow: 4rpx 5rpx 0 var(--shadow-soft); font-size: 22rpx; font-weight: 900; line-height: 1.3; }
 .privacy-btn.ghost { color: var(--text-2); background: var(--card); box-shadow: none; border-color: var(--line-strong); }
 .data-clear-btn { display: flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box; margin: 20rpx 0 0; padding: 18rpx 10rpx; color: #FFFFFF; background: var(--danger); border: 2rpx solid var(--edge); border-radius: 999rpx; box-shadow: 4rpx 5rpx 0 var(--shadow); font-size: 23rpx; font-weight: 900; line-height: 1.3; }
@@ -632,7 +660,15 @@
 /* 本地数据 */
 .desk .data-zone { margin-top: 24px; padding: 15px; border-width: 1px; border-radius: 14px; box-shadow: 3px 3px 0 var(--shadow-soft); }
 .desk .data-title { font-size: 14px; }
-.desk .data-desc { margin-top: 4px; font-size: 12px; }
+.desk .data-actions { gap: 8px; margin-top: 11px; max-width: 300px; }
+.desk .data-btn { min-height: 40px; padding: 0 12px; border-width: 1px; font-size: 13px; }
+.desk .data-export { box-shadow: 3px 4px 0 var(--shadow); }
+.desk .data-import { box-shadow: 3px 4px 0 var(--shadow-soft); }
+.desk .data-meta { max-width: 300px; margin-top: 6px; gap: 8px; }
+.desk .data-warn { font-size: 11px; line-height: 1.45; }
+.desk .data-link { padding: 1px 0; font-size: 11px; }
+.desk .data-split { margin: 15px 0 11px; border-top-width: 1px; }
+.desk .data-danger { font-size: 10px; }
 .desk .privacy-btn { margin-top: 10px; padding: 9px 6px; border-width: 1px; font-size: 12px; }
 .desk .data-clear-btn { margin-top: 11px; padding: 10px 6px; border-width: 1px; font-size: 13px; }
 

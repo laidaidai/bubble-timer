@@ -150,6 +150,7 @@
 
 /* 正文放进原生滚动容器，可视区从顶栏下方开始，能力图滚动时被直接裁切 */
 .result-page {
+  position: relative;
   height: 100vh;
   padding: 0;
   overflow: hidden;
@@ -601,3 +602,39 @@
 .review-cell.miss, .review-cell.void { background: var(--cream-2); border-color: var(--line-strong); }
 .review-no { color: var(--text-2); font-size: 20rpx; line-height: 1.1; }
 .review-ans { color: var(--ink); font-size: 27rpx; font-weight: 900; line-height: 1.15; }
+
+/* 宽窗口：成绩内容列 960px，雷达图随列宽放大到 320px；答题卡浮层保持阅读尺寸 */
+.page.result-page.desk { max-width: 960px; }
+@media (min-width: 700px) {
+  .page.result-page.desk .result-scroller {
+    padding: 14px 16px calc(28px + env(safe-area-inset-bottom));
+  }
+  .review-sheet {
+    max-width: 720px;
+    height: 76vh;
+    max-height: 620px;
+    border-width: 2px;
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -3px 0 var(--shadow);
+  }
+  .review-handle { width: 32px; height: 4px; border-width: 1px; }
+  .review-head { gap: 8px; padding: 6px 11px 5px; }
+  .review-title { font-size: 16px; }
+  .review-close { width: 32px; height: 32px; border-width: 1px; font-size: 18px; }
+  .review-body { padding: 0 13px 11px 10px; }
+  .review-group { margin-top: 7px; padding-right: 7px; }
+  .review-group-head { gap: 7px; margin-bottom: 5px; }
+  .review-name { font-size: 13px; }
+  .review-count { margin-right: 9px; font-size: 11px; }
+  .review-grid { gap: 5px; padding-right: 7px; }
+  .review-cell { min-height: 40px; border-width: 1px; border-radius: 6px; }
+  .review-no { font-size: 10px; }
+  .review-ans { font-size: 14px; }
+}
+@media (min-width: 960px) {
+  .page.result-page { max-width: 960px; margin: 0 auto; }
+  .score-body { gap: 14px; padding: 14px 18px 16px; }
+  .score-main { flex: 1 1 560px; max-width: 580px; }
+  .score-side { flex: 0 0 220px; gap: 7px; }
+  .radar-canvas-stage { height: 320px; }
+}

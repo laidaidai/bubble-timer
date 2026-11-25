@@ -102,6 +102,13 @@ Component({
     },
     hide() {
       this.onHide()
+    },
+    resize() {
+      const app = getApp()
+      const desktop = app && app.detectEnvironment
+        ? app.detectEnvironment()
+        : !!(app && app.globalData && app.globalData.isDesktop)
+      if (desktop !== this.data.isDesktop) this.setData({ isDesktop: desktop })
     }
   },
 

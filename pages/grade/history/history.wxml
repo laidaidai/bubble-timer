@@ -41,6 +41,7 @@
     <view class="empty-short">完成一次批改后，记录会出现在这里</view>
   </view>
 
+  <view class="record-list {{list.length > 1 ? 'two-col' : ''}}">
   <view
     wx:for="{{list}}"
     wx:key="id"
@@ -80,5 +81,6 @@
       <button class="record-action record-delete" data-id="{{item.id}}" bindtap="remove" hover-class="record-action-pressed">删除</button>
       <button class="record-action record-detail" data-id="{{item.id}}" bindtap="goDetail" hover-class="record-action-pressed">查看详情</button>
     </view>
+  </view>
   </view>
 </view>

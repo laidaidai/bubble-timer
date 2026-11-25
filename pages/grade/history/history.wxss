@@ -303,3 +303,15 @@
   .record-delete { font-size: 12px; }
   .record-detail { padding: 8px 16px; font-size: 13px; box-shadow: 3px 4px 0 var(--shadow-soft); }
 }
+
+/* 宽窗口：历史记录列放到 1040px；两条以上记录时两列，单条保持整行 */
+.page.history-page.desk { max-width: 1040px; }
+@media (min-width: 960px) {
+  .record-list.two-col {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    align-items: start;
+  }
+  .record-list.two-col .record-row { margin-bottom: 0; }
+}

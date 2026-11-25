@@ -266,7 +266,7 @@
 
 /* ---------- 大屏：主体收窄居中，控件保持手机档 ---------- */
 .page.desk {
-  max-width: 720px;
+  max-width: 960px;
   margin: 0 auto;
 }
 

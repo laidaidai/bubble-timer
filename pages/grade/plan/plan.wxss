@@ -312,7 +312,7 @@
   color: var(--text-2);
   text-align: center;
   background: var(--card);
-  border: 2rpx dashed var(--line-strong);
+  border: 2rpx solid var(--line-strong);
   border-radius: 24rpx;
   font-size: 23rpx;
   font-weight: 700;
@@ -503,3 +503,7 @@
   .plan-start { box-shadow: 2px 3px 0 var(--shadow); }
   .plan-press { box-shadow: 1px 1px 0 var(--shadow-soft); }
 }
+
+/* 宽窗口：配时内容列与底部操作条同步放到 960px，避免按钮条比内容窄 */
+.page.plan-page.desk { max-width: 960px; }
+.page.plan-page.desk .plan-actions { max-width: 960px; }

@@ -36,7 +36,7 @@
               <view class="tomato-board {{tomatoPop ? 'pop' : ''}} {{incentiveReveal ? 'reveal' : ''}}" bindtap="cycleIncentive" aria-role="button" aria-label="切换激励图案">
                 <text class="tomato-plus" wx:if="{{tomatoPop}}">+1</text>
                 <view class="tomato-grid {{tomatoIcons.length <= 1 ? 'single' : ''}}">
-                  <view class="tomato-row {{rowIndex === incentiveRows.length - 1 ? 'last' : ''}} {{row.items.length === 1 ? 'single' : ''}}" wx:for="{{incentiveRows}}" wx:key="key" wx:for-item="row" wx:for-index="rowIndex">
+                  <view class="tomato-row {{row.full ? 'full' : 'last'}} {{row.items.length === 1 ? 'single' : ''}}" wx:for="{{incentiveRows}}" wx:key="key" wx:for-item="row">
                     <block wx:for="{{row.items}}" wx:key="id" wx:for-item="item">
                       <view wx:if="{{item.countBadge}}" class="tomato-count-badge">×{{tomatoCount}}</view>
                       <view wx:elif="{{incentiveType === 'star'}}" class="incentive-art star {{item.filled ? 'filled' : 'ghost'}} {{item.latest ? 'latest' : ''}}" style="animation-delay:{{item.delay}}ms;">

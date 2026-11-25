@@ -503,13 +503,19 @@ Page({
   },
 
   selectOption(e) {
-    if (this.suppressTap) return;
+    if (this.selectLockedUntil && Date.now() < this.selectLockedUntil) return;
     const no = Number(e.currentTarget.dataset.no);
     const opt = e.currentTarget.dataset.opt;
     if (!no || !opt) return;
     const answers = Object.assign({}, this.data.answers);
-    answers[no] = answers[no] === opt ? '' : opt;
-    if (!answers[no]) delete answers[no];
+    // 逐题模式没有手动清除入口，重复点同一项时保持已选，避免快速连点把答案点没；
+    // 列表模式保留「再点一次取消」，方便整卷校对。
+    if (this.data.mode === 'list') {
+      answers[no] = answers[no] === opt ? '' : opt;
+      if (!answers[no]) delete answers[no];
+    } else {
+      answers[no] = opt;
+    }
     // 列表模式没有「当前题」概念，但答题卡要看它：点到哪题就把它设为当前题
     const patch = { answers };
     if (this.data.mode === 'list') {
@@ -588,9 +594,9 @@ Page({
     const dy = t.clientY - s.y;
     const threshold = this.data.mode === 'list' ? 64 : 50;
     if (Math.abs(dx) < threshold || Math.abs(dx) <= Math.abs(dy)) return;
-    // 滑动结束紧跟着的 tap 不应被当成选答案
-    this.suppressTap = true;
-    setTimeout(() => { this.suppressTap = false; }, 350);
+    // 只有真正完成横滑才短暂屏蔽紧跟其后的合成 tap；
+    // 不用布尔锁，避免未达到阈值的横移把后续点击永久吞掉。
+    this.selectLockedUntil = Date.now() + 160;
     if (this.data.mode === 'list') {
       // 列表页横向滑动换章节；逐题页才是上一题 / 下一题
       this.switchModuleStep(dx < 0 ? 1 : -1);
@@ -598,15 +604,6 @@ Page({
       this.nextQuestion();
     } else {
       this.prevQuestion();
-    }
-  },
-
-  onTouchMove(e) {
-    const s = this.swipe;
-    const t = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]);
-    if (!s || !t) return;
-    if (Math.abs(t.clientX - s.x) > 40 && Math.abs(t.clientX - s.x) > Math.abs(t.clientY - s.y)) {
-      this.suppressTap = true;
     }
   },
 
