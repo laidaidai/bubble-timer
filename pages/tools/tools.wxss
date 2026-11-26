@@ -7,10 +7,10 @@
 .quick-feature-icon { flex: 0 0 88rpx; width: 88rpx; height: 88rpx; display: flex; align-items: center; justify-content: center; background: var(--card); border: 2rpx solid var(--edge); border-radius: 22rpx; box-shadow: 3rpx 4rpx 0 var(--shadow-soft); }
 .quick-feature-icon .glyph-stopwatch { transform: scale(1.35); }
 .quick-feature-copy { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8rpx; }
-.quick-feature-title { color: var(--ink); font-size: 31rpx; font-weight: 900; line-height: 1.15; }
+.quick-feature-title { color: var(--on-primary); font-size: 31rpx; font-weight: 900; line-height: 1.15; }
 .quick-feature-modes { display: flex; flex-wrap: wrap; gap: 6rpx; }
-.quick-feature-modes .qf-mode { display: inline-flex; align-items: center; padding: 3rpx 10rpx; color: var(--text-warm); background: var(--cream-2); border: 1rpx solid var(--line-strong); border-radius: 999rpx; font-size: 17rpx; font-weight: 800; line-height: 1.2; }
-.quick-feature-arrow { flex: 0 0 auto; color: var(--ink); font-size: 36rpx; font-weight: 900; line-height: 1; }
+.quick-feature-modes .qf-mode { display: inline-flex; align-items: center; padding: 3rpx 10rpx; color: var(--text-warm); background: var(--cream-2); border: 1rpx solid var(--line-strong); border-radius: 999rpx; font-size: 19rpx; font-weight: 800; line-height: 1.2; }
+.quick-feature-arrow { flex: 0 0 auto; color: var(--on-primary); font-size: 36rpx; font-weight: 900; line-height: 1; }
 
 .tool-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10rpx; margin-bottom: 10rpx; }
 .tool-tile { position: relative; min-width: 0; min-height: 112rpx; padding: 16rpx 16rpx 16rpx 14rpx; display: flex; align-items: center; gap: 10rpx; background: var(--card); border: 2rpx solid var(--line-strong); border-radius: 20rpx; box-shadow: 4rpx 5rpx 0 var(--shadow-soft); }
@@ -120,7 +120,7 @@
 .important-tool-num { color: var(--text-2); font-size: 20rpx; font-weight: 900; }
 .important-tool-unit { color: var(--text-2); font-size: 18rpx; font-weight: 900; }
 .important-tool-date { color: var(--text-3); font-size: 17rpx; font-weight: 700; }
-.important-tool-empty { margin-top: 14rpx; padding: 18rpx; display: flex; flex-direction: column; gap: 4rpx; background: var(--cream-4); border: 2rpx dashed var(--line-strong); border-radius: 16rpx; }
+.important-tool-empty { margin-top: 14rpx; padding: 18rpx; display: flex; flex-direction: column; gap: 4rpx; background: var(--cream-4); border: 2rpx solid var(--line-strong); border-radius: 16rpx; }
 .important-tool-empty-main { color: var(--ink); font-size: 21rpx; font-weight: 800; }
 .important-tool-empty-sub { color: var(--text-3); font-size: 18rpx; font-weight: 600; }
 

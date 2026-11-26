@@ -124,33 +124,10 @@
   align-items: center;
   justify-content: center;
   gap: 18rpx;
-  background: var(--cream-1);
-  border: 3rpx dashed var(--line-strong);
-  border-radius: 26rpx;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
 }
-.imp-empty:active { opacity: .72; }
-.imp-empty-plus {
-  position: relative;
-  width: 82rpx;
-  height: 82rpx;
-  box-sizing: border-box;
-  background: var(--primary);
-  border: 3rpx solid var(--edge);
-  border-radius: 50%;
-  box-shadow: 4rpx 5rpx 0 var(--shadow);
-}
-.imp-empty-plus::before, .imp-empty-plus::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  background: var(--ink);
-  border-radius: 3rpx;
-  transform: translate(-50%, -50%);
-}
-.imp-empty-plus::before { width: 34rpx; height: 6rpx; }
-.imp-empty-plus::after { width: 6rpx; height: 34rpx; }
-.imp-empty-text { color: var(--text-2); font-size: 22rpx; font-weight: 800; }
 
 /* ---- 添加 / 编辑弹层 ---- */
 .modal-mask {
@@ -263,12 +240,10 @@
 .imp-row:nth-child(n+5) { animation-delay: .20s; }
 .imp-dot.soon { animation: imp-soon-pulse 2.4s ease-in-out infinite; }
 .imp-empty { animation: app-pop-in .5s cubic-bezier(.2, .8, .3, 1) both; }
-.imp-empty-plus { animation: imp-plus-breathe 3s ease-in-out infinite; }
 .modal-card { animation: imp-modal-in .32s cubic-bezier(.2, .8, .3, 1) both; }
 .important-calendar { animation: app-rise-in .26s ease-out both; }
 .important-cal-cell.selected { animation: imp-cell-pop .28s cubic-bezier(.2, .8, .3, 1) both; }
 
-@keyframes imp-plus-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.10) rotate(90deg); } }
 @keyframes imp-soon-pulse { 0%, 100% { transform: scale(1); } 45% { transform: scale(1.055); } }
 @keyframes imp-modal-in { 0% { opacity: 0; transform: translateY(22rpx) scale(.94); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
 @keyframes imp-cell-pop { 0% { transform: scale(.78); } 65% { transform: scale(1.08); } 100% { transform: scale(1); } }
@@ -308,11 +283,7 @@
 .desk .imp-title { font-size: 15px; }
 .desk .imp-date { font-size: 11px; }
 .desk .imp-count, .desk .imp-unit { font-size: 12px; }
-.desk .imp-empty { margin-top: 13px; min-height: 179px; gap: 10px; border-width: 2px; border-radius: 15px; }
-.desk .imp-empty-plus { width: 46px; height: 46px; border-width: 2px; box-shadow: 2px 3px 0 var(--shadow); }
-.desk .imp-empty-plus::before { width: 19px; height: 3px; }
-.desk .imp-empty-plus::after { width: 3px; height: 19px; }
-.desk .imp-empty-text { font-size: 12px; }
+.desk .imp-empty { margin-top: 13px; min-height: 179px; gap: 10px; }
 .desk .imp-empty-logo { width: 94px; height: 94px; }
 
 /* 添加 / 编辑弹层 */

@@ -62,7 +62,7 @@
               <view class="mode-thumb {{mode === 'countdown' ? 'right' : ''}}"></view>
               <view class="mode-seg {{mode === item.key ? 'on' : ''}}" wx:for="{{modes}}" wx:key="key" data-key="{{item.key}}" bindtap="chooseMode">{{item.name}}</view>
             </view>
-            <button class="primary-button {{!modules.length ? 'is-disabled' : ''}}" bindtap="startTraining" disabled="{{!modules.length}}" style="position: relative; left: 5rpx; top: -2rpx">开始计时 <text class="primary-arrow">▶</text></button>
+            <button class="primary-button {{!modules.length ? 'is-disabled' : ''}}" bindtap="startTraining" disabled="{{!modules.length}}">开始计时 <text class="primary-arrow">▶</text></button>
           </view>
 
           <view class="home-feature home-feature-in-timer" wx:if="{{homeImportantPreview.length}}">

@@ -11,23 +11,13 @@
 .plan-hero {
   position: relative;
   overflow: hidden;
-  padding: 26rpx 28rpx 26rpx 36rpx;
+  padding: 26rpx 28rpx;
   background: var(--card);
   border: 3rpx solid var(--edge);
   border-radius: 30rpx;
   box-shadow: 6rpx 7rpx 0 var(--shadow);
   box-sizing: border-box;
   animation: app-rise-in .38s cubic-bezier(.2, .8, .3, 1) both;
-}
-.plan-hero::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 10rpx;
-  background: var(--primary);
-  border-right: 2rpx solid var(--edge);
 }
 .plan-hero-top {
   display: flex;
@@ -383,14 +373,10 @@
     padding: 24px 16px calc(82px + env(safe-area-inset-bottom));
   }
   .plan-hero {
-    padding: 14px 16px 14px 20px;
+    padding: 14px 16px;
     border-width: 2px;
     border-radius: 16px;
     box-shadow: 4px 5px 0 var(--shadow);
-  }
-  .plan-hero::before {
-    width: 6px;
-    border-right-width: 1px;
   }
   .plan-hero-top { gap: 10px; }
   .plan-kicker { font-size: 11px; letter-spacing: 1px; }

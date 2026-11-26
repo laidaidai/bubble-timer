@@ -538,13 +538,18 @@ Page({
       if (!lead || diff > lead.diff) lead = { name: it.name, diff };
     });
     if (!weak) return null;
+    // 全都低于目标时，lead 只是「最接近目标」的模块，不能叫「拉分最多」
+    const leadAbove = lead.diff > 0;
     return {
       // 全都超过目标时还说「优先补」会别扭，改成「最低」
-      weakLabel: weak.diff < 0 ? '优先补' : '最低',
+      weakLabel: weak.diff < 0 ? '优先补' : (weak.diff === 0 ? '刚好达标' : '最低'),
       weakName: weak.name,
       weakText: signedPoint(weak.diff),
+      weakTone: weak.diff < 0 ? 'weak' : 'close',
+      leadLabel: leadAbove ? '拉分最多' : (lead.diff === 0 ? '刚好达标' : '最接近'),
       leadName: lead.name,
       leadText: signedPoint(lead.diff),
+      leadTone: leadAbove ? 'lead' : 'close',
     };
   },
   // 模块展开 / 收起：按路径只改目标模块，整份 rows 不再重复下发；高度 0 → 实测 → auto，避免内容瞬间跳出

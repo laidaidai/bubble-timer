@@ -4,7 +4,7 @@
   <view class="topbar-spacer"></view>
 </view>
 <view class="page history-page {{isDesktop ? 'desk' : ''}} {{!isDesktop ? 'has-grade-topbar' : ''}} grade-root theme-{{theme}}" style="{{themeStyle}}">
-  <view class="page-title anim-rise">{{paperName || '全部历史记录'}}</view>
+  <view class="page-title anim-rise" wx:if="{{paperName}}">{{paperName}}</view>
 
   <view wx:if="{{list.length}}" class="hist-tools anim-rise">
     <view class="hist-count" aria-label="共 {{countText}} 条记录">共 <text class="num">{{countText}}</text> 条记录</view>

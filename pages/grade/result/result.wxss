@@ -51,9 +51,9 @@
   min-width: 0;
   padding: 18rpx 20rpx 20rpx;
   background: var(--accent-bg);
-  border: 3rpx solid var(--edge);
+  border: 0;
   border-radius: 22rpx;
-  box-shadow: 5rpx 6rpx 0 var(--shadow-soft);
+  box-shadow: none;
   box-sizing: border-box;
 }
 
@@ -106,16 +106,7 @@
 /* 能力图卡片 */
 .radar-card { padding: 22rpx 24rpx 24rpx; margin-bottom: 22rpx; border-radius: 28rpx; }
 .radar-head { display: flex; align-items: center; justify-content: space-between; }
-.radar-title { display: flex; align-items: center; gap: 10rpx; font-size: 29rpx; font-weight: 900; }
-.radar-title::before {
-  content: "";
-  width: 14rpx;
-  height: 14rpx;
-  background: var(--primary);
-  border: 2rpx solid var(--edge);
-  border-radius: 4rpx;
-  box-sizing: border-box;
-}
+.radar-title { font-size: 29rpx; font-weight: 900; }
 
 /* 目标档：三段切换，选中的一段黄底深边，绿框跟着换位置 */
 .target-tabs {
@@ -232,6 +223,7 @@
 }
 .tip-item.is-weak { color: var(--danger-text); }
 .tip-item.is-lead { color: var(--success-text); }
+.tip-item.is-close { color: var(--text-2); }
 
 .score-side { flex: 0 0 218rpx; display: flex; flex-direction: column; gap: 9rpx; }
 .side-row {
@@ -243,13 +235,13 @@
   padding: 0 16rpx;
   min-height: 62rpx;
   background: var(--cream-2);
-  border: 2rpx solid var(--line-strong);
+  border: 0;
   border-radius: 14rpx;
-  box-shadow: 2rpx 3rpx 0 var(--shadow-soft);
+  box-shadow: none;
   box-sizing: border-box;
 }
-.side-row.side-ok { background: var(--success-bg); border-color: var(--success); }
-.side-row.side-bad { background: var(--danger-bg); border-color: var(--danger); }
+.side-row.side-ok { background: var(--success-bg); }
+.side-row.side-bad { background: var(--danger-bg); }
 .side-row.side-ok .side-label { color: var(--success-text); }
 .side-row.side-bad .side-label { color: var(--danger-text); }
 .side-label { font-size: 22rpx; font-weight: 800; color: var(--text-2); }
@@ -441,7 +433,7 @@
   .paper-sub { font-size: 12px; margin-top: 3px; }
   .score-stamp { padding: 3px 6px; border-width: 1px; border-radius: 4px; box-shadow: 1px 1px 0 var(--shadow-soft); font-size: 10px; letter-spacing: 1px; }
   .score-body { gap: 10px; padding: 11px 12px 12px; justify-content: center; }
-  .score-main { flex: 0 1 400px; max-width: 400px; padding: 10px 11px 11px; border-width: 2px; border-radius: 12px; box-shadow: 3px 3px 0 var(--shadow-soft); }
+  .score-main { flex: 0 1 400px; max-width: 400px; padding: 10px 11px 11px; border: 0; border-radius: 12px; box-shadow: none; }
   .big-score { font-size: 58px; letter-spacing: -2px; }
   .unit { font-size: 14px; margin-left: 3px; }
   .score-note { font-size: 12px; margin-top: 8px; }
@@ -451,8 +443,7 @@
   .acc-val { font-size: 23px; }
   .acc-bar { margin-top: 4px; height: 7px; border-width: 1px; }
   .radar-card { padding: 12px 14px 13px; margin-bottom: 12px; border-radius: 16px; }
-  .radar-title { font-size: 16px; gap: 6px; }
-  .radar-title::before { width: 8px; height: 8px; border-width: 1px; border-radius: 2px; }
+  .radar-title { font-size: 16px; }
   .target-tabs { margin-top: 9px; padding: 3px; gap: 4px; border-width: 1px; border-radius: 999px; box-shadow: 2px 2px 0 var(--shadow-soft); }
   .target-tab { padding: 6px 0; font-size: 12px; border-width: 1px; border-radius: 999px; }
   .radar-canvas-stage { height: 260px; margin-top: 5px; }
@@ -461,7 +452,7 @@
   .radar-tip { margin-top: 7px; padding-top: 8px; font-size: 13px; gap: 5px 12px; border-top-width: 1px; }
   .radar-hint { margin-top: 4px; font-size: 12px; }
   .score-side { flex: 0 0 160px; gap: 5px; }
-  .side-row { padding: 0 9px; min-height: 34px; border-radius: 8px; border-width: 1px; box-shadow: 1px 2px 0 var(--shadow-soft); gap: 6px; }
+  .side-row { padding: 0 9px; min-height: 34px; border-radius: 8px; border: 0; box-shadow: none; gap: 6px; }
   .side-label { font-size: 12px; }
   .side-right { font-size: 22px; }
   .notice-bar { gap: 8px; padding: 9px 11px; margin-bottom: 12px; border-width: 1px; box-shadow: 2px 2px 0 var(--shadow-soft); border-radius: 9px; }

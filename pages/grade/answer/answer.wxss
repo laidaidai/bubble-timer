@@ -26,7 +26,7 @@
 
 .mod-tabs-inner {
   display: inline-flex;
-  gap: 12rpx;
+  gap: 10rpx;
 }
 
 .mode-chip {
@@ -55,7 +55,7 @@
   min-height: 50rpx;
   border: 2rpx solid var(--edge);
   border-radius: 999rpx;
-  padding: 0 20rpx;
+  padding: 0 16rpx;
   font-size: 23rpx;
   font-weight: 900;
   color: var(--ink);
@@ -133,7 +133,7 @@
 }
 .progress-label {
   color: var(--text-2);
-  font-size: 20rpx;
+  font-size: 21rpx;
   font-weight: 800;
 }
 .progress-count {
@@ -158,7 +158,7 @@
   border-radius: 999rpx;
   background: var(--card);
   color: var(--ink);
-  font-size: 21rpx;
+  font-size: 22rpx;
   font-weight: 900;
   box-shadow: 2rpx 3rpx 0 var(--shadow-soft);
   box-sizing: border-box;
@@ -172,20 +172,6 @@
   color: var(--on-primary);
   box-shadow: 3rpx 4rpx 0 var(--shadow);
 }
-
-.progress-pct {
-  flex: 0 0 auto;
-  padding: 4rpx 10rpx;
-  color: var(--ink);
-  background: var(--accent-bg);
-  border: 2rpx solid var(--line-strong);
-  border-radius: 12rpx;
-  box-shadow: 2rpx 2rpx 0 var(--shadow-soft);
-  font-size: 32rpx;
-  font-weight: 900;
-  line-height: 1;
-}
-.progress-pct-unit { margin-left: 2rpx; color: var(--text-warm); font-size: 17rpx; font-weight: 800; }
 
 .progress-bar {
   margin-top: 9rpx;
@@ -903,11 +889,20 @@
 .sheet-group { margin-bottom: 28rpx; }
 
 .sheet-group-name {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
   font-size: 27rpx;
   font-weight: 900;
-  border-left: 8rpx solid var(--primary);
-  padding-left: 14rpx;
   margin-bottom: 18rpx;
+}
+.sheet-group-name::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 10rpx;
+  height: 10rpx;
+  border-radius: 50%;
+  background: var(--primary);
 }
 
 /* minmax(0,1fr)：轨道不被内容最小宽撑破，窄屏 / 大字号下右列也不会被裁 */
@@ -981,8 +976,6 @@
   .progress-label { font-size: 11px; }
   .progress-count { font-size: 24px; }
   .progress-total { font-size: 13px; }
-  .progress-pct { padding: 2px 6px; border-width: 1px; font-size: 18px; box-shadow: 1px 1px 0 var(--shadow-soft); }
-  .progress-pct-unit { font-size: 10px; }
   .sheet-chip { min-height: 27px; padding: 0 10px; font-size: 12px; border-width: 1px; box-shadow: 1px 2px 0 var(--shadow-soft); }
   .progress-bar { margin-top: 5px; height: 8px; border-width: 2px; }
   .section-head { margin: 2px 2px 11px; gap: 7px; }
@@ -1038,7 +1031,8 @@
   .sheet-handle { width: 38px; height: 4px; margin: 0 auto; border-width: 1px; }
   .sheet-body { padding: 13px 16px; }
   .sheet-group { margin-bottom: 16px; }
-  .sheet-group-name { font-size: 16px; border-left-width: 5px; padding-left: 9px; margin-bottom: 11px; }
+  .sheet-group-name { gap: 6px; font-size: 16px; margin-bottom: 11px; }
+  .sheet-group-name::before { width: 6px; height: 6px; }
   .sheet-grid { grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 8px; }
   .circle { font-size: 14px; border-width: 1px; border-radius: 50%; box-shadow: 2px 2px 0 var(--shadow-soft); }
   .circle.current { box-shadow: 0 0 0 2px var(--card), 0 0 0 4px var(--primary); }

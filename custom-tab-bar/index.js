@@ -57,6 +57,7 @@ Component({
     sync() {
       const theme = app.getTheme ? app.getTheme() : null
       const swatch = (theme && theme.swatch) || ['#FBF3DF', '#FFC94D', '#4B3A2A']
+      const css = (theme && theme.css) || {}
       const pages = getCurrentPages()
       const current = pages.length ? pages[pages.length - 1].route : ''
       // 批改页 / 快捷页 / 待办 / 重要日子 / 打卡都是从工具页进入的子页面；
@@ -69,9 +70,9 @@ Component({
       const selected = onPinnedHome ? 0 : (inTools ? 1 : Math.max(0, TABS.findIndex(item => item.route === current)))
       this.setData({
         selected,
-        activeColor: swatch[1] || '#4B3A2A',
-        inactiveColor: swatch[2] || '#A6906F',
-        tabStyle: `background:${swatch[0]};border-top-color:${swatch[1]};`
+        activeColor: css['text-warm'] || '#4B3A2A',
+        inactiveColor: css['text-3'] || '#6E5A42',
+        tabStyle: `background:${swatch[0]};border-top-color:${css['text-warm'] || swatch[1]};`
       })
     },
 

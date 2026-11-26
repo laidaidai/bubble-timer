@@ -103,8 +103,8 @@
     </view>
     <view class="radar-hint">距目标（分）：<text class="is-lead">+ 领先</text> · <text class="is-weak">− 落后</text></view>
     <view wx:if="{{radarTip}}" class="radar-tip">
-      <text class="tip-item is-weak num">{{radarTip.weakLabel}} {{radarTip.weakName}} {{radarTip.weakText}}</text>
-      <text class="tip-item is-lead num">拉分最多 {{radarTip.leadName}} {{radarTip.leadText}}</text>
+      <text class="tip-item {{radarTip.weakTone === 'weak' ? 'is-weak' : 'is-close'}} num">{{radarTip.weakLabel}} {{radarTip.weakName}} {{radarTip.weakText}}</text>
+      <text class="tip-item {{radarTip.leadTone === 'lead' ? 'is-lead' : 'is-close'}} num">{{radarTip.leadLabel}} {{radarTip.leadName}} {{radarTip.leadText}}</text>
     </view>
   </view>
 

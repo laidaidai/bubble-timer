@@ -11,7 +11,7 @@
 .history-head { display: flex; align-items: flex-start; justify-content: space-between; }
 .history-title-wrap { flex: 1; min-width: 0; overflow: hidden; }
 .history-title { margin-bottom: 8rpx; overflow: hidden; color: var(--ink); font-size: 28rpx; font-weight: 900; white-space: nowrap; text-overflow: ellipsis; }
-.history-time { color: var(--text-3); font-size: 20rpx; }
+.history-time { color: var(--text-3); font-size: 21rpx; }
 .history-subline { display: flex; align-items: center; flex-wrap: wrap; gap: 8rpx; }
 .history-pending-tag {
   padding: 2rpx 9rpx;
@@ -23,11 +23,12 @@
   line-height: 1.35;
 }
 
-.history-meta { margin: 20rpx 0 18rpx; display: flex; align-items: baseline; justify-content: space-between; color: var(--text-dim); font-size: 22rpx; }
+.history-meta { margin: 20rpx 0 18rpx; display: flex; align-items: baseline; justify-content: space-between; color: var(--text-dim); font-size: 23rpx; }
 .history-duration { color: var(--ink); font-size: 48rpx; font-weight: 900; }
 .history-count { flex: 0 0 auto; color: var(--text-2); white-space: nowrap; }
 
 .history-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12rpx; }
+.history-fill, .history-rerun, .delete-link, .history-report-button { min-height: 80rpx; }
 .history-fill { width: auto !important; min-width: 0 !important; box-sizing: border-box; margin: 0; padding: 16rpx 28rpx; color: var(--on-primary); background: var(--primary); border: 2rpx solid var(--edge); border-radius: 999rpx; box-shadow: 3rpx 4rpx 0 var(--shadow); font-size: 23rpx; font-weight: 900; line-height: 1.3; }
 .history-rerun { width: auto !important; min-width: 0 !important; box-sizing: border-box; margin: 0; padding: 16rpx 28rpx; color: var(--ink); background: var(--primary-2); border: 2rpx solid var(--edge); border-radius: 999rpx; box-shadow: 3rpx 4rpx 0 var(--shadow); font-size: 23rpx; font-weight: 900; line-height: 1.3; }
 .delete-link { width: auto !important; min-width: 0 !important; box-sizing: border-box; margin: 0; padding: 16rpx 24rpx; color: var(--danger); background: var(--card); border: 2rpx solid var(--danger); border-radius: 999rpx; box-shadow: 3rpx 4rpx 0 var(--shadow-soft); font-size: 22rpx; font-weight: 800; line-height: 1.3; }
@@ -79,33 +80,26 @@
   margin-bottom: 16rpx;
   padding: 0 4rpx;
 }
-.history-toolbar-count { color: var(--text-2); font-size: 21rpx; font-weight: 800; }
+.history-toolbar-count { color: var(--text-2); font-size: 22rpx; font-weight: 800; }
 .clear-all-btn {
-  position: relative;
-  flex: 0 0 52rpx;
-  width: 52rpx;
-  height: 52rpx;
+  flex: 0 0 auto;
+  min-width: 88rpx;
+  height: 80rpx;
+  padding: 0 20rpx;
   box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
+  color: var(--danger-text);
   background: var(--card);
   border: 2rpx solid var(--danger);
-  border-radius: 50%;
+  border-radius: 999rpx;
   box-shadow: 3rpx 3rpx 0 var(--shadow-soft);
+  font-size: 24rpx;
+  font-weight: 900;
+  line-height: 1;
 }
 .clear-all-btn:active { transform: translate(1rpx, 1rpx); box-shadow: 1rpx 1rpx 0 var(--shadow-soft); }
-.cross-line {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 22rpx;
-  height: 3rpx;
-  border-radius: 2rpx;
-  background: var(--danger);
-}
-.cross-line.a { transform: translate(-50%, -50%) rotate(45deg); }
-.cross-line.b { transform: translate(-50%, -50%) rotate(-45deg); }
 
 /* ===== 桌面 / 大屏：记录页按手机档物理尺寸渲染 ===== */
 /* 底部内距避开左下角悬浮球，避免最后一条记录被压住 */
@@ -113,8 +107,7 @@
 .desk .history-tail { height: 72px; }
 .desk .history-toolbar { gap: 7px; margin-bottom: 9px; padding: 0 2px; }
 .desk .history-toolbar-count { font-size: 12px; }
-.desk .clear-all-btn { flex: 0 0 29px; width: 29px; height: 29px; border-width: 1px; box-shadow: 2px 2px 0 var(--shadow-soft); }
-.desk .cross-line { width: 12px; height: 2px; }
+.desk .clear-all-btn { min-width: 58px; height: 30px; padding: 0 12px; border-width: 1px; border-radius: 999px; box-shadow: 2px 2px 0 var(--shadow-soft); font-size: 12px; }
 .desk .history-tip { margin-bottom: 12px; font-size: 12px; line-height: 1.6; }
 
 .desk .history-card {
@@ -144,6 +137,7 @@
   max-width: 100%;
   box-sizing: border-box;
   padding: 8px 15px;
+  min-height: 0;
   border-width: 1px;
   font-size: 13px;
   line-height: 1.3;

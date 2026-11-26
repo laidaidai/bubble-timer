@@ -4,8 +4,8 @@
 
 /* 顶部分段切换 */
 .seg-scroll { width: 100%; white-space: nowrap; }
-.seg-bar { display: inline-flex; gap: 10rpx; padding-bottom: 6rpx; }
-.seg { padding: 18rpx 34rpx; color: var(--text-mid); background: var(--cream-1); border: 2rpx solid var(--edge); border-radius: 999rpx; box-shadow: 4rpx 4rpx 0 var(--shadow); font-size: 25rpx; font-weight: 900; }
+.seg-bar { display: inline-flex; gap: 8rpx; padding-bottom: 6rpx; }
+.seg { padding: 18rpx 24rpx; color: var(--text-mid); background: var(--cream-1); border: 2rpx solid var(--edge); border-radius: 999rpx; box-shadow: 4rpx 4rpx 0 var(--shadow); font-size: 24rpx; font-weight: 900; }
 .seg.on { color: var(--on-primary); background: var(--primary); box-shadow: 5rpx 5rpx 0 var(--shadow); }
 
 .pane { margin-top: 26rpx; }
@@ -53,7 +53,7 @@
 .custom-box { margin-top: 18rpx; padding: 22rpx 24rpx; background: var(--card); border: 2rpx solid var(--edge); border-radius: 24rpx; box-shadow: 5rpx 5rpx 0 var(--shadow); }
 .custom-head { margin-bottom: 14rpx; font-size: 24rpx; font-weight: 900; }
 .custom-name { width: 100%; box-sizing: border-box; height: 92rpx; min-height: 92rpx; margin-bottom: 16rpx; padding: 0 20rpx; color: var(--ink); background: var(--cream-1); border: 2rpx solid var(--edge); border-radius: 16rpx; font-size: 26rpx; font-weight: 800; line-height: 92rpx; }
-.custom-name-ph { color: var(--text-4); font-weight: 700; }
+.custom-name-ph { color: var(--text-3); font-weight: 700; }
 .custom-actions { margin-top: 16rpx; display: flex; gap: 14rpx; }
 .custom-btn { flex: 1; padding: 16rpx 8rpx; text-align: center; color: var(--ink); background: var(--card); border: 2rpx solid var(--edge); border-radius: 999rpx; box-shadow: 4rpx 4rpx 0 var(--shadow-soft); font-size: 22rpx; font-weight: 900; }
 .custom-btn.primary { color: var(--on-primary); background: var(--primary); box-shadow: 5rpx 5rpx 0 var(--shadow); }
@@ -62,7 +62,7 @@
 .color-list { flex: 1; display: flex; flex-wrap: wrap; gap: 12rpx; }
 .color-dot { width: 52rpx; height: 52rpx; border: 2rpx solid var(--edge); border-radius: 50%; }
 .color-dot.on { box-shadow: 0 0 0 4rpx var(--primary); border-width: 3rpx; }
-.custom-tip { margin-top: 6rpx; color: var(--text-3); font-size: 19rpx; }
+.custom-tip { margin-top: 6rpx; color: var(--text-3); font-size: 20rpx; }
 
 /* 自定义铃声 */
 .ring-actions { margin-top: 16rpx; display: flex; gap: 12rpx; }
@@ -94,15 +94,15 @@
 .data-export { color: var(--on-primary); background: var(--primary); box-shadow: 4rpx 5rpx 0 var(--shadow); }
 .data-import { color: var(--ink); background: var(--card); box-shadow: 4rpx 5rpx 0 var(--shadow-soft); }
 .data-meta { display: flex; align-items: center; justify-content: space-between; gap: 12rpx; margin-top: 8rpx; }
-.data-warn { flex: 1; min-width: 0; color: var(--text-3); font-size: 19rpx; line-height: 1.45; }
-.data-link { flex: 0 0 auto; padding: 2rpx 0; color: var(--text-warm); font-size: 19rpx; font-weight: 900; line-height: 1.4; }
+.data-warn { flex: 1; min-width: 0; color: var(--text-3); font-size: 21rpx; line-height: 1.45; }
+.data-link { flex: 0 0 auto; padding: 2rpx 0; color: var(--text-warm); font-size: 21rpx; font-weight: 900; line-height: 1.4; }
 .data-link-press { opacity: .58; }
 .data-split { margin: 26rpx 0 18rpx; border-top: 2rpx solid var(--line); }
 .data-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12rpx; }
-.data-danger { color: var(--danger-text); font-size: 18rpx; font-weight: 800; white-space: nowrap; }
+.data-danger { color: var(--danger-text); font-size: 20rpx; font-weight: 800; white-space: nowrap; }
 .privacy-btn { display: flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box; margin: 18rpx 0 0; padding: 16rpx 10rpx; color: var(--ink); background: var(--cream-1); border: 2rpx solid var(--edge); border-radius: 999rpx; box-shadow: 4rpx 5rpx 0 var(--shadow-soft); font-size: 22rpx; font-weight: 900; line-height: 1.3; }
 .privacy-btn.ghost { color: var(--text-2); background: var(--card); box-shadow: none; border-color: var(--line-strong); }
-.data-clear-btn { display: flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box; margin: 20rpx 0 0; padding: 18rpx 10rpx; color: #FFFFFF; background: var(--danger); border: 2rpx solid var(--edge); border-radius: 999rpx; box-shadow: 4rpx 5rpx 0 var(--shadow); font-size: 23rpx; font-weight: 900; line-height: 1.3; }
+.data-clear-btn { display: flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box; margin: 20rpx 0 0; padding: 18rpx 10rpx; color: var(--card); background: var(--danger-text); border: 2rpx solid var(--edge); border-radius: 999rpx; box-shadow: 4rpx 5rpx 0 var(--shadow); font-size: 23rpx; font-weight: 900; line-height: 1.3; }
 
 /* 时钟样式：预览 + 列表 */
 .clock-preview { display: flex; flex-direction: column; align-items: center; gap: 16rpx; padding: 34rpx 24rpx; background: var(--card); border: 2rpx solid var(--edge); border-radius: 26rpx; box-shadow: 5rpx 5rpx 0 var(--shadow-soft); }

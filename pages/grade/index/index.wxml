@@ -7,10 +7,7 @@
   <!-- 顶部战绩：浅色成绩卡，分数、卷名与批改统计分栏 -->
   <view class="grade-hero">
     <view class="gh-hero-top">
-      <view class="gh-hero-label-wrap">
-        <view class="gh-hero-label-mark"></view>
-        <text class="gh-hero-eyebrow">{{homeSummary.hasLast ? '上次战绩' : '还没开始'}}</text>
-      </view>
+      <text class="gh-hero-eyebrow">{{homeSummary.hasLast ? '上次战绩' : '还没开始'}}</text>
       <view class="gh-hero-letter" bindtap="goLetter" hover-class="gh-hero-letter-press">
         <view class="gh-hero-envelope"></view>
         <text>一封信</text>
@@ -55,9 +52,6 @@
   <!-- 分组试卷列表：分组只做标题，试卷各自成卡，展开时逐张入场 -->
   <view wx:for="{{groups}}" wx:for-index="gIndex" wx:key="id" class="group-block" style="animation-delay: {{gIndex * 55}}ms;">
     <view class="group-head {{collapsed[item.id] ? 'is-closed' : 'is-open'}}" bindtap="toggleGroup" data-id="{{item.id}}" hover-class="group-press" aria-label="{{collapsed[item.id] ? '展开' : '收起'}}{{item.name}}">
-      <view class="group-mark">
-        <text class="group-mark-num num">0{{gIndex + 1}}</text>
-      </view>
       <view class="group-copy">
         <view class="group-name">{{item.name}}</view>
         <view class="group-sub">共 {{item.totalQuestions}} 题</view>

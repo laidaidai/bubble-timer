@@ -8,16 +8,6 @@
   border-radius: 30rpx;
   box-shadow: 7rpx 8rpx 0 var(--shadow);
 }
-.letter-card::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  height: 9rpx;
-  background: var(--primary);
-  border-bottom: 2rpx solid var(--edge);
-}
 
 .letter-seal {
   position: absolute;
@@ -74,7 +64,6 @@
 @media (min-width: 700px) {
   .letter-page { padding-top: 18px; }
   .letter-card { padding: 19px 18px 17px; border-radius: 17px; box-shadow: 4px 5px 0 var(--shadow); }
-  .letter-card::before { height: 5px; border-bottom-width: 1px; }
   .letter-seal { top: 15px; right: 16px; width: 41px; height: 41px; border-width: 2px; box-shadow: 2px 2px 0 var(--shadow-soft); font-size: 15px; }
   .letter-title { padding-right: 52px; font-size: 21px; }
   .letter-sign { margin-top: 4px; font-size: 12px; }

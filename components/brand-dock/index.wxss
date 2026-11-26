@@ -231,4 +231,4 @@
   line-height: 1.3;
 }
 .dock-switch-chip.on { background: var(--primary, #5AA9E6); border-color: var(--edge, #1E3448); }
-.dock-switch-chip.soon { opacity: .55; border-style: dashed; }
+.dock-switch-chip.soon { opacity: .55; border-style: solid; }

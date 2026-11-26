@@ -32,7 +32,6 @@
         <view class="progress-fill" style="width: {{progressPct}}%;"></view>
       </view>
     </view>
-    <view class="progress-pct num">{{progressPct}}<text class="progress-pct-unit">%</text></view>
     <view class="sheet-chip import-chip" bindtap="openImport" hover-class="is-press" aria-label="AI 识别并导入作答">AI 导入</view>
     <view wx:if="{{mode === 'list'}}" class="sheet-chip" bindtap="openCard" hover-class="is-press">答题卡</view>
   </view>
